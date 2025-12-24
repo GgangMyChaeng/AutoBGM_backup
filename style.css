@@ -57,6 +57,11 @@
   text-align: left;
 }
 
+// 모달 디버그 버튼 숨기기
+#abgm_debugMode { display: none; }
+#abgm_debugMode ~ i,
+#abgm_debugMode ~ .abgm-debug-text { display: none; }
+
 /* === Now Playing controls row (extension menu) === */
 .autobgm-now-controls{
   display: grid;
@@ -106,31 +111,6 @@
   opacity: .35;
   pointer-events: none;
   filter: grayscale(1);
-}
-
-/* ===== Extension menu: Now Playing layout only ===== */
-#autobgm-root .autobgm-now-wrap,
-#autobgm-root #autobgm_now_wrap {
-  text-align: center;
-}
-
-/* state(Playing/Paused/Stopped) 숨김 */
-#autobgm-root #autobgm_now_state{
-  display: none !important;
-}
-
-/* 제목/메타는 중앙정렬 유지 */
-#autobgm-root #autobgm_now_title,
-#autobgm-root #autobgm_now_meta{
-  text-align: center;
-}
-
-/* 디버그 라인은 meta 아래, 좌측 정렬 */
-#autobgm-root .autobgm-now-debug{
-  margin-top: 6px;
-  font-size: 12px;
-  opacity: .85;
-  text-align: left;
 }
 
 /* ===== modal base ===== */
