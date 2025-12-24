@@ -325,7 +325,6 @@ function ensureSettings() {
   ensureAssetList(s);
   s.chatStates ??= {};
   s.debugMode ??= false;
-  __abgmDebugMode = !!s.debugMode;
 
   // 프리셋/곡 스키마 보정 + 구버전 변환
   Object.values(s.presets).forEach((p) => {
