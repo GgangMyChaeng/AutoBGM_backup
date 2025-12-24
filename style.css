@@ -1,0 +1,960 @@
+/* =========================================================
+   AutoBGM — CLEAN style.css (dedup + stable responsive)
+   ========================================================= */
+
+/* ===== extension drawer wrapper ===== */
+.abgm-wrap{
+  padding:12px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:12px;
+  background:rgba(255,255,255,.03);
+}
+
+.abgm-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.abgm-toggle{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:14px;
+}
+
+.abgm-btn{
+  padding:6px 10px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.06);
+  color:inherit;
+}
+
+/* ===== Extension menu: Now Playing layout only ===== */
+#autobgm-root .autobgm-now-wrap,
+#autobgm-root #autobgm_now_wrap {
+  text-align: center;
+}
+
+/* state(Playing/Paused/Stopped) 숨김 */
+#autobgm-root #autobgm_now_state{
+  display: none !important;
+}
+
+/* 제목/메타는 중앙정렬 유지 */
+#autobgm-root #autobgm_now_title,
+#autobgm-root #autobgm_now_meta{
+  text-align: center;
+}
+
+/* 디버그 라인은 meta 아래, 좌측 정렬 */
+#autobgm-root .autobgm-now-debug{
+  margin-top: 6px;
+  font-size: 12px;
+  opacity: .85;
+  text-align: left;
+}
+
+/* === Now Playing controls row (extension menu) === */
+.autobgm-now-controls{
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr; /* 3분할 고정 */
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;          /* 벽에 안 붙게 */
+}
+
+/* 각 칸 안에서 버튼은 중앙에 */
+.autobgm-now-controls .np-left,
+.autobgm-now-controls .np-center,
+.autobgm-now-controls .np-right{
+  display: flex;
+  align-items: center;
+  justify-content: center;    /* 칸 중앙 */
+  min-width: 0;
+}
+
+/* 버튼들 크기 완전 동일 (뚱뚱X, 얇X) */
+.autobgm-now-controls .menu_button{
+  width: 44px;                /* ✅ 3개 동일 폭 */
+  height: 34px;               /* ✅ 3개 동일 높이 */
+  padding: 0;                 /* 폭은 width로 고정했으니 패딩 제거 */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  box-sizing: border-box;
+}
+
+/* 아이콘(유니코드)이 너무 커보이면 살짝만 */
+.autobgm-now-controls .menu_button{
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* ===== 숨김 규칙: 자리 유지용 (display:none 금지) ===== */
+/* 키워드 모드 OFF일 때, 왼쪽 버튼은 "자리 유지한 채" 숨김 */
+.autobgm-now-controls .np-left.is-hidden{
+  visibility: hidden;         /* 자리 유지 */
+  pointer-events: none;
+}
+
+/* 확장 OFF일 때: 3버튼 전부 비활성 느낌(자리 유지) */
+.autobgm-now-controls.is-disabled .menu_button{
+  opacity: .35;
+  pointer-events: none;
+  filter: grayscale(1);
+}
+
+/* ===== Extension menu: Now Playing layout only ===== */
+#autobgm-root .autobgm-now-wrap,
+#autobgm-root #autobgm_now_wrap {
+  text-align: center;
+}
+
+/* state(Playing/Paused/Stopped) 숨김 */
+#autobgm-root #autobgm_now_state{
+  display: none !important;
+}
+
+/* 제목/메타는 중앙정렬 유지 */
+#autobgm-root #autobgm_now_title,
+#autobgm-root #autobgm_now_meta{
+  text-align: center;
+}
+
+/* 디버그 라인은 meta 아래, 좌측 정렬 */
+#autobgm-root .autobgm-now-debug{
+  margin-top: 6px;
+  font-size: 12px;
+  opacity: .85;
+  text-align: left;
+}
+
+/* ===== modal base ===== */
+body.autobgm-modal-open{ overflow:hidden; }
+
+.autobgm-overlay{
+  position:fixed;
+  inset:0;
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  overflow:auto;
+  -webkit-overflow-scrolling: touch;
+  background:rgba(0,0,0,.55);
+  z-index:99999;
+  padding:12px;
+}
+
+@supports (padding: max(0px, env(safe-area-inset-top))){
+  .autobgm-overlay{
+    padding-top: max(12px, env(safe-area-inset-top));
+    padding-right: max(12px, env(safe-area-inset-right));
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    padding-left: max(12px, env(safe-area-inset-left));
+  }
+}
+
+/* JS가 width/height를 !important로 박아주지만, fallback로 남겨둠 */
+.autobgm-modal{
+  width:min(900px, 96vw);
+  max-height: calc(100vh - 24px);
+  min-height: 240px;
+  overflow:auto;
+  box-sizing:border-box;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:14px;
+  background:rgba(20,20,20,.96);
+  box-shadow:0 10px 40px rgba(0,0,0,.55);
+}
+
+.autobgm-modal-h{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 14px;
+  border-bottom:1px solid rgba(255,255,255,.10);
+}
+
+.autobgm-modal-b{ padding:12px 14px 14px; }
+
+/* ===== modal ui ===== */
+.abgm-topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.abgm-grid{
+  display:grid;
+  grid-template-columns: 1fr;
+  gap:12px;
+}
+
+.abgm-card{
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:14px;
+  background:rgba(255,255,255,.03);
+  padding:12px;
+  min-width:0;
+}
+
+.abgm-card-h{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+
+.abgm-row,
+.abgm-inline{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-width:0;
+}
+
+.abgm-top-row1{
+  margin-bottom:10px;
+}
+
+.abgm-select{
+  width:100%;
+  padding:6px 10px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.06);
+  color:inherit;
+  min-width:0;
+}
+
+.abgm-select-slim{
+  width:auto;
+  min-width:200px;
+}
+
+.abgm-range{ width:180px; }
+
+.abgm-hr{
+  margin:12px 0;
+  opacity:.18;
+}
+
+/* 헬프 제목 */
+.autobgm-helptext, .abgm-minihelp > b{
+  font-size: 18px;
+}
+
+/* 헬프 */
+.autobgm-helptext, .abgm-minihelp{
+  margin-top:10px;
+  font-size:16px;
+  opacity:.75;
+  line-height:1.55; /* 1.35 -> 1.55~1.65 추천 */
+}
+
+/* 리스트 간격(항목끼리) */
+.autobgm-helptext, .abgm-minihelp ul{
+  margin: 8px 0;
+  padding-left: 18px; /* 들여쓰기 살짝 */
+}
+
+.autobgm-helptext, .abgm-minihelp li{
+  margin: 6px 0;      /* 항목 위아래 간격 */
+}
+
+/* 중첩 ul은 조금 덜 벌어지게 */
+.autobgm-helptext, .abgm-minihelp li ul{
+  margin-top: 6px;
+}
+.autobgm-helptext, .abgm-minihelp li ul li{
+  margin: 4px 0;
+}
+
+/* inputs in modal should not overflow */
+.autobgm-modal input,
+.autobgm-modal select,
+.autobgm-modal .text_pole{
+  min-width:0;
+  max-width:100%;
+}
+
+/* ===== modal close (X) button bigger ===== */
+#abgm_modal_close{
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* 모바일에서 더 크게 */
+@media (max-width: 520px){
+  #abgm_modal_close{
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    min-height: 42px;
+    font-size: 20px;
+  }
+}
+
+/* ===== table ===== */
+.abgm-tablewrap{
+  margin-top:10px;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:12px;
+  overflow:auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.abgm-table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px;
+  table-layout: fixed; /* 핵심: 모바일에서 우측 버튼 밀림 방지 */
+  min-width:0;
+}
+
+.abgm-table thead{ background:rgba(255,255,255,.05); }
+
+.abgm-table th, .abgm-table td{
+  padding:8px 10px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  vertical-align:middle;
+}
+
+.abgm-col-check{
+  width:38px;
+  text-align:center;
+  padding:8px 6px !important;
+}
+
+.abgm-table input.abgm_sel{ transform:scale(1.05); }
+
+.abgm-table input[type="text"],
+.abgm-table input[type="number"]{
+  width:100%;
+  padding:6px 8px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.06);
+  color:inherit;
+}
+
+.abgm-iconbtn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:34px;
+  height:30px;
+}
+
+/* column widths: (1)check / (2)file / (3)play / (4)more */
+.abgm-table th:nth-child(1),
+.abgm-table td:nth-child(1){ width:44px; }
+
+.abgm-table th:nth-child(3),
+.abgm-table td:nth-child(3){ width:72px; }
+
+.abgm-table th:nth-child(4),
+.abgm-table td:nth-child(4){ width:64px; }
+
+.abgm-filecell{
+  min-width:0;
+  overflow:hidden;
+}
+
+.abgm_name{
+  width:100%;
+  min-width:0;
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+/* ===== row: collapsed / expanded ===== */
+.abgm-bgm-summary.abgm-expanded td{
+  background: rgba(255,255,255,.02);
+}
+
+.abgm_toggle i{ transition: transform .15s ease; }
+.abgm-bgm-summary.abgm-expanded .abgm_toggle i{ transform: rotate(180deg); }
+
+/* ===== detail row (기존) ===== */
+.abgm-bgm-detail td{
+  padding: 10px 10px 12px;
+  background: rgba(255,255,255,.03);
+}
+
+/* detail layout (base) */
+.abgm-detail-grid{
+  display:grid;
+  grid-template-columns: 1fr 170px 130px;
+  gap:10px;
+  align-items: stretch;
+}
+
+.abgm-keywords{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  min-width:0;
+}
+
+.abgm-keywords textarea.abgm_keywords{
+  width:100%;
+  min-height: 74px;      /* 기본 높이(모바일에서 더 줄일거면 media에서) */
+  max-height: 180px;
+  resize: vertical;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.06);
+  color: inherit;
+}
+
+.abgm-side{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  height:100%;
+  justify-content: flex-start;
+  padding-top: 0px;
+  padding-bottom: 0px;
+}
+
+.abgm-field-tight small{ opacity:.8; }
+
+.abgm_narrow{ max-width: 120px; }
+
+.abgm-volcell{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-width:0;
+}
+
+.abgm-volcell .abgm_vol{ width:100%; min-width:0; }
+.abgm-volcell .abgm_volnum{ width:72px; text-align:right; }
+
+.abgm_vol_lock{ padding:6px 8px; }
+.abgm_vol_lock i{ opacity:.85; }
+.abgm_vol:disabled{ opacity:.45; cursor:not-allowed; }
+
+.abgm-detail-actions{
+  height:100%;
+  display:flex;
+  gap:8px;
+  align-items:center;
+  justify-content:flex-end; /* 기본은 우측 */
+  min-width:140px;
+}
+
+/* mobile: delete label 숨김(있을 경우) */
+@media (max-width: 520px){
+  .abgm-del-label{ display:none; }
+}
+
+/* Keyword Mode ON: disable Play buttons */
+.abgm-test-locked {
+  opacity: 0.35;
+  pointer-events: none;
+  cursor: not-allowed;
+  filter: grayscale(1);
+}
+
+/* ===== Detail: Source ===== */
+
+.abgm-src-title{
+  margin-top:6px;
+  opacity:.85;
+}
+
+.abgm_source{
+  width:100%;
+  padding:6px 8px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.06);
+  color:inherit;
+  min-width:0;
+}
+
+/* ===== responsive: mobile table widths (play/more 항상 보이게) ===== */
+@media (max-width: 520px){
+  .abgm-table th, .abgm-table td{ padding:6px 6px; }
+  .abgm-iconbtn{ width:30px; height:28px; }
+
+  .abgm-table th:nth-child(1),
+  .abgm-table td:nth-child(1){ width:38px; }
+
+  .abgm-table th:nth-child(3),
+  .abgm-table td:nth-child(3){ width:58px; }
+
+  .abgm-table th:nth-child(4),
+  .abgm-table td:nth-child(4){ width:58px; }
+
+  /* filecell은 “너무 길어서 버튼 밀기” 방지: 60% 기준 */
+  .abgm-filecell{ width:60%; }
+}
+
+/* ===== responsive: mobile detail (2col + 2row) + compact volume wrap ===== */
+@media (max-width: 520px){
+  .abgm-bgm-detail td{ padding: 8px 8px 10px; }
+
+  .abgm-detail-grid{
+    grid-template-columns: minmax(0, 1fr) 150px;
+    grid-template-areas:
+      "kw side"
+      "kw act";
+    gap:8px;
+    align-items: stretch;
+  }
+
+  .abgm-keywords{ grid-area: kw; }
+  .abgm-side{ grid-area: side; }
+  .abgm-detail-actions{
+    grid-area: act;
+    align-self: center;
+    justify-self: end;
+    padding-right: 10px;
+    padding-bottom: 6px;
+  }
+
+  /* 키워드 높이 조금만 */
+  .abgm-keywords textarea.abgm_keywords{
+    min-height: 74px;
+    max-height: 130px;
+  }
+
+  /* 우측 스택 */
+  .abgm-side{
+    padding-top: 0px;
+    padding-bottom: 0px;
+    justify-content: flex-start;
+    gap:10px;
+  }
+
+  /* 볼륨: 슬라이더는 한 줄로 길게, 숫자/락은 아래 우측 */
+  .abgm-volcell .abgm_vol{
+    flex: 1 0 100%;
+    width: 100%;
+    min-width:0;
+    margin-top:2px;
+  }
+
+  .abgm-volcell .abgm_volnum{
+    width:72px;
+    margin-left:auto;
+  }
+
+  .abgm-volcell .abgm_vol_lock{
+    width:34px;
+    height:30px;
+  }
+}
+
+/* super narrow: detail 1col */
+@media (max-width: 380px){
+  .abgm-detail-grid{
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "kw"
+      "side"
+      "act";
+  }
+  .abgm-detail-actions{
+    justify-self: start;
+    padding-right: 0;
+  }
+}
+
+/* ===== confirm modal ===== */
+.abgm-confirm-wrap{
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  display: grid;
+  place-items: center;
+}
+
+.abgm-confirm-backdrop{
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+}
+
+.abgm-confirm{
+  position: relative;
+  width: min(420px, calc(100vw - 24px));
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 14px;
+  background: rgba(20,20,20,.96);
+  box-shadow: 0 10px 40px rgba(0,0,0,.55);
+  padding: 12px 14px;
+}
+
+.abgm-confirm-title{ font-weight: 700; margin-bottom: 8px; }
+.abgm-confirm-msg{ opacity: .9; white-space: pre-wrap; line-height: 1.35; }
+
+.abgm-confirm-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+  margin-top:12px;
+}
+
+/* confirm이 overlay(모달) 안에 붙을 때: overlay 기준 중앙 */
+.abgm-confirm-wrap.abgm-confirm-in-modal{
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+/* ===== confirm modal buttons: always horizontal ===== */
+.abgm-confirm-actions{
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  gap:12px;              /* 기존 8px -> 12px 정도 */
+  flex-wrap:nowrap;      /* 절대 줄바꿈 금지 */
+}
+
+.abgm-confirm-actions .menu_button{
+  width:auto !important;         /* 세로로 찢기는 원인 차단 */
+  min-width: 84px;              /* 너무 찌그러지지 않게 */
+  display:inline-flex !important;
+  justify-content:center;
+  white-space:nowrap;           /* 글자 줄바꿈 방지 */
+}
+
+/* =========================================================
+   PC detail rule (FINAL)
+   - side는 Priority(위) / Volume(아래) 항상 붙음 (auto + 1fr)
+   - 우선도 입력창 & 슬라이더 max-width 동일
+   - 슬라이더 위 / 수치+락 아래
+   - Delete는 우측 고정 + 세로 중앙
+   ========================================================= */
+@media (min-width: 700px){
+
+  :root{
+    --abgm-pc-ctlw: 220px;   /* 우선도/슬라이더 최대 가로폭(둘 동일) */
+    --abgm-pc-delw: 160px;   /* delete 컬럼 폭 */
+  }
+
+  /* 키워드 | side(우선도/볼륨) | delete */
+  .abgm-detail-grid{
+    grid-template-columns: minmax(320px, 1fr) var(--abgm-pc-ctlw) var(--abgm-pc-delw) !important;
+    grid-template-areas: "kw side del" !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .abgm-keywords{ grid-area: kw; }
+
+  /* side: Priority는 auto / Volume이 나머지 => 절대 멀어지지 않음 */
+  .abgm-side{
+    grid-area: side;
+    display: grid !important;
+    grid-template-rows: auto 1fr !important; /* 핵심 */
+    align-content: start !important;
+    gap: 10px !important;
+    height: 100% !important;
+    padding: 0 !important;
+  }
+
+  /* Delete: 우측 고정 + 세로 중앙 */
+  .abgm-detail-actions{
+    grid-area: del;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    padding-right: 14px !important;
+  }
+
+  /* Priority block */
+  .abgm-side > .abgm-field-tight:nth-child(1){
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+  }
+
+  .abgm-side .abgm_priority{
+    width: 100% !important;
+    max-width: var(--abgm-pc-ctlw) !important; /* 슬라이더와 동일 */
+  }
+
+  /* Volume block: 타이틀+슬라이더가 Priority처럼 상하로 딱 붙게 */
+  .abgm-side > .abgm-field-tight:nth-child(2){
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    gap: 6px !important;
+  }
+
+  .abgm-side > .abgm-field-tight:nth-child(2) > small{
+    display:block;
+    margin: 0 0 4px 0;
+  }
+
+  /* Volume row: slider 위 / num+lock 아래 */
+  .abgm-volcell{
+    display: grid !important;
+    grid-template-columns: 1fr 72px 34px !important;
+    grid-template-rows: auto auto !important;
+    gap: 8px !important;
+    align-items: center !important;
+    align-content: start !important;
+    max-width: var(--abgm-pc-ctlw) !important; /* 우선도와 동일 */
+  }
+
+  input[type="range"].abgm_vol{
+    grid-column: 1 / -1 !important;
+    grid-row: 1 !important;
+    width: 100% !important;
+    max-width: var(--abgm-pc-ctlw) !important;
+    min-width: 0 !important;
+    margin-top: 2px;
+  }
+
+  .abgm-volcell .abgm_volnum{
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    width: 72px !important;
+    justify-self: end !important;
+  }
+
+  .abgm-volcell .abgm_vol_lock{
+    grid-column: 3 !important;
+    grid-row: 2 !important;
+    width: 34px !important;
+    height: 30px !important;
+    justify-self: end !important;
+  }
+}
+
+/* ===== narrow window: volume num+lock goes UNDER slider (but stays side-by-side) ===== */
+/* 창 폭이 좁아지면(PC든 뭐든) 볼륨 숫자+락을 슬라이더 아래로 내림 */
+@media (max-width: 760px){
+
+  /* 우선도 입력창과 볼륨 컨트롤의 가로폭을 동일하게 맞춤 */
+  .abgm-side .abgm_priority{
+    width: 100%;
+    max-width: 220px;
+  }
+
+  .abgm-volcell{
+    display: grid !important;
+    grid-template-columns: 1fr 72px 34px !important; /* 슬라이더 폭 / 숫자 / 락 */
+    grid-template-rows: auto auto !important;
+    gap: 8px !important;
+    align-items: center !important;
+    max-width: 220px !important;  /* 우선도랑 동일 폭 */
+  }
+
+  /* 슬라이더는 위에서 단독 한 줄 */
+  .abgm-volcell .abgm_vol{
+    grid-column: 1 / -1 !important;
+    grid-row: 1 !important;
+    width: 100% !important;
+    margin-top: 2px;
+  }
+
+  /* 숫자 + 락은 아래에서 우측 정렬로 딱 붙게 */
+  .abgm-volcell .abgm_volnum{
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    justify-self: end !important;
+    width: 72px !important;
+  }
+
+  .abgm-volcell .abgm_vol_lock{
+    grid-column: 3 !important;
+    grid-row: 2 !important;
+    justify-self: end !important;
+    width: 34px !important;
+    height: 30px !important;
+  }
+}
+
+/* ===== AutoBGM extension menu buttons (window.html) ===== */
+.autobgm-menublock{
+  margin-top:6px;
+}
+
+.menu_button.autobgm-menu-btn{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:10px;
+  box-sizing:border-box;
+}
+
+.menu_button.autobgm-menu-btn .autobgm-menu-label{
+  flex:1;
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.menu_button.autobgm-menu-btn .autobgm-menu-state{
+  opacity:.8;
+  white-space:nowrap;
+}
+
+.menu_button.autobgm-menu-btn{
+  justify-content:center;
+}
+.menu_button.autobgm-menu-btn .autobgm-menu-state{
+  margin-left:8px;
+}
+
+/* power button: icon pinned to exact center, state text trails to the right */
+#autobgm_enabled_btn{
+  position: relative;
+}
+
+#autobgm_enabled_btn #autobgm_enabled_icon{
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* 상태 텍스트는 중앙 아이콘 오른쪽으로 */
+#autobgm_enabled_btn #autobgm_enabled_state{
+  margin-left: calc(50% + 14px);
+}
+
+.abgm-disabled{
+  opacity:.35;
+  filter: grayscale(1);
+  cursor: not-allowed;
+}
+
+/* ===== AutoBGM modal top controls mobile layout ===== */
+.abgm-top-controls { width: 100%; }
+
+/* 상단 3개 컨트롤 줄: 벽에서 숨 + 버튼간 간격 */
+.abgm-top-row3{
+  padding: 0 10px;          /* 좌/우 벽에서 숨 좀 쉬게 */
+  gap: 6px;                /* 세 덩어리 간격 */
+}
+
+/* 각 영역 자체도 터치하기 쉽게 */
+.abgm-top-item{
+  padding: 6px 8px;         /* 각 덩어리 내부 숨(터치 영역) */
+  border-radius: 10px;
+}
+
+/* 좌/우는 너무 벽으로 쏠리지 않게 */
+.abgm-top-item.left{ justify-content:flex-start; }
+.abgm-top-item.center{ justify-content:center; }
+.abgm-top-item.right{ justify-content:flex-end; }
+
+.abgm-top-item.right select{
+  max-width: 100%;
+}
+
+/* Global volume line */
+/* 글로벌 볼륨 줄도 벽에서 숨 */
+.abgm-top-row1{
+  padding: 0 10px;          /* 좌/우 벽에서 숨 */
+}
+
+/* 슬라이더가 너무 길면 적당히 제한 */
+.abgm-volume-block{
+  max-width: 520px;         /* PC에서 무한히 길어지는 거 방지 */
+  margin: 0 auto;           /* 가운데 정렬 */
+}
+
+/* 모바일에서만: Debug 텍스트 숨기고 아이콘만 남기기 */
+@media (max-width: 520px){
+  .abgm-debug-text{ display:none; }
+  /* debug 라벨이 가운데서 너무 커지면 아이콘 크기만 남기기 */
+  .abgm-top-item.center i{ opacity:.9; }
+}
+
+/* ===== FIX: top 3 controls must stay on ONE line ===== */
+.abgm-top-row3{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  flex-wrap:nowrap !important;   /* 무조건 한 줄 */
+  width:100% !important;
+}
+
+/* 각 칸이 줄 안에서 찌그러질 수 있게 */
+.abgm-top-row3 .abgm-top-item{
+  display:flex !important;
+  align-items:center !important;
+  min-width:0 !important;
+}
+
+/* popup.html에 inline으로 박힌 min-width(160px) 때문에 모바일에서 터짐 → 강제로 무시 */
+.abgm-top-row3 .abgm-top-item.right{
+  min-width:0 !important;
+}
+
+/* Play Mode select도 모바일에서 과하게 커지면 줄바꿈 유발 → 축소 가능하게 */
+.abgm-top-row3 .abgm-top-item.right .abgm-select-slim{
+  min-width:0 !important;
+  width:auto !important;
+  max-width:140px;              /* 필요하면 120px로 더 줄이기 */
+}
+
+/* Default 어쩌고들 */
+.abgm-top-row2{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:nowrap;
+  width:100%;
+  padding: 0 10px;   /* 좌우 벽에서 숨 */
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.abgm-top-row2 .abgm-top-item{
+  display:flex;
+  align-items:center;
+  min-width:0;
+  padding: 6px 8px;
+  border-radius: 10px;
+}
+
+/* Default select 폭 제한 + 말줄임 */
+#abgm_default_select{
+  max-width: 180px;   /* 원하는 값으로 */
+  width: 100%;
+}
+
+/* 셀렉트가 있는 덩어리도 같이 제한 (popup에서 right 블록 쓰는 구조라서) */
+.abgm-top-row2 .abgm-top-item.right{
+  max-width: 240px;   /* 전체 덩어리 제한 */
+  min-width: 0;
+}
+
+/* select 안 텍스트가 길면 ... (브라우저마다 완벽하진 않음) */
+.abgm-top-row2 .abgm-top-item.right select{
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

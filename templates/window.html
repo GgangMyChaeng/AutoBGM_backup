@@ -1,0 +1,92 @@
+<div id="autobgm_settings">
+  <div class="inline-drawer">
+    <div class="inline-drawer-toggle inline-drawer-header">
+      <b>AutoBGM</b>
+      <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
+    </div>
+
+    <div class="inline-drawer-content">
+
+      <!-- 1) Now Playing -->
+      <div class="autobgm-nowplaying" style="margin-top:10px; padding:8px 10px; border:1px solid rgba(255,255,255,.12); border-radius:10px; background:rgba(0,0,0,.18);">
+        <small style="opacity:.75;">Now Playing</small>
+        <div style="display:flex; gap:8px; align-items:center; margin-top:4px;">
+          <b id="autobgm_now_title" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;">(none)</b>
+          <small id="autobgm_now_state" style="opacity:.7; white-space:nowrap;">Stopped</small>
+        </div>
+        <small id="autobgm_now_meta" style="opacity:.65; display:block; margin-top:2px;">—</small>
+        <div id="autobgm_now_debug" class="autobgm-now-debug" style="display:none;"></div>
+
+        
+        <!-- Now Playing controls (side menu) -->
+  <div id="autobgm_now_controls" class="autobgm-now-controls">
+  <button type="button" id="autobgm_now_btn_default" class="menu_button autobgm-now-btn" title="Use Default">
+    ☆
+  </button>
+  <button type="button" id="autobgm_now_btn_play" class="menu_button autobgm-now-btn autobgm-now-btn-play" title="Play / Pause">
+    ⏹️
+  </button>
+  <button type="button" id="autobgm_now_btn_mode" class="menu_button autobgm-now-btn" title="Play Mode">
+    ▶️
+  </button>
+</div>
+      </div>
+
+      <!-- 2) Enabled 버튼 -->
+      <div class="autobgm-menublock" style="margin-top:10px;">
+        <div id="autobgm_enabled_btn" class="menu_button autobgm-menu-btn" title="Enabled">
+          <i id="autobgm_enabled_icon" class="fa-solid fa-power-off"></i>
+          <span id="autobgm_enabled_state" class="autobgm-menu-state">Off</span>
+        </div>
+      </div>
+
+      <!-- 3) 사용방법 버튼 -->
+      <div class="autobgm-menublock">
+        <div id="autobgm_help_toggle" class="menu_button autobgm-menu-btn" title="Help">
+          <i class="fa-solid fa-book"></i>
+        </div><div id="autobgm_help_text" class="autobgm-helptext" style="display:none;">
+          <b># 설명</b>
+  <ul><li>
+    <strong>Now Playing: </strong>
+    현재 재생 중인 곡 등의 상태를 확인하거나 특정 기능들을 간단히 조작할 수 있는 작은 창.
+    키워드 모드를 포함한 다섯 가지 재생 모드 중 무엇인지, 현재 재생 중인 곡은 어느 프리셋의 파일인지,
+    재생 중인지 정지 중인지 등을 확인할 수 있음. 이외에 후술할 디버그 모드를 통해 다른 정보도 확인 가능.
+    <ul>
+      <li>
+        <strong>☆(Use Default: OFF) / ⭐(Use Default: ON): </strong>
+        "use default when no keyword" 기능을 사용할지 여부를 바꿔주는 버튼. 해당 기능은 키워드 모드에서 유의미함.
+        ☆는 해당 기능 비활성화, ⭐는 해당 기능 활성화.
+      </li>
+      <li>
+        <strong>⏹️(Stopped) / ⏸️(Paused) / ▶️(Playing): </strong>
+        현재 재생 상태를 조작할 수 있는 버튼. ⏹️는 현재 확장이 비활성화 상태일 때 뜸.
+        이 상태에서는 재생 버튼이나 재생 모드 조작 버튼이 아예 안 눌릴 거임.
+        작동하려면 확장을 켜주면 됨. ⏸️는 현재 일시정지 상태. ▶️는 현재 재생 중인 상태.
+      </li>
+      <li>
+        <strong>▶️(Manual) / 🔂(Loop One) / 🔁(Loop List) / 🔀(Random) / 💬(Keyword): </strong>
+        재생 모드를 바꿀 수 있는 버튼.
+        ▶️는 단일 모드로, 한 곡 재생해두면 종료 후 그대로 끝남.
+        🔂는 단일 무한 재생 모드(Loop One).
+        🔁는 현재 프리셋의 BGM들을 Sort로 설정한 순서대로 무한 재생해 주는 리스트 루프 모드(Loop List).
+        🔀는 현재 프리셋의 BGM들을 랜덤(Random)으로 재생해 주는 모드.
+        💬는 키워드 인식 기반의 로직에 따라 재생해 주는 모드(Keyword).
+        키워드 모드에 대한 자세한 설명은 "Modal" 하위 항목에 있음.
+      </li>
+    </ul>
+  <li><strong>Enabled(전원 모양): </strong>해당 확장을 활성화 / 비활성화 시킬 수 있음</li>
+  <li><strong>Settings(톱니바퀴): </strong>해당 확장의 모달을 열어 상세 설정을 할 수 있음</li>
+</ul>
+        </div>
+      </div>
+
+      <!-- 4) Settings 버튼 -->
+      <div class="autobgm-menublock" style="margin-top:8px;">
+        <div id="autobgm_open" class="menu_button autobgm-menu-btn" title="Settings">
+          <i class="fa-solid fa-gear"></i>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

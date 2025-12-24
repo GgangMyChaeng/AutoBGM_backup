@@ -1,0 +1,411 @@
+<!-- templates/popup.html -->
+<div class="autobgm-modal">
+  <div class="autobgm-modal-h">
+    <b>AutoBGM Settings</b>
+    <div class="menu_button" id="abgm_modal_close" title="Close">
+      <i class="fa-solid fa-xmark fa-lg"></i>
+    </div>
+  </div>
+
+<!-- 상단 옵션 -->
+<div class="abgm-top-controls">
+
+  <!-- Now Playing -->
+    <div class="abgm-nowplaying" style="display:flex; gap:10px; align-items:baseline; flex-wrap:wrap; padding:8px 10px; border:1px solid rgba(255,255,255,.12); border-radius:12px; background:rgba(0,0,0,.18); margin:10px 0;">
+      <small style="opacity:.75;">Now Playing</small>
+      <b id="abgm_now_title" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%;">(none)</b>
+      <small id="abgm_now_state" style="opacity:.7;">Stopped</small>
+      <small id="abgm_now_meta" style="opacity:.65;">—</small>
+    </div>
+
+  <!-- 1줄: Keyword / Debug / Play Mode -->
+  <div class="abgm-top-row3">
+
+    <!-- Keyword (좌측) -->
+    <label class="checkbox_label abgm-top-item left" style="margin:0;">
+      <input type="checkbox" id="abgm_keywordMode">
+      <small>Keyword Mode</small>
+    </label>
+
+    <!-- Debug (중앙: 아이콘 + (PC에서만 텍스트)) -->
+    <label class="checkbox_label abgm-top-item center" style="margin:0;" title="Debug Mode">
+      <input type="checkbox" id="abgm_debugMode">
+      <i class="fa-solid fa-bug"></i>
+      <small class="abgm-debug-text">Debug</small>
+    </label>
+
+    <!-- Play Mode (우측) -->
+    <div class="abgm-top-item right" style="min-width:160px;">
+      <small style="opacity:.85;">Play Mode</small>
+      <select id="abgm_playMode" class="abgm-select abgm-select-slim" title="Works when Keyword Mode is OFF">
+        <option value="manual">Manual</option>
+        <option value="loop_one">Loop One</option>
+        <option value="loop_list">Loop List</option>
+        <option value="random">Random</option>
+      </select>
+    </div>
+  </div>
+  
+   <!-- 2줄: Default 어쩌고 -->
+<div class="abgm-top-row2">
+
+  <!-- Use Default (좌측) -->
+  <label class="checkbox_label abgm-top-item left" style="margin:0;">
+    <input type="checkbox" id="abgm_useDefault">
+    <small>Use Default when no keyword</small>
+  </label>
+
+  <!-- Default select (우측) -->
+  <div class="abgm-top-item right" style="min-width:160px;">
+    <small style="opacity:.85;">Default</small>
+    <select id="abgm_default_select" class="abgm-select"></select>
+  </div>
+</div>
+
+  <!-- 3줄: Global Volume -->
+  <div class="abgm-top-row1">
+    <div class="abgm-volume-block">
+      <small style="opacity:.85;">Global Volume</small>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <input id="abgm_globalVol" type="range" min="0" max="100" value="70" class="abgm-range">
+        <small id="abgm_globalVolText" style="opacity:.85; width:38px; text-align:right;">70</small>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+    <div class="abgm-grid">
+      <!-- LEFT: Presets -->
+      <section class="abgm-card">
+        <div class="abgm-card-h">
+          <b>Presets</b>
+          <div class="abgm-row">
+            <div class="menu_button" id="abgm_preset_add" title="New Preset">
+              <i class="fa-solid fa-plus"></i>
+            </div>
+            <div class="menu_button" id="abgm_preset_del" title="Delete Preset">
+              <i class="fa-solid fa-trash"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="abgm-row" style="gap:8px;">
+          <select id="abgm_preset_select" class="abgm-select"></select>
+        </div>
+
+        <div class="abgm-row" style="gap:8px; margin-top:8px;">
+          <input id="abgm_preset_name" class="text_pole" placeholder="Preset name" style="flex:1;">
+          <div class="menu_button" id="abgm_preset_rename" title="Rename">
+            <i class="fa-solid fa-pen"></i>
+          </div>
+        </div>
+
+<div class="abgm-row abgm-preset-actions" style="gap:10px; margin-top:10px; flex-wrap:wrap; align-items:center;">
+  <div class="menu_button" id="abgm_bind_open" title="Bind this preset to character cards">
+    <i class="fa-solid fa-link"></i> Bind
+  </div>
+
+  <div class="menu_button" id="abgm_modal_help_toggle" title="Modal help">
+    <i class="fa-solid fa-book"></i>
+  </div>
+  
+<div class="menu_button" id="abgm_preset_help_toggle" title="Preset help">
+  <i class="fa-solid fa-book"></i>
+</div>
+
+  <!-- 오른쪽으로 밀기 -->
+  <div class="abgm-row" style="gap:10px; margin-left:auto; flex-wrap:wrap; align-items:center;">
+    <div class="menu_button" id="abgm_import"><i class="fa-solid fa-file-import"></i> Import</div>
+    <div class="menu_button" id="abgm_export"><i class="fa-solid fa-file-export"></i> Export</div>
+  </div>
+
+  <input id="abgm_import_file" type="file" accept="application/json" style="display:none;">
+</div>
+
+        <!-- 모달 설명 -->
+        <div class="abgm-minihelp" id="abgm_modal_help" style="display:none;">
+          <b># AutoBGM 설명</b>
+          <ul>
+  <li>
+    <strong>Now Playing: </strong>
+    현재 재생 중인 곡이나 상태를 확인할 수 있는 작은 창. 키워드 모드를 포함한 다섯 가지 재생 모드 중 무엇인지,
+    현재 재생 중인 곡은 어느 프리셋에 속했는지 확인할 수 있음. 이외에 후술할 디버그 모드를 통해 다른 정보도 확인 가능.
+  </li>
+  <li>
+    <strong>Keyword Mode: </strong>
+    AI의 마지막 메시지에서 키워드가 인식되면 자동으로 해당 BGM이 조건(키워드 인식, 우선도 등)에 따라 자동 재생되는 기능임.
+    키워드 트리거 방식 기반이므로 키워드 모드를 활성화하는 동안은 모달 창의 개별 재생(Play), 재생 모드(Play Mode) 버튼은 자동으로 비활성화됨.
+  </li>
+  <li>
+    <strong>디버그 모드(Debug Mode): </strong>
+    지금 확장이 제대로 돌아가고 있는지 <strong>Now Playing</strong>에서 확인할 수 있음.
+    기본적으로 보이는 건 <strong>asstLen</strong>이고, 키워드 모드 활성화 시 <strong>kw</strong>와 <strong>hit</strong>가 추가로 보임.
+    즉, 키워드 설정을 해두고 제대로 매칭됐는지 확인하는 용도로 사용 가능.
+    <ul>
+      <li>
+        <strong>asstLen: </strong>
+        마지막 AI 메시지의 공백 및 줄바꿈 포함 글자 수(UTF-16 코드 유닛 기준).
+        키워드 모드가 아닐 때는 글자 수 뒤에 "kw"와 "hit" 대신, 현재 인식한 컨텍스트의 초반 몇 글자를 보여줌.
+      </li>
+      <li><strong>kw: </strong>현재 마지막 AI 메시지 기준으로 어떤 키워드들이 트리거 됐는지 보여줌</li>
+      <li><strong>hit: </strong>로직에 따라 <strong>최종적으로</strong> 결정된 곡(1개)을 보여줌</li>
+    </ul>
+  </li>
+  <li>
+    <strong>재생 모드(Play Mode): </strong>
+    키워드 모드 비활성화 시 사용할 수 있는 모드. Manual(일반 재생), Loop One(단일 무한), Loop List(리스트 무한), Random(랜덤)이 있음
+    <ul>
+      <li><strong>Manual(일반 재생): </strong>한 곡 재생 후 종료되면 그대로 끝남</li>
+      <li><strong>Loop One(단일 무한 재생): </strong>한 곡만 무한 자동 재생</li>
+      <li><strong>Loop List(리스트 무한 재생): </strong>프리셋의 BGM List 순서대로(Sort로 조정 가능) 무한 재생</li>
+      <li>
+        <strong>Random(랜덤 재생): </strong>
+        프리셋의 BGM을 랜덤 순서로 무한 재생. 활성화 방법은 2가지가 있음
+        <ul>
+          <li>🍏 아무 곡이나 재생 → Play Mode를 Manual에서 Random으로 변경 (첫 곡을 원하는 곡으로 시작 가능)</li>
+          <li>🍏 Play Mode를 Random으로 설정 → Enabled로 확장을 껐다 켜기</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <strong>Use Default when no keyword: </strong>
+    키워드 모드 활성화 중, AI의 마지막 지문에 인식된 키워드가 <strong>없을 때</strong>
+    이전 BGM 유지 대신 Default BGM이 재생되도록 하는 기능임.
+    타이틀곡(Default BGM)을 설정해둬도 이전 곡을 유지하고 싶으면 이 기능을 끄면 됨.
+  </li>
+  <li>
+    <strong>Default: </strong>
+    프리셋 타이틀곡 설정 기능. "키워드 모드" + "Use Default when no keyword" 활성화 중,
+    AI 마지막 컨텍스트에 인식된 키워드가 없을 때 재생됨.
+    키워드 모드 킨 상태에서 Default도 없고 키워드도 없으면 이전 곡 재생이 유지됨.
+  </li>
+  <li>
+    <strong>Global Volume(전체 볼륨): </strong>
+    BGM별 상세 볼륨을 설정해놨어도, Global Volume으로 전체적인 소리 크기를 한 번 더 조정할 수 있음.
+    프리셋 mp3들의 음량 편차 때문에 쓰기 불편한 상황을 줄이기 위한 쿠션 기능이라고 보면 됨.
+    (세부 볼륨은 BGM List에서 따로 조정하면 됨)
+  </li>
+</ul>
+        </div>
+
+        <!-- 프리셋 설명 -->
+      <div class="abgm-minihelp" id="abgm_preset_help" style="display:none;">
+          <b># Presets 설명</b>
+<ul>
+  <li><strong>프리셋 추가(+): </strong>새 프리셋 생성 기능</li>
+  <li>
+    <strong>삭제(쓰레기통): </strong>
+    현재 프리셋 삭제 기능 → 실수 방지용 쿠션 창(확인 메시지) 뜸
+  </li>
+  <li>
+    <strong>수정(연필): </strong>
+    현재 프리셋 명칭 수정 기능 → 입력창에 변경할 명칭 적고 연필 누르면 됨
+  </li>
+  <li>
+    <strong>Bind(Bind this preset to character cards): </strong>
+    특정 프리셋을 여러 캐릭터에 종속시키는 기능. Bind 해둔 캐릭터의 채팅에 들어가면 해당 프리셋으로 자동 연결됨
+    (확장 비활성화 상태면 동작 안 함)
+  </li>
+  <li>
+    <strong>Import: </strong>
+    (이름)_AutoBGM.json을 삽입하면, 프리셋 설정(프리셋명/엔트리명/파일명 또는 URL/키워드/우선도/볼륨)만 불러와짐.<br>
+    mp3 파일은 따로 추가해야 하고, 파일명이 프리셋에 등록된 것과 일치하면 정상 동작함
+  </li>
+  <li>
+    <strong>Export: </strong>
+    위 설정(프리셋명/엔트리명/파일명 또는 URL/키워드/우선도/볼륨)이 저장된 json 파일이 생성됨.<br>
+    mp3 파일까지 같이 공유하려면 사용자가 별도로 세팅해야 함
+  </li>
+</ul>
+        </div>
+      </section>
+
+<!-- RIGHT: BGM List -->
+<section class="abgm-card">
+  <div class="abgm-card-h">
+    <b>BGM List</b>
+    <div class="abgm-row">
+      <div class="menu_button" id="abgm_bgm_add" title="Add MP3">
+        <i class="fa-solid fa-music"></i>
+      </div>
+      <div class="menu_button" id="abgm_zip_add" title="Add ZIP">
+        <i class="fa-solid fa-file-zipper"></i>
+      </div>
+      <input id="abgm_zip_file" type="file" accept=".zip,application/zip" style="display:none;">
+    </div>
+  </div>
+
+  <!-- ===== BGM List controls (2 rows + help) ===== -->
+
+  <!-- Row 1: selected count (left) / sort (right) -->
+  <div class="abgm-row abgm-bgmbar1" style="margin-top:8px;">
+    <small id="abgm_selected_count" style="opacity:.75;">0 selected</small>
+
+    <div class="abgm-inline" style="margin-left:auto; min-width:240px;">
+      <small style="opacity:.85;">Sort</small>
+      <select id="abgm_sort" class="abgm-select abgm-select-slim">
+        <option value="priority_desc">Priority (High → Low)</option>
+        <option value="priority_asc">Priority (Low → High)</option>
+        <option value="name_asc">Name (A → Z)</option>
+        <option value="name_desc">Name (Z → A)</option>
+        <option value="added_asc">Added (old → new)</option>
+        <option value="added_desc">Added (new → old)</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Row 2: delete+Vol reset+help (left) / add+expand+collapse+lock (right) -->
+<div class="abgm-row abgm-bgmbar2" style="margin-top:8px; align-items:center; gap:10px;">
+  <div class="menu_button" id="abgm_delete_selected" title="Delete selected entries">
+    <i class="fa-solid fa-trash"></i> Ent
+  </div>
+
+  <!-- Vol reset -->
+<div class="menu_button" id="abgm_reset_vol_selected" title="Reset volume of selected">
+  <i class="fa-solid fa-rotate-left"></i> Vol
+</div>
+
+  <!-- help 버튼 -->
+  <div class="menu_button" id="abgm_bgm_help_toggle" title="BGM List help">
+    <i class="fa-solid fa-book"></i>
+  </div>
+
+    <div class="menu_button" id="abgm_bgm_entry_help_toggle" title="BGM List Entry help">
+    <i class="fa-solid fa-book"></i>
+  </div>
+
+  <!-- 우측 정렬 영역 -->
+  <div class="abgm-row" style="margin-left:auto; gap:10px; align-items:center;">
+    <!-- 엔트리 추가 버튼: 책 버튼 원래 자리로 -->
+    <div class="menu_button" id="abgm_bgm_add_row" title="Add empty entry">
+      <i class="fa-solid fa-plus"></i>
+    </div>
+
+    <div class="menu_button" id="abgm_expand_all" title="Expand all rows">
+      <i class="fa-solid fa-angles-down"></i>
+    </div>
+    <div class="menu_button" id="abgm_collapse_all" title="Collapse all rows">
+      <i class="fa-solid fa-angles-up"></i>
+    </div>
+    <div class="menu_button" id="abgm_lock_all_vol" title="Lock all volume sliders">
+      <i class="fa-solid fa-lock"></i>
+    </div>
+  </div>
+
+  <input id="abgm_bgm_file" type="file" accept="audio/mpeg,audio/mp3" style="display:none;">
+</div>
+
+  <!-- 브금 리스트 설명 -->
+  <div class="abgm-minihelp" id="abgm_bgm_help" style="display:none;">
+    <b># BGM List 설명</b>
+    <ul>
+            <li><strong>MP3 파일 추가(음표): </strong>특정 경로에 있는 MP3 파일을 인식시켜줄 수 있음</li>
+            <li><strong>ZIP 파일 추가(ZIP): </strong>특정 경로에 있는 ZIP 파일을(MP3 파일이 들어가 있는 ZIP) 인식시켜줄 수 있음</li>
+            <li><strong>Sort:</strong> BGM List의 파일 정렬 순서 설정 기능임. 참고로 우선도 순은 동일 값일 시 항목 이름 순으로 정렬됨.</li>
+            <li><strong>Ent(쓰레기통):</strong> 선택한 BGM들을 삭제해 주는 기능임. 버튼 상단에는 몇 개의 항목을 선택해뒀는지 "N selected"이라고 뜰 거임. 그리고 실수로 삭제하지 말라고 쿠션 창(삭제 확인 메시지) 뜰 거임.</li>
+            <li><strong>Vol(초기화):</strong> 선택한 BGM들의 볼륨 설정을 초기화해 주는 기능임. 역시 버튼 상단에는 몇 개의 항목을 선택해뒀는지 "N selected"이라고 뜸. 얘도 실수로 삭제하지 말라고 쿠션 창(초기화 확인 메시지) 뜰 거임. 참고로 "<strong>Lock all volume sliders</strong>" 기능 활성화 여부와 무관하게 무조건 초기화해 주니 유의 바람.</li>
+            <li><strong>Add empty entry(+): </strong>빈 항목을 만들 수 있는 버튼. 생성된 항목은 Source에 오디오 직링(url)을 입력하거나, Change MP3 버튼을 통해 BGM 연결 가능.</li>
+            <li><strong>Expand all rows(하단): </strong>BGM List 항목들을 전부 펼쳐주는 기능임</li>
+            <li><strong>Collapse all rows(상단): </strong>BGM List 항목들을 전부 접어주는 기능임</li>
+            <li><strong>Lock all volume sliders(자물쇠):</strong> 각 BGM 볼륨을 설정해 주는 슬라이더를 잠가주는 기능임 → 키워드나 우선도 설정하다가 실수로 볼륨 설정 바꿔버리는 경우를 방지해 줌, 다만 볼륨 설정 입력창까지 잠가주진 않으니 그 점 유의 바람. 볼륨 입력창은 눌러서 수치를 입력해야 바뀌니까 굳이 실수할 거라 생각은 안 하고, 디테일한(터치로 하기 불편한 1 단위 조절이라든지) 설정을 할 수 있게 안 잠기게 해둔 거임.</li>
+        </ul>
+  </div>
+  <div class="abgm-minihelp" id="abgm_bgm_entry_help" style="display:none;">
+    <b># BGM List Entry 설명</b>
+    <ul>
+  <li><strong>File: </strong>해당 항목의 이름을 바꿀 수 있는 기능</li>
+  <li><strong>Play: </strong>누르면 재생됨</li>
+  <li>
+    <strong>펼치기/접기(More): </strong>
+    BGM File 각각의 설정을 위한 기능. 항목별로 펼치거나 접을 수 있음
+    <ul>
+      <li><strong>Keywords: </strong>해당 BGM이 트리거(재생) 될 키워드 매칭 기능. 쉼표로 구분해 다수 키워드 매칭 가능</li>
+      <li>
+        <strong>Source: </strong>
+        해당 항목에 연결된 파일명 혹은 직링 URL이 보이거나(또는 입력하는) 칸.
+        MP3를 먹여둬 파일명이 적힌 경우 함부로 수정하면 유령 항목이 되니,
+        반드시 "(원본파일명).mp3" 또는 올바른 직링 URL을 유지해야 함
+      </li>
+
+      <li><strong>Change MP3: </strong>해당 항목에 mp3 파일을 먹이거나 교체하는 기능</li>
+      <li>
+        <strong>Priority: </strong>
+        여러 키워드가 인식됐을 때 어떤 BGM을 재생할지 결정하는 값.
+        우선도 숫자가 가장 큰 BGM이 재생됨
+      </li>
+    </ul>
+  </li>
+  <li>
+    <strong>Volume: </strong>
+    mp3 파일들의 소리 설정을 각각 따로 할 수 있게 해주는 기능
+    <ul>
+      <li><strong>슬라이더: </strong>좌측(0)~우측(100). 터치로 조정 가능</li>
+      <li><strong>입력칸: </strong>1 단위 같은 미세 조절이 필요할 때 직접 수치 입력</li>
+    </ul>
+  </li>
+  <li>
+    <strong>자물쇠(Lock slider): </strong>
+    실수로 슬라이더를 건드려 볼륨이 바뀌는 걸 방지하는 기능. 눌러서 잠금/해제 가능
+  </li>
+  <li>
+    <strong>삭제(쓰레기통): </strong>
+    해당 항목을 리스트에서 삭제하는 기능 → 실수 방지용 쿠션 창(확인 메시지) 뜸
+  </li>
+</ul>
+    </div>
+
+  <!-- 집 나갔던 파일들 -->
+  <div class="abgm-tablewrap">
+    <table class="abgm-table">
+      <thead>
+        <tr>
+          <th class="abgm-col-check">
+            <input type="checkbox" id="abgm_sel_all" title="Select all">
+          </th>
+          <th>File</th>
+          <th style="width:92px;">Play</th>
+          <th style="width:64px;">More</th>
+        </tr>
+      </thead>
+      <tbody id="abgm_bgm_tbody"></tbody>
+    </table>
+  </div>
+</section>
+    </div>
+  
+  <!-- Bind Overlay (covers modal) -->
+  <div id="abgm_bind_overlay" style="
+  display:none;
+  position:fixed;
+  left:0; top:0;
+  width:100vw;
+  height:100vh;
+  height:100dvh;
+  z-index:9999999;
+  align-items:center;
+  justify-content:center;
+  padding:12px;
+  padding-top:calc(12px + env(safe-area-inset-top));
+  padding-bottom:calc(12px + env(safe-area-inset-bottom));
+  box-sizing:border-box;
+  background:rgba(0,0,0,.55);
+">
+
+    <div style="width:min(560px, calc(100vw - 24px)); height:min(70dvh, 560px); background:rgba(20,20,20,.98); border:1px solid rgba(255,255,255,.14); border-radius:14px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,.55);">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 12px 10px 12px; border-bottom:1px solid rgba(255,255,255,.10); gap:10px;">
+        <b id="abgm_bind_title">Bind Preset</b>
+        <div class="menu_button" id="abgm_bind_close" title="Close">
+          <i class="fa-solid fa-xmark fa-lg"></i>
+        </div>
+      </div>
+
+      <div style="padding:10px 12px; height:calc(100% - 52px); display:flex; flex-direction:column; gap:10px;">
+        <small id="abgm_bind_sub" style="opacity:.75;">Select a character</small>
+        <div id="abgm_bind_list" style="flex:1; overflow:auto; display:flex; flex-direction:column; gap:8px; padding:2px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
