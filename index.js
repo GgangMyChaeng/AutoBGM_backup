@@ -523,9 +523,9 @@ function setNowControlsLocked(locked) {
   const root = document.getElementById("autobgm-root");
   if (!root) return;
 
-  const btnPlay = root.querySelector("#autobgm_np_play");
-  const btnDef  = root.querySelector("#autobgm_np_default");
-  const selMode = root.querySelector("#autobgm_np_mode");
+  const btnPlay = root.querySelector("#autobgm_now_btn_play");
+  const btnDef  = root.querySelector("#autobgm_now_btn_default");
+  const btnMode = root.querySelector("#autobgm_now_btn_mode");
 
   const lockBtn = (el, on) => {
     if (!el) return;
@@ -538,12 +538,7 @@ function setNowControlsLocked(locked) {
 
   lockBtn(btnPlay, locked);
   lockBtn(btnDef, locked);
-
-  if (selMode) {
-    selMode.disabled = !!locked;
-    selMode.classList.toggle("abgm-disabled", !!locked);
-    selMode.title = locked ? "Disabled (Extension Off)" : "";
-  }
+  lockBtn(btnMode, locked);
 }
 
 function bindNowPlayingEventsOnce() {
@@ -1766,13 +1761,13 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
       saveSettingsDebounced();
       return;
     }
-    
-    if (e.target.classList.contains("abgm_source")) {
+
+  // Source (정규화된 거)
+  if (e.target.classList.contains("abgm_source")) {
   const oldKey = String(bgm.fileKey ?? "");
   const newKey = String(e.target.value || "").trim();
   bgm.fileKey = newKey;
 
-  // default가 이 파일을 가리키고 있었으면 같이 바꿔줌
   if (preset.defaultBgmKey === oldKey) preset.defaultBgmKey = newKey;
 
   saveSettingsDebounced();
@@ -1836,19 +1831,6 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
     const preset = getActivePreset(settings);
     const bgm = preset.bgms.find((x) => x.id === id);
     if (!bgm) return;
-
-// Source (fileKey or url)
-if (e.target.classList.contains("abgm_source")) {
-  const oldKey = bgm.fileKey;
-  const newKey = String(e.target.value || "").trim();
-  bgm.fileKey = newKey;
-
-  if (preset.defaultBgmKey === oldKey) preset.defaultBgmKey = newKey;
-
-  saveSettingsDebounced();
-  renderDefaultSelect(root, settings);
-  return;
-}
 
     // change mp3 (swap only this entry's asset)
 if (e.target.closest(".abgm_change_mp3")) {
