@@ -2183,11 +2183,17 @@ async function mount() {
       const s = ensureSettings();
       const on = !!s.debugMode;
       if (!debugBtn) return;
+      
       debugBtn.classList.toggle("abgm-debug-on", on);
       debugBtn.title = on ? "Debug: ON" : "Debug: OFF";
-      // 원하면 아이콘도
-      // debugBtn.textContent = on ? "🐞" : "🐛";
+
+      const icon = debugBtn.querySelector("i");
+      if (icon) {
+        icon.classList.toggle("fa-bug", !on);
+        icon.classList.toggle("fa-bug-slash", on); // 싫으면 이 줄 빼고 bug만 써도 됨
+      }
     };
+
     syncEnabledUI();
     syncDebugUI();
     
@@ -2205,12 +2211,7 @@ async function mount() {
       s.debugMode = !s.debugMode;
       __abgmDebugMode = !!s.debugMode;
       
-      // 디버그 즉시 반영용 (엔진틱 기다리지 않게)
-      if (__abgmDebugMode) {
-        __abgmDebugLine = __abgmDebugLine || "debug on";
-        } else {
-          __abgmDebugLine = "";
-        }
+      if (!__abgmDebugMode) __abgmDebugLine = ""; // 끌 때 즉시 비우기
       
       saveSettingsDebounced();
       syncDebugUI();
