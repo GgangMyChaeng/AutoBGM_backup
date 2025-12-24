@@ -2204,7 +2204,14 @@ async function mount() {
       const s = ensureSettings();
       s.debugMode = !s.debugMode;
       __abgmDebugMode = !!s.debugMode;
-      if (!__abgmDebugMode) __abgmDebugLine = "";
+      
+      // 디버그 즉시 반영용 (엔진틱 기다리지 않게)
+      if (__abgmDebugMode) {
+        __abgmDebugLine = __abgmDebugLine || "debug on";
+        } else {
+          __abgmDebugLine = "";
+        }
+      
       saveSettingsDebounced();
       syncDebugUI();
       updateNowPlayingUI();
