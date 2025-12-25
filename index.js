@@ -1644,13 +1644,27 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
     rerenderAll(root, settings);
   });
 
-  root.querySelector("#abgm_preset_rename")?.addEventListener("click", () => {
-    const name = root.querySelector("#abgm_preset_name")?.value?.trim();
-    if (!name) return;
-    getActivePreset(settings).name = name;
-    saveSettingsDebounced();
-    rerenderAll(root, settings);
+  // 프리셋 이름 변경
+  root.querySelector("#abgm_preset_rename_btn")?.addEventListener("click", async () => {
+  const preset = getActivePreset(settings);
+  const out = await abgmPrompt(root, `Preset name 변경`, {
+    title: "Rename Preset",
+    okText: "확인",
+    cancelText: "취소",
+    resetText: "초기화",
+    initialValue: preset?.name ?? "",
+    placeholder: "Preset name...",
   });
+
+  if (out === null) return;
+  const name = String(out ?? "").trim();
+  if (!name) return;
+
+  preset.name = name;
+  saveSettingsDebounced();
+  rerenderAll(root, settings);
+  updateNowPlayingUI();
+});
 
     // ===== Preset Binding UI (bind preset to character cards) =====
   const bindOpen = root.querySelector("#abgm_bind_open");
