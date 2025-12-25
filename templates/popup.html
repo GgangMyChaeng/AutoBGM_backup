@@ -50,12 +50,38 @@
           <select id="abgm_preset_select" class="abgm-select"></select>
         </div>
 
-        <div class="abgm-row" style="gap:8px; margin-top:8px;">
-          <input id="abgm_preset_name" class="text_pole" placeholder="Preset name" style="flex:1;">
-          <div class="menu_button" id="abgm_preset_rename" title="Rename">
-            <i class="fa-solid fa-pen"></i>
-          </div>
-        </div>
+<!-- Default select -->
+<div class="abgm-row abgm-row-between">
+  <!-- Default select (좌측) -->
+  <div class="abgm-top-item" style="min-width:160px;">
+    <small style="opacity:.85;">Default</small>
+    <select id="abgm_default_select" class="abgm-select"></select>
+  </div>
+
+  <!-- Rename (우측) -->
+  <div class="abgm-top-item" style="min-width:auto;">
+    <small style="opacity:.85;">&nbsp;</small>
+    <div id="abgm_preset_rename_btn" class="menu_button abgm-iconbtn" title="Rename Preset">
+      <i class="fa-solid fa-pen"></i>
+    </div>
+  </div>
+</div>
+
+<!-- Global Volume (preset select 하단) -->
+<div class="abgm-top-row1">
+  <div class="abgm-volume-block">
+    <small style="opacity:.85;">Global Volume</small>
+    <div class="abgm-vol-row">
+      <input id="abgm_globalVol" type="range" min="0" max="100" value="70" class="abgm-range">
+      <small id="abgm_globalVolText" style="opacity:.85; width:38px; text-align:right;">70</small>
+
+      <!-- Lock 버튼 추가 -->
+      <div id="abgm_globalVol_lock" class="menu_button abgm-iconbtn" title="Lock Global Volume">
+        <i class="fa-solid fa-lock-open"></i>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="abgm-row abgm-preset-actions" style="gap:10px; margin-top:10px; flex-wrap:wrap; align-items:center;">
   <div class="menu_button" id="abgm_bind_open" title="Bind this preset to character cards">
