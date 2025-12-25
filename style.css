@@ -215,6 +215,19 @@ body.autobgm-modal-open{ overflow:hidden; }
   min-width:200px;
 }
 
+.abgm-row-between{
+  display:flex;
+  align-items:flex-end; /* small 라벨 기준으로 바닥 맞춤 */
+  justify-content:space-between;
+  gap:10px;
+}
+
+.abgm-vol-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
 .abgm-range{ width:180px; }
 
 .abgm-hr{
