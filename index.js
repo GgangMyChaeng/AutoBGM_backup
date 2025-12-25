@@ -262,7 +262,6 @@ function abgmPrompt(containerOrDoc, message, {
     <button class="menu_button abgm-confirm-cancel" type="button">취소</button>
   </div>
 </div>
-</div>
     `;
 
     const ta = wrap.querySelector(".abgm-prompt-text");
