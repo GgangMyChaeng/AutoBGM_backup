@@ -426,8 +426,6 @@ Object.values(s.presets).forEach((p) => {
     b.priority ??= 0;
     b.volume ??= 1.0;
     b.volLocked ??= false;
-
-    // 라이센스/설명 텍스트
     b.license ??= "";
   });
 });
@@ -1392,6 +1390,7 @@ function initModal(overlay) {
   const pm = root.querySelector("#abgm_playMode");
   const gv = root.querySelector("#abgm_globalVol");
   const gvText = root.querySelector("#abgm_globalVolText");
+  const gvLock = root.querySelector("#abgm_globalVol_lock");
   const useDef = root.querySelector("#abgm_useDefault");
 
   if (kw) kw.checked = !!settings.keywordMode;
@@ -1428,15 +1427,45 @@ function initModal(overlay) {
     });
   }
 
+  // ===== Global Volume + Lock =====
+  settings.globalVolLocked ??= false; // 안전빵(ensureSettings에도 넣는게 정석)
+
+  const syncGlobalVolUI = () => {
+    const locked = !!settings.globalVolLocked;
+
+    if (gv) gv.disabled = locked;
+
+    if (gvLock) {
+      gvLock.classList.toggle("abgm-locked", locked);
+      gvLock.title = locked ? "Global Volume Locked" : "Lock Global Volume";
+
+      const icon = gvLock.querySelector("i");
+      if (icon) {
+        icon.classList.toggle("fa-lock", locked);
+        icon.classList.toggle("fa-lock-open", !locked);
+      }
+    }
+  };
+
   if (gv) gv.value = String(Math.round((settings.globalVolume ?? 0.7) * 100));
   if (gvText) gvText.textContent = gv?.value ?? "70";
+  syncGlobalVolUI();
 
   gv?.addEventListener("input", (e) => {
+    if (settings.globalVolLocked) return; // 락이면 입력 무시
+
     const v = Number(e.target.value);
     settings.globalVolume = Math.max(0, Math.min(1, v / 100));
     if (gvText) gvText.textContent = String(v);
+
     saveSettingsDebounced();
     engineTick();
+  });
+
+  gvLock?.addEventListener("click", () => {
+    settings.globalVolLocked = !settings.globalVolLocked;
+    saveSettingsDebounced();
+    syncGlobalVolUI();
   });
 
   if (useDef) useDef.checked = !!settings.useDefault;
