@@ -396,34 +396,36 @@ function ensureSettings() {
   s.debugMode ??= false;
 
   // 프리셋/곡 스키마 보정 + 구버전 변환
-  Object.values(s.presets).forEach((p) => {
-    p.defaultBgmKey ??= "";
-    p.bgms ??= [];
+Object.values(s.presets).forEach((p) => {
+  p.defaultBgmKey ??= "";
+  p.bgms ??= [];
 
-    // 구버전: preset.defaultBgmId가 있으면 -> defaultBgmKey로 변환
-    if (p.defaultBgmId && !p.defaultBgmKey) {
-      const hit = p.bgms.find((b) => b.id === p.defaultBgmId);
-      if (hit?.fileKey) p.defaultBgmKey = hit.fileKey;
-      else if (hit?.name) p.defaultBgmKey = `${hit.name}.mp3`;
-      delete p.defaultBgmId;
+  // 구버전: preset.defaultBgmId가 있으면 -> defaultBgmKey로 변환
+  if (p.defaultBgmId && !p.defaultBgmKey) {
+    const hit = p.bgms.find((b) => b.id === p.defaultBgmId);
+    if (hit?.fileKey) p.defaultBgmKey = hit.fileKey;
+    else if (hit?.name) p.defaultBgmKey = `${hit.name}.mp3`;
+    delete p.defaultBgmId;
+  }
+
+  // bgm들 스키마 보정
+  p.bgms.forEach((b) => {
+    b.id ??= uid();
+
+    if (!b.fileKey) {
+      if (b.name) b.fileKey = `${b.name}.mp3`;
+      else b.fileKey = "";
     }
 
-    // bgm들 스키마 보정
-    p.bgms.forEach((b) => {
-      b.id ??= uid();
-      if (!b.fileKey) {
-        if (b.name) b.fileKey = `${b.name}.mp3`;
-        else b.fileKey = "";
-      }
-      b.keywords ??= "";
-      b.priority ??= 0;
-      b.volume ??= 1.0;
-      b.volLocked ??= false;
-      // 라이센스 및 설명 텍스트
-      b.license ??= ""; // or b.licenseText ??= ""
-});
-    });
+    b.keywords ??= "";
+    b.priority ??= 0;
+    b.volume ??= 1.0;
+    b.volLocked ??= false;
+
+    // 라이센스/설명 텍스트
+    b.license ??= "";
   });
+});
 
 // 구버전: settings.defaultBgmId 같은 전역 값 남아있으면 제거 (있어도 안 쓰게)
   if (s.defaultBgmId) delete s.defaultBgmId;
@@ -1781,7 +1783,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
       preset.bgms.push({
         id: uid(),
         fileKey,
-        name: basenameNoExt(fileKey),
+        name: basenameNoExt(fk),
         keywords: "",
         priority: 0,
         volume: 1.0,
@@ -1935,16 +1937,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
     const bgm = preset.bgms.find((x) => x.id === id);
     if (!bgm) return;
 
-    // change mp3 (swap only this entry's asset)
-if (e.target.closest(".abgm_change_mp3")) {
-  const detailRow = tr.classList.contains("abgm-bgm-detail")
-    ? tr
-    : tr.closest("tr.abgm-bgm-detail") || tr;
-
-  const fileInput = detailRow.querySelector(".abgm_change_mp3_file");
-  if (!fileInput) return;
-
-  // license / description edit
+      // license / description edit
 if (e.target.closest(".abgm_license_btn")) {
   const current = String(bgm.license ?? "");
   const out = await abgmPrompt(root, `License / Description (이 엔트리에만 저장됨)`, {
@@ -1958,12 +1951,20 @@ if (e.target.closest(".abgm_license_btn")) {
 
   // 취소면 null
   if (out === null) return;
-
   bgm.license = String(out ?? "").trim();
   saveSettingsDebounced();
   try { updateNowPlayingUI(); } catch {}
   return;
 }
+
+    // change mp3 (swap only this entry's asset)
+if (e.target.closest(".abgm_change_mp3")) {
+  const detailRow = tr.classList.contains("abgm-bgm-detail")
+    ? tr
+    : tr.closest("tr.abgm-bgm-detail") || tr;
+
+  const fileInput = detailRow.querySelector(".abgm_change_mp3_file");
+  if (!fileInput) return;
 
   // 이 엔트리의 id를 fileInput에 기억시켜둠
   fileInput.dataset.bgmId = String(id);
