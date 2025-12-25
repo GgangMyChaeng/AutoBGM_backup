@@ -139,21 +139,6 @@
     키워드 트리거 방식 기반이므로 키워드 모드를 활성화하는 동안은 모달 창의 개별 재생(Play), 재생 모드(Play Mode) 버튼은 자동으로 비활성화됨.
   </li>
   <li>
-    <strong>디버그 모드(Debug Mode): </strong>
-    지금 확장이 제대로 돌아가고 있는지 <strong>Now Playing</strong>에서 확인할 수 있음.
-    기본적으로 보이는 건 <strong>asstLen</strong>이고, 키워드 모드 활성화 시 <strong>kw</strong>와 <strong>hit</strong>가 추가로 보임.
-    즉, 키워드 설정을 해두고 제대로 매칭됐는지 확인하는 용도로 사용 가능.
-    <ul>
-      <li>
-        <strong>asstLen: </strong>
-        마지막 AI 메시지의 공백 및 줄바꿈 포함 글자 수(UTF-16 코드 유닛 기준).
-        키워드 모드가 아닐 때는 글자 수 뒤에 "kw"와 "hit" 대신, 현재 인식한 컨텍스트의 초반 몇 글자를 보여줌.
-      </li>
-      <li><strong>kw: </strong>현재 마지막 AI 메시지 기준으로 어떤 키워드들이 트리거 됐는지 보여줌</li>
-      <li><strong>hit: </strong>로직에 따라 <strong>최종적으로</strong> 결정된 곡(1개)을 보여줌</li>
-    </ul>
-  </li>
-  <li>
     <strong>재생 모드(Play Mode): </strong>
     키워드 모드 비활성화 시 사용할 수 있는 모드. Manual(일반 재생), Loop One(단일 무한), Loop List(리스트 무한), Random(랜덤)이 있음
     <ul>
@@ -165,7 +150,7 @@
         프리셋의 BGM을 랜덤 순서로 무한 재생. 활성화 방법은 2가지가 있음
         <ul>
           <li>🍏 아무 곡이나 재생 → Play Mode를 Manual에서 Random으로 변경 (첫 곡을 원하는 곡으로 시작 가능)</li>
-          <li>🍏 Play Mode를 Random으로 설정 → Enabled로 확장을 껐다 켜기</li>
+          <li>🍏 아무 곡도 재생 중이지 않았을 시 Play Mode를 Random으로 설정 → Enabled로 확장을 껐다 켜기</li>
         </ul>
       </li>
     </ul>
