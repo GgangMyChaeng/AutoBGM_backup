@@ -382,6 +382,7 @@ function ensureSettings() {
   };
 
   const s = extension_settings[SETTINGS_KEY];
+  s.globalVolLocked ??= false;
   ensureEngineFields(s);
 
   s.ui ??= { bgmSort: "added_asc" };
