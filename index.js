@@ -254,12 +254,12 @@ function abgmPrompt(containerOrDoc, message, {
 
         <div class="abgm-confirm-row" style="margin-top:10px;">
   <div class="abgm-confirm-left">
-    <button class="menu_button abgm-confirm-reset" type="button" style="white-space:nowrap;>초기화</button>
+    <button class="menu_button abgm-confirm-reset" type="button">초기화</button>
   </div>
 
   <div class="abgm-confirm-right">
-    <button class="menu_button abgm-confirm-ok" type="button" style="white-space:nowrap;>확인</button>
-    <button class="menu_button abgm-confirm-cancel" type="button" style="white-space:nowrap;>취소</button>
+    <button class="menu_button abgm-confirm-ok" type="button">확인</button>
+    <button class="menu_button abgm-confirm-cancel" type="button">취소</button>
   </div>
 </div>
     `;
