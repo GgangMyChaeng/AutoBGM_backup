@@ -111,47 +111,11 @@
   <li>
     <strong>Now Playing: </strong>
     현재 재생 중인 곡이나 상태를 확인할 수 있는 작은 창. 키워드 모드를 포함한 다섯 가지 재생 모드 중 무엇인지,
-    현재 재생 중인 곡은 어느 프리셋에 속했는지 확인할 수 있음. 이외에 후술할 디버그 모드를 통해 다른 정보도 확인 가능.
+    현재 재생 중인 곡은 어느 프리셋에 속했는지 간략히 확인할 수 있음.
   </li>
   <li>
-    <strong>Keyword Mode: </strong>
-    AI의 마지막 메시지에서 키워드가 인식되면 자동으로 해당 BGM이 조건(키워드 인식, 우선도 등)에 따라 자동 재생되는 기능임.
-    키워드 트리거 방식 기반이므로 키워드 모드를 활성화하는 동안은 모달 창의 개별 재생(Play), 재생 모드(Play Mode) 버튼은 자동으로 비활성화됨.
-  </li>
-  <li>
-    <strong>재생 모드(Play Mode): </strong>
-    키워드 모드 비활성화 시 사용할 수 있는 모드. Manual(일반 재생), Loop One(단일 무한), Loop List(리스트 무한), Random(랜덤)이 있음
-    <ul>
-      <li><strong>Manual(일반 재생): </strong>한 곡 재생 후 종료되면 그대로 끝남</li>
-      <li><strong>Loop One(단일 무한 재생): </strong>한 곡만 무한 자동 재생</li>
-      <li><strong>Loop List(리스트 무한 재생): </strong>프리셋의 BGM List 순서대로(Sort로 조정 가능) 무한 재생</li>
-      <li>
-        <strong>Random(랜덤 재생): </strong>
-        프리셋의 BGM을 랜덤 순서로 무한 재생. 활성화 방법은 2가지가 있음
-        <ul>
-          <li>🍏 아무 곡이나 재생 → Play Mode를 Manual에서 Random으로 변경 (첫 곡을 원하는 곡으로 시작 가능)</li>
-          <li>🍏 아무 곡도 재생 중이지 않았을 시 Play Mode를 Random으로 설정 → Enabled로 확장을 껐다 켜기</li>
-        </ul>
-      </li>
-    </ul>
-  </li>
-  <li>
-    <strong>Use Default when no keyword: </strong>
-    키워드 모드 활성화 중, AI의 마지막 지문에 인식된 키워드가 <strong>없을 때</strong>
-    이전 BGM 유지 대신 Default BGM이 재생되도록 하는 기능임.
-    타이틀곡(Default BGM)을 설정해둬도 이전 곡을 유지하고 싶으면 이 기능을 끄면 됨.
-  </li>
-  <li>
-    <strong>Default: </strong>
-    프리셋 타이틀곡 설정 기능. "키워드 모드" + "Use Default when no keyword" 활성화 중,
-    AI 마지막 컨텍스트에 인식된 키워드가 없을 때 재생됨.
-    키워드 모드 킨 상태에서 Default도 없고 키워드도 없으면 이전 곡 재생이 유지됨.
-  </li>
-  <li>
-    <strong>Global Volume(전체 볼륨): </strong>
-    BGM별 상세 볼륨을 설정해놨어도, Global Volume으로 전체적인 소리 크기를 한 번 더 조정할 수 있음.
-    프리셋 mp3들의 음량 편차 때문에 쓰기 불편한 상황을 줄이기 위한 쿠션 기능이라고 보면 됨.
-    (세부 볼륨은 BGM List에서 따로 조정하면 됨)
+    <strong>License / Description(문서): </strong>
+    현재 재생 중인 곡의 라이센스나 설명 등을 볼 수 있는 창임. 해당사항 없으면 안 뜸.
   </li>
 </ul>
         </div>
@@ -167,7 +131,19 @@
   </li>
   <li>
     <strong>수정(연필): </strong>
-    현재 프리셋 명칭 수정 기능 → 입력창에 변경할 명칭 적고 연필 누르면 됨
+    현재 프리셋 명칭 수정 기능
+  </li>
+  <li>
+    <strong>Default: </strong>
+    프리셋 타이틀곡 설정 기능. "키워드 모드" + "Use Default when no keyword" 활성화 중,
+    AI 마지막 컨텍스트에 인식된 키워드가 없을 때 재생됨.
+    키워드 모드 킨 상태에서 Default도 없고 키워드도 없으면 이전 곡 재생이 유지됨.
+  </li>
+  <li>
+    <strong>Global Volume(전체 볼륨): </strong>
+    BGM별 상세 볼륨을 설정해놨어도, Global Volume으로 전체적인 소리 크기를 한 번 더 조정할 수 있음.
+    프리셋 mp3들의 음량 편차 때문에 쓰기 불편한 상황을 줄이기 위한 쿠션 기능이라고 보면 됨.
+    (세부 볼륨은 BGM List에서 따로 조정하면 됨)
   </li>
   <li>
     <strong>Bind(Bind this preset to character cards): </strong>
@@ -176,13 +152,13 @@
   </li>
   <li>
     <strong>Import: </strong>
-    (이름)_AutoBGM.json을 삽입하면, 프리셋 설정(프리셋명/엔트리명/파일명 또는 URL/키워드/우선도/볼륨)만 불러와짐.<br>
-    mp3 파일은 따로 추가해야 하고, 파일명이 프리셋에 등록된 것과 일치하면 정상 동작함
+    (이름)_AutoBGM.json을 삽입하면, 프리셋 설정(프리셋명/엔트리명/키워드/우선도/볼륨/파일명 또는 URL/라이센스 혹은 설명)만 불러와짐.<br>
+    Url이 아닌 mp3인 경우 파일은 따로 추가해야 하고, 파일명이 프리셋에 등록된 것과 일치하면 정상 동작함.
   </li>
   <li>
     <strong>Export: </strong>
-    위 설정(프리셋명/엔트리명/파일명 또는 URL/키워드/우선도/볼륨)이 저장된 json 파일이 생성됨.<br>
-    mp3 파일까지 같이 공유하려면 사용자가 별도로 세팅해야 함
+    위 설정(프리셋명/엔트리명/키워드/우선도/볼륨/파일명 또는 URL/라이센스 혹은 설명)이 저장된 json 파일이 생성됨.<br>
+    mp3 파일까지 같이 공유하려면 사용자가 별도로 세팅해야 함. 공유 시 외부 오디오의 경우 오디오 원저작자의 라이센스 확인 필수.
   </li>
 </ul>
         </div>
@@ -269,9 +245,9 @@
     <ul>
             <li><strong>MP3 파일 추가(음표): </strong>특정 경로에 있는 MP3 파일을 인식시켜줄 수 있음</li>
             <li><strong>ZIP 파일 추가(ZIP): </strong>특정 경로에 있는 ZIP 파일을(MP3 파일이 들어가 있는 ZIP) 인식시켜줄 수 있음</li>
-            <li><strong>Sort:</strong> BGM List의 파일 정렬 순서 설정 기능임. 참고로 우선도 순은 동일 값일 시 항목 이름 순으로 정렬됨.</li>
-            <li><strong>Ent(쓰레기통):</strong> 선택한 BGM들을 삭제해 주는 기능임. 버튼 상단에는 몇 개의 항목을 선택해뒀는지 "N selected"이라고 뜰 거임. 그리고 실수로 삭제하지 말라고 쿠션 창(삭제 확인 메시지) 뜰 거임.</li>
-            <li><strong>Vol(초기화):</strong> 선택한 BGM들의 볼륨 설정을 초기화해 주는 기능임. 역시 버튼 상단에는 몇 개의 항목을 선택해뒀는지 "N selected"이라고 뜸. 얘도 실수로 삭제하지 말라고 쿠션 창(초기화 확인 메시지) 뜰 거임. 참고로 "<strong>Lock all volume sliders</strong>" 기능 활성화 여부와 무관하게 무조건 초기화해 주니 유의 바람.</li>
+            <li><strong>Sort:</strong> BGM List의 파일 정렬 순서 설정 기능임. 참고로 우선도 순은 동일 값일 시 항목 이름 순으로(A-Z) 정렬됨.</li>
+            <li><strong>Ent(쓰레기통):</strong> 선택한 BGM들을 삭제해 주는 기능임. 실수로 삭제하지 말라고 쿠션 창(삭제 확인 메시지) 뜰 거임.</li>
+            <li><strong>Vol(초기화):</strong> 선택한 BGM들의 볼륨 설정을 초기화해 주는 기능임. 얘도 실수로 삭제하지 말라고 쿠션 창(초기화 확인 메시지) 뜰 거임. 참고로 "<strong>Lock all volume sliders</strong>" 기능 활성화 여부와 무관하게 무조건 초기화해 주니 유의 바람.</li>
             <li><strong>Add empty entry(+): </strong>빈 항목을 만들 수 있는 버튼. 생성된 항목은 Source에 오디오 직링(url)을 입력하거나, Change MP3 버튼을 통해 BGM 연결 가능.</li>
             <li><strong>Expand all rows(하단): </strong>BGM List 항목들을 전부 펼쳐주는 기능임</li>
             <li><strong>Collapse all rows(상단): </strong>BGM List 항목들을 전부 접어주는 기능임</li>
@@ -284,25 +260,23 @@
   <li><strong>File: </strong>해당 항목의 이름을 바꿀 수 있는 기능</li>
   <li><strong>Play: </strong>누르면 재생됨</li>
   <li>
-    <strong>펼치기/접기(More): </strong>
-    BGM File 각각의 설정을 위한 기능. 항목별로 펼치거나 접을 수 있음
-    <ul>
+    <strong>펼치기/접기(More): </strong>BGM File 각각의 설정을 위한 기능. 항목별로 펼치거나 접을 수 있음</li>
       <li><strong>Keywords: </strong>해당 BGM이 트리거(재생) 될 키워드 매칭 기능. 쉼표로 구분해 다수 키워드 매칭 가능</li>
       <li>
         <strong>Source: </strong>
-        해당 항목에 연결된 파일명 혹은 직링 URL이 보이거나(또는 입력하는) 칸.
+        해당 항목에 연결된 파일명 혹은 직링 URL을 볼 수 있는 볼 수 있는(혹은 Url 먹이는) 칸.
         MP3를 먹여둬 파일명이 적힌 경우 함부로 수정하면 유령 항목이 되니,
         반드시 "(원본파일명).mp3" 또는 올바른 직링 URL을 유지해야 함
       </li>
-
       <li><strong>Change MP3: </strong>해당 항목에 mp3 파일을 먹이거나 교체하는 기능</li>
+      <li><strong>License / Description: </strong>
+        해당 항목에 먹인 오디오 소스에 대한 라이센스나 설명을 기재할 수 있음. 해당 항목이 재생 중일 시, 작성해 둔 내용이 모달의 Now Playing 하단에 뜸. 작성값이 없을 시 안 뜸.
+</li>
       <li>
         <strong>Priority: </strong>
         여러 키워드가 인식됐을 때 어떤 BGM을 재생할지 결정하는 값.
-        우선도 숫자가 가장 큰 BGM이 재생됨
+        우선도 숫자가 가장 큰 BGM이 재생됨.
       </li>
-    </ul>
-  </li>
   <li>
     <strong>Volume: </strong>
     mp3 파일들의 소리 설정을 각각 따로 할 수 있게 해주는 기능
