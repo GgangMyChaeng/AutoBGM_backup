@@ -228,6 +228,13 @@ body.autobgm-modal-open{ overflow:hidden; }
   gap:10px;
 }
 
+/* 락 켜졌을 때 버튼 느낌 */
+#abgm_globalVol_lock.abgm-locked,
+#abgm_globalVol_lock.abgm-locked:hover {
+  opacity: .95;
+  filter: brightness(1.05);
+}
+
 .abgm-range{ width:180px; }
 
 .abgm-hr{
