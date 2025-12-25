@@ -222,6 +222,25 @@ body.autobgm-modal-open{ overflow:hidden; }
   opacity:.18;
 }
 
+/* 라이센스 / 확인 쿠션 버튼 행 */
+.abgm-confirm-row{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* 좌측: 초기화 */
+.abgm-confirm-left{
+  padding-left: 6px;      /* 벽에 너무 붙지 않게 */
+}
+
+/* 우측: 확인 / 취소 */
+.abgm-confirm-right{
+  margin-left: auto;      /* 오른쪽으로 밀기 */
+  display: flex;
+  gap: 10px;              /* 확인-취소 간격 */
+}
+
 /* 헬프 제목 */
 .autobgm-helptext, .abgm-minihelp > b{
   font-size: 18px;
