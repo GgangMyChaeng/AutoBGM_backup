@@ -241,6 +241,12 @@ body.autobgm-modal-open{ overflow:hidden; }
   gap: 10px;              /* 확인-취소 간격 */
 }
 
+.abgm-confirm-row .menu_button{
+  white-space: nowrap;
+  word-break: keep-all;
+  min-width: 64px;   /* 72~80으로 조정 가능 */
+}
+
 /* 헬프 제목 */
 .autobgm-helptext, .abgm-minihelp > b{
   font-size: 18px;
