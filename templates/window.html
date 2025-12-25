@@ -75,6 +75,21 @@
       </li>
     </ul>
   <li><strong>Enabled(전원 모양): </strong>해당 확장을 활성화 / 비활성화 시킬 수 있음</li>
+    <li>
+    <strong>디버그 모드(Debug Mode): </strong>
+    지금 확장이 제대로 돌아가고 있는지 <strong>Now Playing</strong>에서 확인할 수 있음.
+    기본적으로 보이는 건 <strong>asstLen</strong>이고, 키워드 모드 활성화 시 <strong>kw</strong>와 <strong>hit</strong>가 추가로 보임.
+    즉, 키워드 설정을 해두고 제대로 매칭됐는지 확인하는 용도로 사용 가능.
+    <ul>
+      <li>
+        <strong>asstLen: </strong>
+        마지막 AI 메시지의 공백 및 줄바꿈 포함 글자 수(UTF-16 코드 유닛 기준).
+        키워드 모드가 아닐 때는 글자 수 뒤에 "kw"와 "hit" 대신, 현재 인식한 컨텍스트의 초반 몇 글자를 보여줌.
+      </li>
+      <li><strong>kw: </strong>현재 마지막 AI 메시지 기준으로 어떤 키워드들이 트리거 됐는지 보여줌</li>
+      <li><strong>hit: </strong>로직에 따라 <strong>최종적으로</strong> 결정된 곡(1개)을 보여줌</li>
+    </ul>
+  </li>
   <li><strong>Settings(톱니바퀴): </strong>해당 확장의 모달을 열어 상세 설정을 할 수 있음</li>
 </ul>
         </div>
