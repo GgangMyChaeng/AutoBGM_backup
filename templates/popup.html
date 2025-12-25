@@ -29,63 +29,6 @@
        style="margin-top:6px; padding:8px 10px; border:1px solid rgba(255,255,255,.12); border-radius:10px; background:rgba(0,0,0,.18); font-size:12px; line-height:1.35; white-space:pre-wrap;">
   </div>
 </div>
-
-  <!-- 1줄: Keyword / Debug / Play Mode -->
-  <div class="abgm-top-row3">
-
-    <!-- Keyword (좌측) -->
-    <label class="checkbox_label abgm-top-item left" style="margin:0;">
-      <input type="checkbox" id="abgm_keywordMode">
-      <small>Keyword Mode</small>
-    </label>
-
-    <!-- Debug (중앙: 아이콘 + (PC에서만 텍스트)) 였던 것
-    <label class="checkbox_label abgm-top-item center" style="margin:0;" title="Debug Mode">
-      <input type="checkbox" id="abgm_debugMode">
-      <i class="fa-solid fa-bug"></i>
-      <small class="abgm-debug-text">Debug</small>
-    </label>
-     -->
-
-    <!-- Play Mode (우측) -->
-    <div class="abgm-top-item right" style="min-width:160px;">
-      <small style="opacity:.85;">Play Mode</small>
-      <select id="abgm_playMode" class="abgm-select abgm-select-slim" title="Works when Keyword Mode is OFF">
-        <option value="manual">Manual</option>
-        <option value="loop_one">Loop One</option>
-        <option value="loop_list">Loop List</option>
-        <option value="random">Random</option>
-      </select>
-    </div>
-  </div>
-  
-   <!-- 2줄: Default 어쩌고 -->
-<div class="abgm-top-row2">
-
-  <!-- Use Default (좌측) -->
-  <label class="checkbox_label abgm-top-item left" style="margin:0;">
-    <input type="checkbox" id="abgm_useDefault">
-    <small>Use Default when no keyword</small>
-  </label>
-
-  <!-- Default select (우측) -->
-  <div class="abgm-top-item right" style="min-width:160px;">
-    <small style="opacity:.85;">Default</small>
-    <select id="abgm_default_select" class="abgm-select"></select>
-  </div>
-</div>
-
-  <!-- 3줄: Global Volume -->
-  <div class="abgm-top-row1">
-    <div class="abgm-volume-block">
-      <small style="opacity:.85;">Global Volume</small>
-      <div style="display:flex; align-items:center; gap:10px;">
-        <input id="abgm_globalVol" type="range" min="0" max="100" value="70" class="abgm-range">
-        <small id="abgm_globalVolText" style="opacity:.85; width:38px; text-align:right;">70</small>
-      </div>
-    </div>
-  </div>
-
 </div>
 
     <div class="abgm-grid">
