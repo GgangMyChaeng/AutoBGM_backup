@@ -1089,14 +1089,14 @@ function getSortedBgms(preset, sort) {
 
     // 추가순
   if (mode === "added_desc") return arr.reverse();
-
   return arr; // added_asc
 }
 
+// 프리셋 선택
 function renderPresetSelect(root, settings) {
   const sel = root.querySelector("#abgm_preset_select");
-  const nameInput = root.querySelector("#abgm_preset_name");
-  if (!sel || !nameInput) return;
+  const nameInput = root.querySelector("#abgm_preset_name"); // 있을 수도/없을 수도
+  if (!sel) return;
 
   sel.innerHTML = "";
   Object.values(settings.presets).forEach((p) => {
@@ -1107,7 +1107,8 @@ function renderPresetSelect(root, settings) {
     sel.appendChild(opt);
   });
 
-  nameInput.value = getActivePreset(settings).name || "";
+  // nameInput이 있으면만 채우기
+  if (nameInput) nameInput.value = getActivePreset(settings).name || "";
 }
 
 function renderDefaultSelect(root, settings) {
