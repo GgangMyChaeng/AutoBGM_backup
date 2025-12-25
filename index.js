@@ -252,12 +252,16 @@ function abgmPrompt(containerOrDoc, message, {
           box-sizing:border-box;
         " placeholder="${escapeHtml(placeholder)}"></textarea>
 
-        <div class="abgm-confirm-actions" style="display:flex; gap:10px; justify-content:flex-end; margin-top:10px;">
-          <button class="menu_button abgm-confirm-reset" type="button">${escapeHtml(resetText)}</button>
-          <button class="menu_button abgm-confirm-cancel" type="button">${escapeHtml(cancelText)}</button>
-          <button class="menu_button abgm-confirm-ok" type="button">${escapeHtml(okText)}</button>
-        </div>
-      </div>
+        <div class="abgm-confirm-row" style="margin-top:10px;">
+  <div class="abgm-confirm-left">
+    <button class="menu_button abgm-confirm-reset" type="button">초기화</button>
+  </div>
+
+  <div class="abgm-confirm-right">
+    <button class="menu_button abgm-confirm-ok" type="button">확인</button>
+    <button class="menu_button abgm-confirm-cancel" type="button">취소</button>
+  </div>
+</div>
     `;
 
     const ta = wrap.querySelector(".abgm-prompt-text");
