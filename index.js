@@ -365,6 +365,7 @@ function ensureSettings() {
     keywordMode: true,
     debugMode: false,
     globalVolume: 0.7,
+    globalVolLocked: false,
     useDefault: true,
     activePresetId: "default",
     presets: {
@@ -433,7 +434,7 @@ Object.values(s.presets).forEach((p) => {
 
 // 구버전: settings.defaultBgmId 같은 전역 값 남아있으면 제거 (있어도 안 쓰게)
   if (s.defaultBgmId) delete s.defaultBgmId;
-
+  globalVolLocked: false,
   return s;
 }
 
