@@ -1202,11 +1202,15 @@ function renderBgmTable(root, settings) {
           <textarea class="abgm_keywords" placeholder="rain, storm...">${escapeHtml(b.keywords ?? "")}</textarea>
           <small class="abgm-src-title">Source</small>
 
+<!-- 좌측 애들 -->
 <div class="abgm-source-row" style="display:flex; gap:8px; align-items:center;">
   <input type="text" class="abgm_source" placeholder="file.mp3 or https://..." value="${escapeHtml(b.fileKey ?? "")}" style="flex:1; min-width:0;">
-  <div class="menu_button abgm-iconbtn abgm_change_mp3" title="Change MP3" style="white-space:nowrap;">
-    <i class="fa-solid fa-file-audio"></i>
+<div class="menu_button abgm-iconbtn abgm_change_mp3" title="Change MP3" style="white-space:nowrap;">
+  <i class="fa-solid fa-file-audio"></i>
   </div>
+<div class="menu_button abgm-iconbtn abgm_license_btn" title="License / Description" style="white-space:nowrap;">
+  <i class="fa-solid fa-file-lines"></i>
+</div>
 
   <!-- 엔트리별 파일선택 input (숨김) -->
   <input type="file" class="abgm_change_mp3_file" accept="audio/mpeg,audio/mp3" style="display:none;">
