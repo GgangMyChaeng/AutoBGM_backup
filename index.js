@@ -432,7 +432,6 @@ Object.values(s.presets).forEach((p) => {
 
 // 구버전: settings.defaultBgmId 같은 전역 값 남아있으면 제거 (있어도 안 쓰게)
   if (s.defaultBgmId) delete s.defaultBgmId;
-  globalVolLocked: false,
   return s;
 }
 
@@ -815,7 +814,7 @@ async function ensurePlayFile(fileKey, vol01, loop) {
   const fk = String(fileKey ?? "").trim();
   if (!fk) return false;
 
-  // ✅ URL이면 IDB 없이 바로 재생
+  // URL이면 IDB 없이 바로 재생
   if (isProbablyUrl(fk)) {
     if (_bgmUrl) URL.revokeObjectURL(_bgmUrl);
     _bgmUrl = ""; // url은 revoke 대상 아님
@@ -831,7 +830,7 @@ async function ensurePlayFile(fileKey, vol01, loop) {
     return true;
   }
 
-  // ✅ 파일키면 기존대로 IDB
+  // 파일키면 기존대로 IDB
   const blob = await idbGet(fk);
   if (!blob) return false;
 
@@ -1832,7 +1831,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
       preset.bgms.push({
         id: uid(),
         fileKey,
-        name: basenameNoExt(fk),
+        name: basenameNoExt(filekey),
         keywords: "",
         priority: 0,
         volume: 1.0,
@@ -1864,7 +1863,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
           preset.bgms.push({
             id: uid(),
             fileKey: fk,
-            name: basenameNoExt(fileKey),
+            name: basenameNoExt(fK),
             keywords: "",
             priority: 0,
             volume: 1.0,
