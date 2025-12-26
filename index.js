@@ -1162,11 +1162,21 @@ function getSortedBgms(preset, sort) {
 // 프리셋 선택
 function renderPresetSelect(root, settings) {
   const sel = root.querySelector("#abgm_preset_select");
-  const nameInput = root.querySelector("#abgm_preset_name"); // 있을 수도/없을 수도
+  const nameInput = root.querySelector("#abgm_preset_name");
   if (!sel) return;
 
   sel.innerHTML = "";
-  Object.values(settings.presets).forEach((p) => {
+
+  // 프리셋 이름순 정렬
+  const presetsSorted = Object.values(settings.presets).sort((a, b) =>
+    String(a?.name ?? a?.id ?? "").localeCompare(
+      String(b?.name ?? b?.id ?? ""),
+      undefined,
+      { numeric: true, sensitivity: "base" }
+    )
+  );
+
+  presetsSorted.forEach((p) => {
     const opt = document.createElement("option");
     opt.value = p.id;
     opt.textContent = p.name || p.id;
@@ -1174,7 +1184,6 @@ function renderPresetSelect(root, settings) {
     sel.appendChild(opt);
   });
 
-  // nameInput이 있으면만 채우기
   if (nameInput) nameInput.value = getActivePreset(settings).name || "";
 }
 
