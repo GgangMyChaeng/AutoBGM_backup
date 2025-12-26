@@ -981,40 +981,24 @@ body.autobgm-modal-open{ overflow:hidden; }
 
 /* 액션 버튼(카피/무브/딜리트) 줄 정리 */
 .abgm-detail-actions{
-  display:flex;
-  gap:10px;
-  justify-content:flex-end;   /* 우측 정렬 */
-  align-items:center;         /* 세로 중앙 */
-  padding-right:6px;          /* 벽에 너무 붙는 거 방지 */
+  display:flex !important;
+  gap:10px !important;
+  justify-content:flex-end !important;  /* 우측 정렬 */
+  align-items:center !important;       /* 세로 중앙 */
+  padding-right:6px !important;       /* 벽에 너무 붙는 거 방지 */
 }
 
 /* 버튼 자체가 너무 길어지면 보기 안 좋으니 */
 .abgm-detail-actions .menu_button{
-  white-space:nowrap;
+  white-space:nowrap !important;
 }
 
 /* 좁은 화면(모달 폭이 줄어드는 상황)에서는 액션을 아래로 내려서 정리 */
 @media (max-width: 520px){
   .abgm-detail-actions{
-    grid-column: 1 / -1;      /* 한 줄 통째로 먹고 아래로 */
-    justify-content:flex-end; /* 아래에서도 오른쪽 정렬 유지 */
-    margin-top:8px;
-    padding-right:0;
-  }
-}
-
-/* 볼륨 줄이 좁으면 자동 줄바꿈 */
-.abgm-volcell{
-  display:flex;
-  gap:8px;
-  align-items:center;
-  flex-wrap:wrap; /* 핵심 */
-}
-
-/* 좁을 때 숫자입력+락이 아래로 떨어지게 */
-@media (max-width: 520px){
-  .abgm-volcell .abgm_volnum,
-  .abgm-volcell .abgm_vol_lock{
-    flex: 0 0 auto;
+    grid-column: 1 / -1 !important;    /* 한 줄 통째로 먹고 아래로 */
+    justify-content:flex-end !important; /* 아래에서도 오른쪽 정렬 유지 */
+    margin-top:8px !important;
+    padding-right:0 !important;
   }
 }
