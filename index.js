@@ -1328,7 +1328,13 @@ function renderBgmTable(root, settings) {
 
           <!-- Delete (right) -->
           <div class="abgm-detail-actions">
-            <div class="menu_button abgm_del" title="Delete">
+          <div class="menu_button abgm_copy" title="Copy to another preset">
+            <i class="fa-solid fa-copy"></i> Copy
+          </div>
+          <div class="menu_button abgm_move" title="Move to another preset">
+            <i class="fa-solid fa-arrow-right-arrow-left"></i> Move
+          </div>
+          <div class="menu_button abgm_del" title="Delete">
             <i class="fa-solid fa-trash"></i> <span class="abgm-del-label">Delete</span>
             </div>
           </div>
