@@ -1147,6 +1147,19 @@ function renderDefaultSelect(root, settings) {
   sel.value = cur;
 }
 
+  // Default 자동 세팅 정책: "그 프리셋에 곡이 처음 들어올 때만" 자동 지정
+function maybeSetDefaultOnFirstAdd(preset, newFileKey) {
+  const cur = String(preset.defaultBgmKey ?? "").trim();
+  if (cur) return; // 이미 default가 있으면 절대 건드리지 않음
+
+  const bgmCount = (preset.bgms ?? []).filter(b => String(b?.fileKey ?? "").trim()).length;
+
+  // "첫 곡"일 때만 default 자동 지정
+  if (bgmCount <= 1) {
+    preset.defaultBgmKey = String(newFileKey ?? "").trim();
+  }
+}
+
 function renderBgmTable(root, settings) {
   const preset = getActivePreset(settings);
   const tbody = root.querySelector("#abgm_bgm_tbody");
@@ -1840,7 +1853,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
       });
     }
 
-    if (!preset.defaultBgmKey) preset.defaultBgmKey = fileKey;
+    maybeSetDefaultOnFirstAdd(preset, fileKey);
 
     e.target.value = "";
     saveSettingsDebounced();
@@ -1872,10 +1885,13 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
           });
         }
       }
-
-      if (!preset.defaultBgmKey && preset.bgms.length && preset.bgms[0].fileKey) {
-        preset.defaultBgmKey = preset.bgms[0].fileKey;
-      }
+      
+      let firstAddedKey = "";
+      for (const fk of importedKeys) {
+        if (!firstAddedKey) firstAddedKey = fk;
+          // bgm push 로직...
+        }
+      maybeSetDefaultOnFirstAdd(preset, firstAddedKey);
 
       saveSettingsDebounced();
       rerenderAll(root, settings);
