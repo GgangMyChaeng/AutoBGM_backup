@@ -1002,3 +1002,21 @@ body.autobgm-modal-open{ overflow:hidden; }
     padding-right:0 !important;
   }
 }
+
+/* ===== FIX: PC에서 Copy/Move/Delete 세로 스택 ===== */
+@media (min-width: 700px){
+  .abgm-detail-actions{
+    display:flex !important;
+    flex-direction: column !important;   /* 세로로 */
+    justify-content: center !important;  /* 세로 중앙 */
+    align-items: flex-end !important;    /* 오른쪽 정렬 */
+    gap: 10px !important;
+    padding-right: 14px !important;      /* 벽에 너무 붙지 않게 */
+  }
+
+  /* 버튼 폭이 제멋대로면 보기 안 좋아서 통일(원하면 수치만 조절) */
+  .abgm-detail-actions .menu_button{
+    width: 110px !important;             /* 100~140 사이 취향 */
+    justify-content: center !important;
+  }
+}
