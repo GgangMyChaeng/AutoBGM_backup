@@ -979,44 +979,37 @@ body.autobgm-modal-open{ overflow:hidden; }
   white-space: nowrap;
 }
 
-/* 액션 버튼(카피/무브/딜리트) 줄 정리 */
+/* ===== Actions (Copy/Move/Delete) ===== */
+/* 기본(PC/중간폭): 우측 칼럼에서 세로 스택 */
 .abgm-detail-actions{
   display:flex !important;
+  flex-direction: column !important;
   gap:10px !important;
-  justify-content:flex-end !important;  /* 우측 정렬 */
-  align-items:center !important;       /* 세로 중앙 */
-  padding-right:6px !important;       /* 벽에 너무 붙는 거 방지 */
+  justify-content:center !important;   /* 세로 중앙 */
+  align-items:flex-end !important;     /* 우측 정렬 */
+  padding-right:14px !important;
 }
 
-/* 버튼 자체가 너무 길어지면 보기 안 좋으니 */
+/* 버튼 줄바꿈 방지 + 폭 통일(원하면 숫자만 조절) */
 .abgm-detail-actions .menu_button{
   white-space:nowrap !important;
+  width:110px !important;
+  justify-content:center !important;
 }
 
-/* 좁은 화면(모달 폭이 줄어드는 상황)에서는 액션을 아래로 내려서 정리 */
+/* 모바일(<=520): 아래로 내려간 영역에서 가로 정렬 */
 @media (max-width: 520px){
   .abgm-detail-actions{
-    grid-column: 1 / -1 !important;    /* 한 줄 통째로 먹고 아래로 */
-    justify-content:flex-end !important; /* 아래에서도 오른쪽 정렬 유지 */
-    margin-top:8px !important;
+    grid-column: 1 / -1 !important;    /* 아래 한 줄 먹기 */
+    flex-direction: row !important;    /* 가로 */
+    justify-content:flex-end !important;
+    align-items:center !important;
     padding-right:0 !important;
-  }
-}
-
-/* ===== FIX: PC에서 Copy/Move/Delete 세로 스택 ===== */
-@media (min-width: 700px){
-  .abgm-detail-actions{
-    display:flex !important;
-    flex-direction: column !important;   /* 세로로 */
-    justify-content: center !important;  /* 세로 중앙 */
-    align-items: flex-end !important;    /* 오른쪽 정렬 */
-    gap: 10px !important;
-    padding-right: 14px !important;      /* 벽에 너무 붙지 않게 */
+    margin-top:8px !important;
   }
 
-  /* 버튼 폭이 제멋대로면 보기 안 좋아서 통일(원하면 수치만 조절) */
   .abgm-detail-actions .menu_button{
-    width: 110px !important;             /* 100~140 사이 취향 */
-    justify-content: center !important;
+    width:auto !important;             /* 모바일에선 폭 고정 풀어주기 */
   }
 }
+
