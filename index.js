@@ -2138,7 +2138,6 @@ if (e.target.closest(".abgm_copy")) {
     message: "복사할 프리셋 선택",
     okText: "확인",
     cancelText: "취소",
-    excludePresetId: curPreset.id,
   });
   if (!targetId) return;
 
