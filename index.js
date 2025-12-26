@@ -1110,6 +1110,7 @@ function renderPresetSelect(root, settings) {
   if (nameInput) nameInput.value = getActivePreset(settings).name || "";
 }
 
+// 디폴트에 이름 뜨는 거 개선
 function renderDefaultSelect(root, settings) {
   const preset = getActivePreset(settings);
   const sel = root.querySelector("#abgm_default_select");
@@ -1117,7 +1118,6 @@ function renderDefaultSelect(root, settings) {
 
   const cur = String(preset.defaultBgmKey ?? "");
   const list = getSortedBgms(preset, getBgmSort(settings));
-  const keys = list.map((b) => String(b.fileKey ?? "")).filter(Boolean);
 
   sel.innerHTML = "";
 
@@ -1128,7 +1128,7 @@ function renderDefaultSelect(root, settings) {
   sel.appendChild(none);
 
   // 현재 default가 룰 목록에 없으면(=missing) 옵션을 하나 만들어서 고정 유지
-  if (cur && !keys.includes(cur)) {
+  if (cur && !list.some((b) => String(b.fileKey ?? "") === cur)) {
     const miss = document.createElement("option");
     miss.value = cur;
     miss.textContent = `${cur} (missing rule)`;
@@ -1136,14 +1136,18 @@ function renderDefaultSelect(root, settings) {
   }
 
   // rules
-  for (const fk of keys) {
+  for (const b of list) {
+    const fk = String(b.fileKey ?? "").trim();
+    if (!fk) continue;
+
     const opt = document.createElement("option");
     opt.value = fk;
-    opt.textContent = fk;
+
+    // 이름 있으면 이름, 없으면 fileKey/URL에서 자동 생성된 표시명
+    opt.textContent = getEntryName(b); 
     sel.appendChild(opt);
   }
 
-  // value로 고정 (selected 속성보다 이게 안전)
   sel.value = cur;
 }
 
