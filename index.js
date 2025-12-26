@@ -2025,7 +2025,9 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
   const newKey = String(e.target.value || "").trim();
   bgm.fileKey = newKey;
 
-  if (preset.defaultBgmKey === oldKey) preset.defaultBgmKey = newKey;
+  if (oldKey && preset.defaultBgmKey === oldKey) {
+      preset.defaultBgmKey = newKey;
+    }
 
   saveSettingsDebounced();
   renderDefaultSelect(root, settings);
@@ -2278,8 +2280,10 @@ root.querySelector("#abgm_bgm_tbody")?.addEventListener("change", async (e) => {
     // 엔트리 소스 교체
     bgm.fileKey = newKey;
 
-    // default도 같이 따라가게
-    if (preset.defaultBgmKey === oldKey) preset.defaultBgmKey = newKey;
+    // default 최초만 따라가게
+    if (oldKey && preset.defaultBgmKey === oldKey) {
+  preset.defaultBgmKey = newKey;
+}
 
     // oldKey가 더 이상 참조 안 되면 정리(선택)
     if (oldKey && oldKey !== newKey && !isFileKeyReferenced(settings, oldKey)) {
