@@ -2441,7 +2441,6 @@ root.querySelector("#abgm_bgm_tbody")?.addEventListener("change", async (e) => {
   });
   rerenderAll(root, settings);
   setupHelpToggles(root);
-  syncKeywordOnceUI();
 } // initModal 닫기
 
 /** ========= Side menu mount ========= */
