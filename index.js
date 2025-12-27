@@ -914,7 +914,8 @@ function findBgmByKey(preset, fileKey) {
   return (preset.bgms ?? []).find((b) => String(b.fileKey ?? "") === String(fileKey ?? ""));
 }
 
-async function ensurePlayFile(fileKey, vol01, loop) {
+// presetId 인자 추가 버전
+async function ensurePlayFile(fileKey, vol01, loop, presetId = "") {
   const fk = String(fileKey ?? "").trim();
   if (!fk) return false;
 
@@ -930,6 +931,7 @@ async function ensurePlayFile(fileKey, vol01, loop) {
     try { await _bgmAudio.play(); } catch {}
 
     _engineCurrentFileKey = fk;
+    if (presetId) _engineCurrentPresetId = String(presetId);
     updateNowPlayingUI();
     return true;
   }
@@ -948,6 +950,7 @@ async function ensurePlayFile(fileKey, vol01, loop) {
   try { await _bgmAudio.play(); } catch {}
 
   _engineCurrentFileKey = fk;
+  if (presetId) _engineCurrentPresetId = String(presetId);
   updateNowPlayingUI();
   return true;
 }
@@ -2783,7 +2786,7 @@ if (settings.keywordMode) {
 
       if (_engineCurrentFileKey !== desired) {
         _engineCurrentFileKey = desired;
-        ensurePlayFile(desired, getVol(desired), true);
+        ensurePlayFile(desired, getVol(desired), true, preset.id);
         try { updateNowPlayingUI(); } catch {}
       } else {
         _bgmAudio.loop = true;
@@ -2795,7 +2798,7 @@ if (settings.keywordMode) {
     if (st.currentKey) {
       if (_engineCurrentFileKey !== st.currentKey) {
         _engineCurrentFileKey = st.currentKey;
-        ensurePlayFile(st.currentKey, getVol(st.currentKey), true);
+        ensurePlayFile(st.currentKey, getVol(st.currentKey), true, preset.id);
         try { updateNowPlayingUI(); } catch {}
       } else {
         _bgmAudio.loop = true;
@@ -2865,7 +2868,7 @@ if (settings.keywordMode) {
     st.currentKey = "";       // 1회 모드에서는 sticky 안 씀
     st.defaultPlayedSig = ""; // default 1회 기록도 리셋(선택이지만 깔끔)
     _engineCurrentFileKey = hitKey;
-    ensurePlayFile(hitKey, getVol(hitKey), false);
+    ensurePlayFile(hitKey, getVol(hitKey), false, preset.id);
     try { updateNowPlayingUI(); } catch {}
     return;
   }
@@ -2876,7 +2879,7 @@ if (settings.keywordMode) {
       st.defaultPlayedSig = sig;
       st.currentKey = "";
       _engineCurrentFileKey = defKey;
-      ensurePlayFile(defKey, getVol(defKey), false);
+      ensurePlayFile(defKey, getVol(defKey), false, preset.id);
       try { updateNowPlayingUI(); } catch {}
     }
   }
@@ -2893,7 +2896,7 @@ if (settings.keywordMode) {
     if (st.currentKey) {
       // manual은 루프 안 함 (원하면 loop_one으로 바꾸면 됨)
       if (_engineCurrentFileKey !== st.currentKey) {
-        ensurePlayFile(st.currentKey, getVol(st.currentKey), false);
+        ensurePlayFile(st.currentKey, getVol(st.currentKey), false, preset.id);
       } else {
         _bgmAudio.loop = false;
         _bgmAudio.volume = getVol(st.currentKey);
@@ -2908,7 +2911,7 @@ if (settings.keywordMode) {
     if (!fk) return;
 
     if (_engineCurrentFileKey !== fk) {
-      ensurePlayFile(fk, getVol(fk), true);
+      ensurePlayFile(fk, getVol(fk), true, preset.id);
       st.currentKey = fk;
     } else {
       _bgmAudio.loop = true;
@@ -2934,7 +2937,7 @@ if (mode === "loop_list" || mode === "random") {
     const idx = Math.max(0, Math.min(st.listIndex ?? 0, keys.length - 1));
     const fk = keys[idx] || "";
     if (fk) {
-      ensurePlayFile(fk, getVol(fk), false);
+      ensurePlayFile(fk, getVol(fk), false, preset.id);
       st.currentKey = fk;
       st.listIndex = idx;
     }
@@ -2944,7 +2947,7 @@ if (mode === "loop_list" || mode === "random") {
   if (mode === "random") {
     const fk = pickRandomKey(keys, st.currentKey || "");
     if (fk) {
-      ensurePlayFile(fk, getVol(fk), false);
+      ensurePlayFile(fk, getVol(fk), false, preset.id);
       st.currentKey = fk;
     }
     return;
@@ -2996,7 +2999,7 @@ _bgmAudio.addEventListener("ended", () => {
 
     const fk = keys[idx];
     st.currentKey = fk;
-    ensurePlayFile(fk, getVol(fk), false);
+    ensurePlayFile(fk, getVol(fk), false, preset.id);
     try { saveSettingsDebounced?.(); } catch {}
     return;
   }
