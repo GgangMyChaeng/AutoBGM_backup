@@ -594,7 +594,7 @@ let _engineCurrentPresetId = "";
 let _abgmNowPlayingBound = false;
 
 function updateModalNowPlayingSimple(title) {
-  const el = document.getElementById("abgm_now_title"); // popup.html에 이 id만 두면 됨
+  const el = document.getElementById("abgm_now_title");
   if (!el) return;
   el.textContent = String(title ?? "(none)");
 }
@@ -679,7 +679,9 @@ function updateNowPlayingUI() {
     }
 
     setNowControlsLocked(!settings.enabled);
-  } catch {}
+  } catch (e) {
+    console.error("[AutoBGM] updateNowPlayingUI failed:", e);
+  }
 }
 
 function setNowControlsLocked(locked) {
