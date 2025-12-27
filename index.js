@@ -695,6 +695,14 @@ function updateNowPlayingUI() {
   } catch {}
 }
 
+function updateModalNowPlayingSimple() {
+  const el = document.getElementById("abgm_modal_np_text");
+  if (!el) return;
+
+  const fk = String(_engineCurrentFileKey || "").trim();
+  el.textContent = fk || "(none)";
+}
+
 function setNowControlsLocked(locked) {
   const root = document.getElementById("autobgm-root");
   if (!root) return;
