@@ -1534,7 +1534,6 @@ function initModal(overlay) {
   const gvText = root.querySelector("#abgm_globalVolText");
   const gvLock = root.querySelector("#abgm_globalVol_lock");
   const useDef = root.querySelector("#abgm_useDefault");
-  const kwOnceBtn = root.querySelector("#autobgm_now_btn_kwonce");
 
   if (kw) kw.checked = !!settings.keywordMode;
   if (dbg) dbg.checked = !!settings.debugMode;
@@ -1569,26 +1568,6 @@ function initModal(overlay) {
       updateNowPlayingUI();
     });
   }
-
-  // 키워드 모드 재생 로직 변경 버튼
-  const syncKeywordOnceUI = () => {
-  const s = ensureSettings();
-  if (!kwOnceBtn) return;
-
-  // 키워드 모드 아닐 땐 숨김
-  kwOnceBtn.style.display = s.keywordMode ? "" : "none";
-
-  const on = !!s.keywordOnce;
-  kwOnceBtn.textContent = on ? "1️⃣" : "🔁";
-  kwOnceBtn.title = on ? "Keyword: Once" : "Keyword: Loop";
-};
-
-kwOnceBtn?.addEventListener("click", () => {
-  const s = ensureSettings();
-  s.keywordOnce = !s.keywordOnce;
-  saveSettingsDebounced();
-  syncKeywordOnceUI();
-});
 
   // ===== Global Volume + Lock =====
   settings.globalVolLocked ??= false; // 안전빵(ensureSettings에도 넣는게 정석)
@@ -2503,6 +2482,32 @@ async function mount() {
     const btnDef = root.querySelector("#autobgm_now_btn_default");
     const btnPlay = root.querySelector("#autobgm_now_btn_play");
     const btnMode = root.querySelector("#autobgm_now_btn_mode");
+    const btnOnce = root.querySelector("#autobgm_now_btn_kwonce");
+
+    const syncKeywordOnceUI = () => {
+      const s = ensureSettings();
+      if (!btnOnce) return;
+
+      // 키워드 모드 아닐 땐 숨김
+      btnOnce.style.display = s.keywordMode ? "" : "none";
+
+      btnOnce.textContent = s.keywordOnce ? "1️⃣" : "🔁";
+      btnOnce.title = s.keywordOnce ? "Keyword: Once" : "Keyword: Loop";
+    };
+
+    btnOnce?.addEventListener("click", () => {
+      const s = ensureSettings();
+      if (!s.enabled) return;
+
+      s.keywordOnce = !s.keywordOnce;
+      saveSettingsDebounced();
+      syncKeywordOnceUI();
+      try { engineTick(); } catch {}
+      updateNowPlayingUI();
+    });
+
+    // 처음 한번 UI 맞추기
+    syncKeywordOnceUI();
 
     // Use Default 토글 (keywordMode일 때만 의미 있음)
     btnDef?.addEventListener("click", () => {
@@ -2563,6 +2568,7 @@ async function mount() {
       saveSettingsDebounced();
       try { engineTick(); } catch {}
       updateNowPlayingUI();
+      syncKeywordOnceUI();
     });
 
     const helpBtn = root.querySelector("#autobgm_help_toggle");
