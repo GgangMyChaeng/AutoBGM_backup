@@ -593,6 +593,12 @@ let _engineCurrentPresetId = "";
 // ===== Now Playing UI =====
 let _abgmNowPlayingBound = false;
 
+function updateModalNowPlayingSimple(title) {
+  const el = document.getElementById("abgm_now_title");
+  if (!el) return;            // 모달 닫혀있으면 그냥 스킵
+  el.textContent = String(title ?? "(none)");
+}
+
 function _abgmSetText(id, text) {
   const el = document.getElementById(id);
   if (el) el.textContent = String(text ?? "");
@@ -692,6 +698,7 @@ function updateNowPlayingUI() {
         `Mode: ${settings?.playMode || "manual"}`;
     }
     setNowControlsLocked(!settings.enabled);
+    updateModalNowPlayingSimple(title);
   } catch {}
 }
 
