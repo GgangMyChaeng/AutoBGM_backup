@@ -634,21 +634,19 @@ function updateNowPlayingUI() {
     // ===== modal license area =====
     const licWrap = document.getElementById("abgm_np_license_wrap");
     const licText = document.getElementById("abgm_np_license_text");
-
     if (licWrap && licText) {
       const lic = bgm ? String(bgm.license ?? "").trim() : "";
       if (lic) {
         licWrap.style.display = "";
         licText.textContent = lic;
-      } else {
-        licWrap.style.display = "none";
-        licText.textContent = "";
-      }
+      } else { licWrap.style.display = "none"; licText.textContent = ""; }
     }
 
-    // drawer
+    // drawer(확장메뉴)
+    const presetName = preset?.name || "Preset";
+    const modeLabel = settings?.keywordMode ? "Keyword" : (settings?.playMode || "manual");
+    const meta = `${modeLabel} · ${presetName}`;
     _abgmSetText("autobgm_now_title", title);
-    // _abgmSetText("autobgm_now_state", state);  // ST 확장 메뉴에는 필요없
     _abgmSetText("autobgm_now_meta", meta);
 
     // 확장메뉴 디버그 줄
@@ -657,11 +655,6 @@ function updateNowPlayingUI() {
       dbg.style.display = debugLine ? "" : "none";
       dbg.textContent = debugLine;
     }
-
-    // modal
-    _abgmSetText("abgm_now_title", title);
-    _abgmSetText("abgm_now_state", state);
-    _abgmSetText("abgm_now_meta", meta);
 
     // ===== side-menu Now Playing controls =====
     const btnDef = document.getElementById("autobgm_now_btn_default");
