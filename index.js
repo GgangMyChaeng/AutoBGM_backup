@@ -594,8 +594,8 @@ let _engineCurrentPresetId = "";
 let _abgmNowPlayingBound = false;
 
 function updateModalNowPlayingSimple(title) {
-  const el = document.getElementById("abgm_now_title");
-  if (!el) return;            // 모달 닫혀있으면 그냥 스킵
+  const el = document.getElementById("abgm_now_title"); // popup.html에 이 id만 두면 됨
+  if (!el) return;
   el.textContent = String(title ?? "(none)");
 }
 
@@ -607,25 +607,18 @@ function _abgmSetText(id, text) {
 function updateNowPlayingUI() {
   try {
     const fk = String(_engineCurrentFileKey || "");
-    const state = !fk ? "Stopped" : (_bgmAudio?.paused ? "Paused" : "Playing");
-
     const settings = ensureSettings?.() || {};
 
-    // 엔진이 실제로 재생 중인 프리셋 우선
     const pid = String(_engineCurrentPresetId || settings?.activePresetId || "");
     const preset =
       (pid && settings?.presets?.[pid]) ||
       settings?.presets?.[settings?.activePresetId] ||
       Object.values(settings?.presets || {})[0] ||
       {};
-    
-    // fk(=source)로 현재 엔트리 찾기
-    const bgm = (preset.bgms ?? []).find((b) => String(b?.fileKey ?? "") === fk) || null;
 
-    // 표시용 제목: 엔트리 이름 우선
+    const bgm = (preset.bgms ?? []).find((b) => String(b?.fileKey ?? "") === fk) || null;
     const title = bgm ? getEntryName(bgm) : (fk || "(none)");
 
-    // meta(기본 정보) / debug(추가 정보) 분리
     const presetName = preset?.name || "Preset";
     const modeLabel = settings?.keywordMode ? "Keyword" : (settings?.playMode || "manual");
     const meta = `${modeLabel} · ${presetName}`;
@@ -636,32 +629,28 @@ function updateNowPlayingUI() {
     const licText = document.getElementById("abgm_np_license_text");
     if (licWrap && licText) {
       const lic = bgm ? String(bgm.license ?? "").trim() : "";
-      if (lic) {
-        licWrap.style.display = "";
-        licText.textContent = lic;
-      } else { licWrap.style.display = "none"; licText.textContent = ""; }
+      if (lic) { licWrap.style.display = ""; licText.textContent = lic; }
+      else { licWrap.style.display = "none"; licText.textContent = ""; }
     }
 
     // drawer(확장메뉴)
-    const presetName = preset?.name || "Preset";
-    const modeLabel = settings?.keywordMode ? "Keyword" : (settings?.playMode || "manual");
-    const meta = `${modeLabel} · ${presetName}`;
     _abgmSetText("autobgm_now_title", title);
     _abgmSetText("autobgm_now_meta", meta);
 
-    // 확장메뉴 디버그 줄
     const dbg = document.getElementById("autobgm_now_debug");
     if (dbg) {
       dbg.style.display = debugLine ? "" : "none";
       dbg.textContent = debugLine;
     }
 
-    // ===== side-menu Now Playing controls =====
+    // 모달(simple)
+    updateModalNowPlayingSimple(title);
+
+    // 버튼들 처리(너 기존 그대로)
     const btnDef = document.getElementById("autobgm_now_btn_default");
     const btnPlay = document.getElementById("autobgm_now_btn_play");
     const btnMode = document.getElementById("autobgm_now_btn_mode");
 
-    // default 버튼은 keywordMode일 때만 "보이게" (자리 유지 숨김)
     if (btnDef) {
       const leftWrap = btnDef.closest(".np-left");
       if (leftWrap) leftWrap.classList.toggle("is-hidden", !settings?.keywordMode);
@@ -670,14 +659,12 @@ function updateNowPlayingUI() {
       btnDef.title = settings?.useDefault ? "Use Default: ON" : "Use Default: OFF";
     }
 
-    // 재생 상태 아이콘
     if (btnPlay) {
       const icon = !fk ? "⏹️" : (_bgmAudio?.paused ? "⏸️" : "▶️");
       btnPlay.textContent = icon;
       btnPlay.title = icon === "▶️" ? "Pause" : (icon === "⏸️" ? "Play" : "Start");
     }
 
-    // 모드 아이콘 (5개 통합)
     if (btnMode) {
       const modeIcon =
         settings?.keywordMode ? "💬" :
@@ -690,17 +677,9 @@ function updateNowPlayingUI() {
         settings?.keywordMode ? "Mode: Keyword" :
         `Mode: ${settings?.playMode || "manual"}`;
     }
+
     setNowControlsLocked(!settings.enabled);
-    updateModalNowPlayingSimple(title);
   } catch {}
-}
-
-function updateModalNowPlayingSimple() {
-  const el = document.getElementById("abgm_modal_np_text");
-  if (!el) return;
-
-  const fk = String(_engineCurrentFileKey || "").trim();
-  el.textContent = fk || "(none)";
 }
 
 function setNowControlsLocked(locked) {
