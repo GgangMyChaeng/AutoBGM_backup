@@ -66,6 +66,17 @@
   padding: 8px 12px;          /* 벽에 안 붙게 */
 }
 
+.autobgm-now-controls{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+}
+
+#autobgm_now_btn_kwonce{
+  flex:0 0 auto;
+  opacity:.85;
+}
+
 /* 각 칸 안에서 버튼은 중앙에 */
 .autobgm-now-controls .np-left,
 .autobgm-now-controls .np-center,
