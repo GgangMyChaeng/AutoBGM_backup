@@ -427,6 +427,7 @@ function ensureAssetList(settings) {
 /** ========= Template loader ========= */
 async function loadHtml(relPath) {
   const url = new URL(relPath, import.meta.url);
+  url.searchParams.set("v", String(Date.now())); // 캐시 버스터
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Template fetch failed: ${res.status} ${url}`);
   return await res.text();
