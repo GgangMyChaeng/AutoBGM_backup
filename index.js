@@ -1534,6 +1534,7 @@ function initModal(overlay) {
   const gvText = root.querySelector("#abgm_globalVolText");
   const gvLock = root.querySelector("#abgm_globalVol_lock");
   const useDef = root.querySelector("#abgm_useDefault");
+  const kwOnceBtn = root.querySelector("#autobgm_now_btn_kwonce");
 
   if (kw) kw.checked = !!settings.keywordMode;
   if (dbg) dbg.checked = !!settings.debugMode;
@@ -1568,6 +1569,26 @@ function initModal(overlay) {
       updateNowPlayingUI();
     });
   }
+
+  // 키워드 모드 재생 로직 변경 버튼
+  const syncKeywordOnceUI = () => {
+  const s = ensureSettings();
+  if (!kwOnceBtn) return;
+
+  // 키워드 모드 아닐 땐 숨김
+  kwOnceBtn.style.display = s.keywordMode ? "" : "none";
+
+  const on = !!s.keywordOnce;
+  kwOnceBtn.textContent = on ? "1️⃣" : "🔁";
+  kwOnceBtn.title = on ? "Keyword: Once" : "Keyword: Loop";
+};
+
+kwOnceBtn?.addEventListener("click", () => {
+  const s = ensureSettings();
+  s.keywordOnce = !s.keywordOnce;
+  saveSettingsDebounced();
+  syncKeywordOnceUI();
+});
 
   // ===== Global Volume + Lock =====
   settings.globalVolLocked ??= false; // 안전빵(ensureSettings에도 넣는게 정석)
@@ -2444,6 +2465,7 @@ root.querySelector("#abgm_bgm_tbody")?.addEventListener("change", async (e) => {
   });
   rerenderAll(root, settings);
   setupHelpToggles(root);
+  syncKeywordOnceUI();
 } // initModal 닫기
 
 /** ========= Side menu mount ========= */
