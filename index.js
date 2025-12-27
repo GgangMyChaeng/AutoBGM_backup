@@ -308,7 +308,7 @@ function abgmPickPreset(containerOrDoc, settings, {
     wrap.className = "abgm-confirm-wrap";
     if (container !== doc.body) wrap.classList.add("abgm-confirm-in-modal");
 
-    const options = Object.values(settings.presets || {})
+    const options = getPresetsSortedByName(settings)
       .filter((p) => String(p.id) !== String(excludePresetId))
       .map((p) => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.name || p.id)}</option>`)
       .join("");
@@ -1383,6 +1383,16 @@ function clone(obj) {
   return JSON.parse(JSON.stringify(obj));
 }
 
+function getPresetsSortedByName(settings) {
+  const arr = Object.values(settings?.presets ?? {});
+  arr.sort((a, b) => {
+    const an = String(a?.name ?? a?.id ?? "").trim();
+    const bn = String(b?.name ?? b?.id ?? "").trim();
+    return an.localeCompare(bn, undefined, { numeric: true, sensitivity: "base" });
+  });
+  return arr;
+}
+
 // export는 "룰만" 보냄 (dataUrl 없음)
 function exportPresetFile(preset) {
   const clean = {
@@ -2158,7 +2168,7 @@ if (e.target.closest(".abgm_copy")) {
   target.bgms ??= [];
   target.bgms.push({
     ...clone(bgm),
-    id: uid(), // ✅ 복사면 새 id
+    id: uid(), // 복사면 새 id
   });
 
   // target default 비어있으면 "자동으로" 바꾸고 싶냐? -> 난 비추라서 안 함
