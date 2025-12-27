@@ -2460,7 +2460,7 @@ async function mount() {
   const host = document.querySelector("#extensions_settings");
   if (!host) return;
 
-  // 이미 붙었으면: 개발 중엔 갈아끼우기
+  // 강제로 갈아끼우기
   const old = document.getElementById("autobgm-root");
   if (old) old.remove();
 
