@@ -154,10 +154,18 @@ function fitModalToHost(overlay, host) {
   setI("border-radius", "14px");
 }
 
-/** ========= util ========= */
+/** ========= util 유틸리티 ========= */
 function uid() {
   return `${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 }
+
+function basenameNoExt(s = "") {
+  const v = String(s || "").trim();
+  if (!v) return "";
+  const base = v.split("/").pop() || v;
+  return base.replace(/\.[^/.]+$/, "");
+}
+
 function escapeHtml(s) {
   return String(s ?? "")
     .replaceAll("&", "&amp;")
@@ -166,6 +174,7 @@ function escapeHtml(s) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
+
 function getActivePreset(settings) {
   return settings.presets[settings.activePresetId];
 }
@@ -1036,15 +1045,16 @@ function closeModal() {
   if (overlay) overlay.remove();
   document.body.classList.remove("autobgm-modal-open");
   window.removeEventListener("keydown", onEscClose);
+  
   if (_abgmViewportHandler) {
   window.removeEventListener("resize", _abgmViewportHandler);
   window.visualViewport?.removeEventListener("resize", _abgmViewportHandler);
   window.visualViewport?.removeEventListener("scroll", _abgmViewportHandler);
   _abgmViewportHandler = null;
-  updateNowPlayingUI();
+  }
+    updateNowPlayingUI();
+}
 
-}
-}
 function onEscClose(e) {
   if (e.key === "Escape") closeModal();
 }
@@ -2669,15 +2679,14 @@ function init() {
     
  // 프리셋이 바뀌면: 이전곡 유지값/런타임 키 전부 초기화
 if (_engineLastPresetId && _engineLastPresetId !== String(preset.id)) {
-  // 재생 멈추기
-  stopRuntime();
-
-  // "이전곡 유지" 방지용: 채팅 상태 초기화
-  st.currentKey = "";
+  stopRuntime();  // 재생 멈추기
+  st.currentKey = "";  // "이전곡 유지" 방지용: 채팅 상태 초기화
   st.listIndex = 0;
 
-  // Now Playing/엔진 상태도 초기화
-  _engineCurrentFileKey = "";
+  st.lastSig = "";
+  st.defaultPlayedSig = "";
+
+  _engineCurrentFileKey = "";  // Now Playing/엔진 상태도 초기화
 }
 _engineLastPresetId = String(preset.id);
 
@@ -2702,15 +2711,6 @@ _engineLastPresetId = String(preset.id);
 if (settings.keywordMode) {
   const asstText = String(lastAsst ?? "");
   const sig = makeAsstSig(asstText);
-
-  // 공용
-  const useDefault = !!settings.useDefault;
-  const defKey = String(preset.defaultBgmKey ?? "");
-
-  const getVol = (fk) => {
-    const b = findBgmByKey(preset, fk);
-    return clamp01((settings.globalVolume ?? 0.7) * (b?.volume ?? 1));
-  };
 
   // =========================
   // (A) 기존: 무한 유지 로직
@@ -2919,45 +2919,38 @@ if (mode === "loop_list" || mode === "random") {
   }
  }
 }
-
-// ended: loop_list/random 다음곡 처리
+  
+  // ended & (A) keywordMode + keywordOnce면: 재생 끝나면 상태만 정리하고 종료
 _bgmAudio.addEventListener("ended", () => {
   const settings = ensureSettings();
   ensureEngineFields(settings);
   if (!settings.enabled) return;
-  
-  // (A) keywordMode + keywordOnce면: 재생 끝나면 상태만 정리하고 종료
-if (settings.keywordMode && !settings.keywordOnce) {
+
   const ctx = getSTContextSafe();
   const chatKey = getChatKeyFromContext(ctx);
-  settings.chatStates[chatKey] ??= { currentKey: "", listIndex: 0 };
+  settings.chatStates[chatKey] ??= { currentKey: "", listIndex: 0, lastSig: "", defaultPlayedSig: "" };
   const st = settings.chatStates[chatKey];
 
-  st.currentKey = "";
-  _engineCurrentFileKey = "";
-  try { updateNowPlayingUI(); } catch {}
-  try { saveSettingsDebounced?.(); } catch {}
-  saveSettingsDebounced();
-  return;
-}
+  // (A) keywordMode + 1회 모드: 재생 끝나면 "현재 재생 없음"으로 정리
+  if (settings.keywordMode && settings.keywordOnce) {
+    _engineCurrentFileKey = "";
+    try { updateNowPlayingUI(); } catch {}
+    return;
+  }
 
-  // (B) keywordMode + 무한(loop)면 ended는 보통 안 오니까 그냥 무시
+  // (B) keywordMode + 무한 유지: ended는 거의 안 오니까 무시
   if (settings.keywordMode && !settings.keywordOnce) return;
 
-  // (C) keywordMode OFF일 때만: loop_list/random 다음곡 처리
-  const ctx = getSTContextSafe();
-  const chatKey = getChatKeyFromContext(ctx);
-  settings.chatStates[chatKey] ??= { currentKey: "", listIndex: 0 };
-  const st = settings.chatStates[chatKey];
-
+  // (C) keywordMode OFF: loop_list/random 다음곡 처리
   let preset = settings.presets?.[settings.activePresetId];
   if (!preset) preset = Object.values(settings.presets ?? {})[0];
   if (!preset) return;
 
   const sort = getBgmSort(settings);
   const keys = getSortedKeys(preset, sort);
-  
-    const getVol = (fk) => {
+  if (!keys.length) return;
+
+  const getVol = (fk) => {
     const b = findBgmByKey(preset, fk);
     return clamp01((settings.globalVolume ?? 0.7) * (b?.volume ?? 1));
   };
@@ -2965,11 +2958,10 @@ if (settings.keywordMode && !settings.keywordOnce) {
   const mode = settings.playMode ?? "manual";
 
   if (mode === "loop_list") {
-    if (!keys.length) return;
     let idx = Number(st.listIndex ?? 0);
     idx = (idx + 1) % keys.length;
     st.listIndex = idx;
-    
+
     const fk = keys[idx];
     st.currentKey = fk;
     ensurePlayFile(fk, getVol(fk), false);
@@ -2978,10 +2970,10 @@ if (settings.keywordMode && !settings.keywordOnce) {
   }
 
   if (mode === "random") {
-    if (!keys.length) return;
     const cur = String(st.currentKey ?? "");
     const pool = keys.filter((k) => k !== cur);
-    const next = (pool.length ? pool : keys)[Math.floor(Math.random() * (pool.length ? pool.length : keys.length))];
+    const pickFrom = pool.length ? pool : keys;
+    const next = pickFrom[Math.floor(Math.random() * pickFrom.length)];
 
     st.currentKey = next;
     ensurePlayFile(next, getVol(next), false);
