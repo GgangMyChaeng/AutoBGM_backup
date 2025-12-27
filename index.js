@@ -603,11 +603,15 @@ function updateNowPlayingUI() {
     const state = !fk ? "Stopped" : (_bgmAudio?.paused ? "Paused" : "Playing");
 
     const settings = ensureSettings?.() || {};
+
+    // 엔진이 실제로 재생 중인 프리셋 우선
+    const pid = String(_engineCurrentPresetId || settings?.activePresetId || "");
     const preset =
+      (pid && settings?.presets?.[pid]) ||
       settings?.presets?.[settings?.activePresetId] ||
       Object.values(settings?.presets || {})[0] ||
       {};
-
+    
     // fk(=source)로 현재 엔트리 찾기
     const bgm = (preset.bgms ?? []).find((b) => String(b?.fileKey ?? "") === fk) || null;
 
@@ -615,37 +619,37 @@ function updateNowPlayingUI() {
     const title = bgm ? getEntryName(bgm) : (fk || "(none)");
 
     // meta(기본 정보) / debug(추가 정보) 분리
-const presetName = preset?.name || "Preset";
-const modeLabel = settings?.keywordMode ? "Keyword" : (settings?.playMode || "manual");
-const meta = `${modeLabel} · ${presetName}`;
-const debugLine = (__abgmDebugMode && __abgmDebugLine) ? String(__abgmDebugLine) : "";
+    const presetName = preset?.name || "Preset";
+    const modeLabel = settings?.keywordMode ? "Keyword" : (settings?.playMode || "manual");
+    const meta = `${modeLabel} · ${presetName}`;
+    const debugLine = (__abgmDebugMode && __abgmDebugLine) ? String(__abgmDebugLine) : "";
 
-// ===== modal license area =====
-const licWrap = document.getElementById("abgm_np_license_wrap");
-const licText = document.getElementById("abgm_np_license_text");
+    // ===== modal license area =====
+    const licWrap = document.getElementById("abgm_np_license_wrap");
+    const licText = document.getElementById("abgm_np_license_text");
 
-if (licWrap && licText) {
-  const lic = bgm ? String(bgm.license ?? "").trim() : "";
-  if (lic) {
-    licWrap.style.display = "";
-    licText.textContent = lic;
-  } else {
-    licWrap.style.display = "none";
-    licText.textContent = "";
-  }
-}
+    if (licWrap && licText) {
+      const lic = bgm ? String(bgm.license ?? "").trim() : "";
+      if (lic) {
+        licWrap.style.display = "";
+        licText.textContent = lic;
+      } else {
+        licWrap.style.display = "none";
+        licText.textContent = "";
+      }
+    }
 
-// drawer
-_abgmSetText("autobgm_now_title", title);
-// _abgmSetText("autobgm_now_state", state);  // ST 확장 메뉴에는 필요없
-_abgmSetText("autobgm_now_meta", meta);
+    // drawer
+    _abgmSetText("autobgm_now_title", title);
+    // _abgmSetText("autobgm_now_state", state);  // ST 확장 메뉴에는 필요없
+    _abgmSetText("autobgm_now_meta", meta);
 
-// 확장메뉴 디버그 줄
-const dbg = document.getElementById("autobgm_now_debug");
-if (dbg) {
-  dbg.style.display = debugLine ? "" : "none";
-  dbg.textContent = debugLine;
-}
+    // 확장메뉴 디버그 줄
+    const dbg = document.getElementById("autobgm_now_debug");
+    if (dbg) {
+      dbg.style.display = debugLine ? "" : "none";
+      dbg.textContent = debugLine;
+    }
 
     // modal
     _abgmSetText("abgm_now_title", title);
@@ -1974,7 +1978,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
       preset.bgms.push({
         id: uid(),
         fileKey,
-        name: basenameNoExt(filekey),
+        name: basenameNoExt(fileKey),
         keywords: "",
         priority: 0,
         volume: 1.0,
@@ -2006,7 +2010,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
           preset.bgms.push({
             id: uid(),
             fileKey: fk,
-            name: basenameNoExt(fK),
+            name: basenameNoExt(fk),
             keywords: "",
             priority: 0,
             volume: 1.0,
