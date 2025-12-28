@@ -2828,6 +2828,21 @@ if (settings.keywordMode) {
   const hit = pickByKeyword(preset, asstText, "", avoidKey);
   const hitKey = hit?.fileKey ? String(hit.fileKey) : "";
 
+  // 현재 곡 재생 중이면 새 키워드 와도 무시 (덜어내기)
+  const isPlayingNow =
+    !!_engineCurrentFileKey &&
+    !_bgmAudio.paused &&
+    !_bgmAudio.ended;
+
+  if (isPlayingNow) {
+    return;
+  }
+
+  // 같은 곡 또 걸린 거면 굳이 다시 틀지 않음
+  if (hitKey && hitKey === _engineCurrentFileKey) {
+    return;
+  }
+  
   // 디버그는 기존처럼 유지(요구사항)
   if (__abgmDebugMode) {
     const tLower = asstText.toLowerCase();
