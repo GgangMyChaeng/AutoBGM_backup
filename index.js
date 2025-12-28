@@ -1140,6 +1140,56 @@ if (window.visualViewport) {
   console.log("[AutoBGM] modal opened");
 }
 
+/** ========= Free Sources ========== */
+const FS_OVERLAY_ID = "abgm_fs_overlay";
+
+async function openFreeSourcesModal() {
+  // 이미 열려있으면 스킵
+  if (document.getElementById(FS_OVERLAY_ID)) return;
+
+  let html = "";
+  try {
+    html = await loadHtml("templates/freesources.html");
+  } catch (e) {
+    console.error("[AutoBGM] freesources.html load failed", e);
+    return;
+  }
+
+  const host = getModalHost();
+
+  const overlay = document.createElement("div");
+  overlay.id = FS_OVERLAY_ID;
+  overlay.className = "autobgm-overlay";
+  overlay.innerHTML = html;
+
+  // overlay 스타일은 기존 모달이랑 동일하게
+  const setO = (k, v) => overlay.style.setProperty(k, v, "important");
+  setO("position", "absolute");
+  setO("inset", "0");
+  setO("display", "block");
+  setO("overflow", "auto");
+  setO("-webkit-overflow-scrolling", "touch");
+  setO("background", "rgba(0,0,0,.55)");
+  setO("z-index", "2147483647");
+  setO("padding", "12px");
+
+  host.appendChild(overlay);
+
+  // 닫기
+  const close = () => {
+    overlay.remove();
+  };
+
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) close();
+  });
+  overlay.querySelector("#abgm_fs_close")?.addEventListener("click", close);
+
+  // ESC 닫기
+  const onKey = (e) => { if (e.key === "Escape") close(); };
+  window.addEventListener("keydown", onKey, { once: true });
+}
+
 /** ========= UI render ========= */
 function getBgmSort(settings) {
   return settings?.ui?.bgmSort ?? "added_asc";
@@ -1503,15 +1553,15 @@ function initModal(overlay) {
   root.__abgmExpanded = new Set();
 
   const updateSelectionUI = () => {
-    const preset = getActivePreset(settings);
-    const list = getSortedBgms(preset, getBgmSort(settings));
-    const selected = root.__abgmSelected;
+  const preset = getActivePreset(settings);
+  const list = getSortedBgms(preset, getBgmSort(settings));
+  const selected = root.__abgmSelected;
 
-    const countEl = root.querySelector("#abgm_selected_count");
-    if (countEl) countEl.textContent = `${selected.size} selected`;
+  const countEl = root.querySelector("#abgm_selected_count");
+  if (countEl) countEl.textContent = `${selected.size} selected`;
 
-    const allChk = root.querySelector("#abgm_sel_all");
-    if (allChk) {
+  const allChk = root.querySelector("#abgm_sel_all");
+  if (allChk) {
       const total = list.length;
       const checked = list.filter((b) => selected.has(b.id)).length;
       allChk.checked = total > 0 && checked === total;
@@ -1836,7 +1886,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
   updateNowPlayingUI();
 });
 
-    // ===== Preset Binding UI (bind preset to character cards) =====
+  // ===== Preset Binding UI (bind preset to character cards) =====
   const bindOpen = root.querySelector("#abgm_bind_open");
   const bindOverlay = root.querySelector("#abgm_bind_overlay");
   const bindClose = root.querySelector("#abgm_bind_close");
@@ -2385,6 +2435,15 @@ root.querySelector("#abgm_bgm_tbody")?.addEventListener("change", async (e) => {
 
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   });
+
+  // ===== Free Sources button bind =====
+  const freeBtn = root.querySelector("#abgm_free_open"); // popup.html 버튼 id
+  if (freeBtn && freeBtn.dataset.bound !== "1") {
+    freeBtn.dataset.bound = "1";
+    freeBtn.addEventListener("click", () => {
+      openFreeSourcesModal(root);
+    });
+  }
 
   // ===== 헬프 토글 =====
   function setupHelpToggles(root) {
