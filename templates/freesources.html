@@ -5,14 +5,44 @@
   background:rgba(0,0,0,.18);
   margin-top:10px;
 ">
+
+  <!-- 헤더 -->
   <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-    <b>Free Sources</b>
-    <div class="menu_button" id="abgm_fs_close" title="Close">
+    <b id="abgm_fs_title">Free Sources</b>
+    <div class="menu_button abgm-fs-close" title="Close">
       <i class="fa-solid fa-xmark"></i>
     </div>
   </div>
 
-  <div style="opacity:.8; font-size:12px; margin-top:8px;">
-    여기 프리소스 UI 들어갈 예정
+  <!-- 탭 -->
+  <div style="display:flex; gap:8px; margin-top:10px;">
+    <button type="button" class="menu_button abgm-fs-tab is-active" data-tab="free">Free</button>
+    <button type="button" class="menu_button abgm-fs-tab" data-tab="my">My</button>
   </div>
+
+  <!-- 필터 바 -->
+  <div style="display:flex; gap:8px; align-items:center; margin-top:10px; flex-wrap:wrap;">
+    <input id="abgm_fs_search" type="text" placeholder="Search..."
+      style="flex:1; min-width:160px; padding:8px 10px; border-radius:10px;
+      border:1px solid rgba(255,255,255,.14); background:rgba(0,0,0,.25); color:inherit;" />
+
+    <button id="abgm_fs_clear" type="button" class="menu_button">Clear</button>
+  </div>
+
+  <!-- 선택된 태그 칩 -->
+  <div id="abgm_fs_tag_chips" style="display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;"></div>
+
+  <!-- 태그 피커(토글로 열림) -->
+  <div id="abgm_fs_tag_picker" style="
+    display:none;
+    margin-top:8px;
+    padding:8px;
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:10px;
+    background:rgba(0,0,0,.18);
+  "></div>
+
+  <!-- 리스트 -->
+  <div id="abgm_fs_list" style="margin-top:10px; display:flex; flex-direction:column; gap:8px;"></div>
+
 </div>
