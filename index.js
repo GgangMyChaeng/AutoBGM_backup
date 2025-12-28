@@ -1390,7 +1390,7 @@ function initFreeSourcesModal(overlay) {
   const root = overlay;
 
   // close btn
-  root.querySelector("#abgm_fs_close, #abgm-fs-close")?.addEventListener("click", closeFreeSourcesModal);
+  root.querySelector(".abgm-fs-close")?.addEventListener("click", closeFreeSourcesModal);
 
   // tab switch
   root.querySelectorAll(".abgm-fs-tab")?.forEach?.((btn) => {
