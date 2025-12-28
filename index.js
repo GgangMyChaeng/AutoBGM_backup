@@ -2248,6 +2248,8 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
   updateNowPlayingUI();
 });
 
+  root.querySelector("#abgm_open_freesources")?.addEventListener("click", openFreeSourcesModal);
+
   // ===== Preset Binding UI (bind preset to character cards) =====
   const bindOpen = root.querySelector("#abgm_bind_open");
   const bindOverlay = root.querySelector("#abgm_bind_overlay");
