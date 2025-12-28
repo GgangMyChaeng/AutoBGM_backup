@@ -472,6 +472,7 @@ function ensureSettings() {
   s.freeSources ??= [];
   s.mySources ??= [];
   s.fsUi ??= { tab: "free", selectedTags: [], search: "" };
+  s.fsUi.cat ??= "all";
 
   // 안전장치
   if (!s.presets || Object.keys(s.presets).length === 0) {
@@ -1188,17 +1189,35 @@ function getFsActiveList(settings) {
   return Array.isArray(arr) ? arr : [];
 }
 
-function collectAllTagsForTab(settings) {
+// 카테고리별 태그 수집
+function tagCat(t) {
+  const s = String(t || "").trim().toLowerCase();
+  const i = s.indexOf(":");
+  if (i <= 0) return "etc";
+  return s.slice(0, i); // bpm/genre/inst/mood/lyric
+}
+
+function tagValue(t) {
+  const s = String(t || "").trim();
+  const i = s.indexOf(":");
+  return i >= 0 ? s.slice(i + 1) : s;
+}
+
+function collectAllTagsForTabAndCat(settings) {
   const list = getFsActiveList(settings);
+  const cat = String(settings?.fsUi?.cat || "all");
   const bag = new Set();
+
   for (const it of list) {
-    for (const t of (it?.tags ?? [])) {
-      const nt = abgmNormTag(t);
-      if (nt) bag.add(nt);
+    for (const raw of (it?.tags ?? [])) {
+      const t = abgmNormTag(raw);
+      if (!t) continue;
+      if (cat !== "all" && tagCat(t) !== cat) continue;
+      bag.add(t);
     }
   }
-  return Array.from(bag).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
-}
+  return Array.from(bag).sort((a,b)=>a.localeCompare(b, undefined, {numeric:true}));
+} // 태그 수집 닫
 
 function renderFsTagChips(root, settings) {
   const wrap = root.querySelector("#abgm_fs_tag_chips");
@@ -1328,6 +1347,21 @@ function renderFsAll(root, settings) {
   renderFsTagChips(root, settings);
   renderFsTagPicker(root, settings);
   renderFsList(root, settings);
+  renderFsSummary(root, settings);
+}
+
+function renderFsSummary(root, settings) {
+  const el = root.querySelector("#abgm_fs_summary_text");
+  if (!el) return;
+
+  const tab = String(settings.fsUi?.tab || "free");
+  const cat = String(settings.fsUi?.cat || "all");
+  const tags = (settings.fsUi?.selectedTags ?? []).map(abgmNormTag).filter(Boolean);
+
+  el.textContent =
+    tags.length
+      ? `${tab.toUpperCase()} · ${cat.toUpperCase()} · AND: ${tags.join(", ")}`
+      : `${tab.toUpperCase()} · ${cat.toUpperCase()} · (none)`;
 }
 
 // open/close
@@ -1401,6 +1435,16 @@ function initFreeSourcesModal(overlay) {
       renderFsAll(root, settings);
     });
   });
+
+  // category switch
+  root.querySelectorAll(".abgm-fs-cat")?.forEach?.((btn) => {
+    btn.addEventListener("click", () => {
+      settings.fsUi.cat = String(btn.dataset.cat || "all");
+      saveSettingsDebounced();
+      renderFsAll(root, settings);
+    });
+  });
+
 
   // search
   const search = root.querySelector("#abgm_fs_search");
