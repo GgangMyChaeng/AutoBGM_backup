@@ -20,6 +20,37 @@
     <button type="button" class="menu_button abgm-fs-tab" data-tab="my">My</button>
   </div>
 
+  <!-- 카테고리 바 (가로 한 줄) -->
+<div id="abgm_fs_catbar" style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+  <button type="button" class="menu_button abgm-fs-cat is-active" data-cat="all">All</button>
+  <button type="button" class="menu_button abgm-fs-cat" data-cat="bpm">BPM</button>
+  <button type="button" class="menu_button abgm-fs-cat" data-cat="genre">Genre</button>
+  <button type="button" class="menu_button abgm-fs-cat" data-cat="inst">Inst</button>
+  <button type="button" class="menu_button abgm-fs-cat" data-cat="mood">Mood</button>
+  <button type="button" class="menu_button abgm-fs-cat" data-cat="lyric">Lyric</button>
+</div>
+
+<!-- 선택 요약 패널(= 지금 필터 뭐 걸렸는지) -->
+<div id="abgm_fs_summary" style="
+  margin-top:10px;
+  padding:10px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:12px;
+  background:rgba(0,0,0,.18);
+  display:flex;
+  gap:10px;
+  align-items:baseline;
+  flex-wrap:wrap;
+">
+  <small style="opacity:.75;">Filter</small>
+  <b id="abgm_fs_summary_text" style="opacity:.95;">(none)</b>
+</div>
+
+<!-- 태그 피커 제목(현재 카테고리) -->
+<div id="abgm_fs_picker_title" style="margin-top:10px; opacity:.8; font-size:12px;">
+  Select tags
+</div>
+
   <!-- 필터 바 -->
   <div style="display:flex; gap:8px; align-items:center; margin-top:10px; flex-wrap:wrap;">
     <input id="abgm_fs_search" type="text" placeholder="Search..."
