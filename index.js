@@ -2379,8 +2379,7 @@ root.querySelector("#abgm_bgm_tbody")?.addEventListener("change", async (e) => {
     const a = document.createElement("a");
     a.href = url;
     a.download = `${(String(preset.name || preset.id || "Preset").trim() || "Preset")
-      .replace(/[\\\/:*?"<>|]+/g, "_")
-      .replace(/\s+/g, "_")
+      .replace(/[\\\/:*?"<>|]+/g, "")
       .replace(/[._-]+$/g, "")}_AutoBGM.json`;
     a.click();
 
