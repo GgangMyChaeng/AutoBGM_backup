@@ -468,6 +468,11 @@ function ensureSettings() {
   s.ui ??= { bgmSort: "added_asc" };
   s.ui.bgmSort ??= "added_asc";
 
+  // ensureSettings 프리소스
+  s.freeSources ??= [];
+  s.mySources ??= [];
+  s.fsUi ??= { tab: "free", selectedTags: [], search: "" };
+
   // 안전장치
   if (!s.presets || Object.keys(s.presets).length === 0) {
     s.presets = {
@@ -1140,74 +1145,10 @@ if (window.visualViewport) {
   console.log("[AutoBGM] modal opened");
 }
 
-/** ========= Free Sources 버튼 ========== */
-const FS_OVERLAY_ID = "abgm_fs_overlay";
-
-async function openFreeSourcesModal() {
-  // 이미 열려있으면 스킵
-  if (document.getElementById(FS_OVERLAY_ID)) return;
-
-  let html = "";
-  try {
-    html = await loadHtml("templates/freesources.html");
-  } catch (e) {
-    console.error("[AutoBGM] freesources.html load failed", e);
-    return;
-  }
-
-  const host = getModalHost();
-
-  const overlay = document.createElement("div");
-  overlay.id = FS_OVERLAY_ID;
-  overlay.className = "autobgm-overlay";
-  overlay.innerHTML = html;
-
-  // overlay 스타일은 기존 모달이랑 동일하게
-  const setO = (k, v) => overlay.style.setProperty(k, v, "important");
-  setO("position", "absolute");
-  setO("inset", "0");
-  setO("display", "block");
-  setO("overflow", "auto");
-  setO("-webkit-overflow-scrolling", "touch");
-  setO("background", "rgba(0,0,0,.55)");
-  setO("z-index", "2147483647");
-  setO("padding", "12px");
-
-  host.appendChild(overlay);
-
-  // 닫기
-  const close = () => {
-    overlay.remove();
-  };
-
-  overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) close();
-  });
-  overlay.querySelector("#abgm_fs_close")?.addEventListener("click", close);
-
-  // ESC 닫기
-  const onKey = (e) => { if (e.key === "Escape") close(); };
-  window.addEventListener("keydown", onKey, { once: true });
-}
-
 // ===============================
 // FreeSources Modal 프리소스모달 (Free/My + Tag filter AND)
 // ===============================
 const FS_OVERLAY_ID = "abgm_fs_overlay";
-
-// settings schema add
-function ensureSettings() {
-  extension_settings[SETTINGS_KEY] ??= { /* ...기존... */ };
-
-  const s = extension_settings[SETTINGS_KEY];
-
-  // --- add these ---
-  s.freeSources ??= []; // read-only 느낌(니가 나중에 채우는 프리셋)
-  s.mySources ??= [];   // 유저 커스텀
-  s.fsUi ??= { tab: "free", selectedTags: [], search: "" };
-
-  return s;
-}
 
 // duration seconds -> "m:ss"
 function abgmFmtDur(sec) {
