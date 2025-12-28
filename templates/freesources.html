@@ -20,6 +20,15 @@
     <button type="button" class="menu_button abgm-fs-tab" data-tab="my">My</button>
   </div>
 
+    <!-- 필터 바 -->
+  <div style="display:flex; gap:8px; align-items:center; margin-top:10px; flex-wrap:wrap;">
+    <input id="abgm_fs_search" type="text" placeholder="Search..."
+      style="flex:1; min-width:160px; padding:8px 10px; border-radius:10px;
+      border:1px solid rgba(255,255,255,.14); background:rgba(0,0,0,.25); color:inherit;" />
+
+    <button id="abgm_fs_clear" type="button" class="menu_button">Clear</button>
+  </div>
+
   <!-- 카테고리 바 (가로 한 줄) -->
 <div id="abgm_fs_catbar" style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
   <button type="button" class="menu_button abgm-fs-cat is-active" data-cat="all">All</button>
@@ -28,6 +37,11 @@
   <button type="button" class="menu_button abgm-fs-cat" data-cat="inst">Inst</button>
   <button type="button" class="menu_button abgm-fs-cat" data-cat="mood">Mood</button>
   <button type="button" class="menu_button abgm-fs-cat" data-cat="lyric">Lyric</button>
+</div>
+
+  <!-- 태그 피커 제목(현재 카테고리) -->
+<div id="abgm_fs_picker_title" style="margin-top:10px; opacity:.8; font-size:12px;">
+  Select tags
 </div>
 
 <!-- 선택 요약 패널(= 지금 필터 뭐 걸렸는지) -->
@@ -45,20 +59,6 @@
   <small style="opacity:.75;">Filter</small>
   <b id="abgm_fs_summary_text" style="opacity:.95;">(none)</b>
 </div>
-
-<!-- 태그 피커 제목(현재 카테고리) -->
-<div id="abgm_fs_picker_title" style="margin-top:10px; opacity:.8; font-size:12px;">
-  Select tags
-</div>
-
-  <!-- 필터 바 -->
-  <div style="display:flex; gap:8px; align-items:center; margin-top:10px; flex-wrap:wrap;">
-    <input id="abgm_fs_search" type="text" placeholder="Search..."
-      style="flex:1; min-width:160px; padding:8px 10px; border-radius:10px;
-      border:1px solid rgba(255,255,255,.14); background:rgba(0,0,0,.25); color:inherit;" />
-
-    <button id="abgm_fs_clear" type="button" class="menu_button">Clear</button>
-  </div>
 
   <!-- 선택된 태그 칩 -->
   <div id="abgm_fs_tag_chips" style="display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;"></div>
