@@ -1194,13 +1194,7 @@ function tagCat(t) {
   const s = String(t || "").trim().toLowerCase();
   const i = s.indexOf(":");
   if (i <= 0) return "etc";
-  return s.slice(0, i); // bpm/genre/inst/mood/lyric
-}
-
-function tagValue(t) {
-  const s = String(t || "").trim();
-  const i = s.indexOf(":");
-  return i >= 0 ? s.slice(i + 1) : s;
+  return s.slice(0, i);
 }
 
 function collectAllTagsForTabAndCat(settings) {
@@ -1249,7 +1243,7 @@ function renderFsTagPicker(root, settings) {
   const box = root.querySelector("#abgm_fs_tag_picker");
   if (!box) return;
 
-  const all = collectAllTagsForTab(settings);
+  const all = collectAllTagsForTabAndCat(settings);
   const selected = new Set((settings.fsUi?.selectedTags ?? []).map(abgmNormTag).filter(Boolean));
 
   box.innerHTML = "";
@@ -1344,10 +1338,24 @@ function renderFsAll(root, settings) {
   const search = root.querySelector("#abgm_fs_search");
   if (search) search.value = String(settings.fsUi?.search ?? "");
 
+  renderFsCatbar(root, settings);
   renderFsTagChips(root, settings);
   renderFsTagPicker(root, settings);
   renderFsList(root, settings);
   renderFsSummary(root, settings);
+}
+
+function renderFsCatbar(root, settings) {
+  const cur = String(settings?.fsUi?.cat || "all");
+  root.querySelectorAll(".abgm-fs-cat")?.forEach?.((b) => {
+    b.classList.toggle("is-active", String(b.dataset.cat || "all") === cur);
+  });
+
+  const t = root.querySelector("#abgm_fs_picker_title");
+  if (t) {
+    const map = { all:"Select tags", bpm:"BPM tags", genre:"Genre tags", inst:"Inst tags", mood:"Mood tags", lyric:"Lyric tags" };
+    t.textContent = map[cur] || "Select tags";
+  }
 }
 
 function renderFsSummary(root, settings) {
