@@ -1140,7 +1140,7 @@ if (window.visualViewport) {
   console.log("[AutoBGM] modal opened");
 }
 
-/** ========= Free Sources ========== */
+/** ========= Free Sources 버튼 ========== */
 const FS_OVERLAY_ID = "abgm_fs_overlay";
 
 async function openFreeSourcesModal() {
@@ -1189,6 +1189,368 @@ async function openFreeSourcesModal() {
   const onKey = (e) => { if (e.key === "Escape") close(); };
   window.addEventListener("keydown", onKey, { once: true });
 }
+
+// ===============================
+// FreeSources Modal 프리소스모달 (Free/My + Tag filter AND)
+// ===============================
+const FS_OVERLAY_ID = "abgm_fs_overlay";
+
+// settings schema add
+function ensureSettings() {
+  extension_settings[SETTINGS_KEY] ??= { /* ...기존... */ };
+
+  const s = extension_settings[SETTINGS_KEY];
+
+  // --- add these ---
+  s.freeSources ??= []; // read-only 느낌(니가 나중에 채우는 프리셋)
+  s.mySources ??= [];   // 유저 커스텀
+  s.fsUi ??= { tab: "free", selectedTags: [], search: "" };
+
+  return s;
+}
+
+// duration seconds -> "m:ss"
+function abgmFmtDur(sec) {
+  const n = Math.max(0, Number(sec || 0));
+  const m = Math.floor(n / 60);
+  const s = Math.floor(n % 60);
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
+function abgmNormTag(t) {
+  return String(t || "").trim().toLowerCase();
+}
+
+function matchTagsAND(itemTags = [], selectedSet) {
+  if (!selectedSet || selectedSet.size === 0) return true;
+  const set = new Set((itemTags || []).map(abgmNormTag).filter(Boolean));
+  for (const t of selectedSet) {
+    if (!set.has(abgmNormTag(t))) return false;
+  }
+  return true;
+}
+
+function matchSearch(item, q) {
+  const s = String(q || "").trim().toLowerCase();
+  if (!s) return true;
+
+  const title = String(item?.title ?? item?.name ?? "").toLowerCase();
+  const tags = (item?.tags ?? []).map(abgmNormTag).join(" ");
+  const src = String(item?.src ?? item?.fileKey ?? "").toLowerCase();
+
+  return (title.includes(s) || tags.includes(s) || src.includes(s));
+}
+
+function getFsActiveList(settings) {
+  const tab = String(settings?.fsUi?.tab || "free");
+  const arr = tab === "my" ? (settings.mySources ?? []) : (settings.freeSources ?? []);
+  return Array.isArray(arr) ? arr : [];
+}
+
+function collectAllTagsForTab(settings) {
+  const list = getFsActiveList(settings);
+  const bag = new Set();
+  for (const it of list) {
+    for (const t of (it?.tags ?? [])) {
+      const nt = abgmNormTag(t);
+      if (nt) bag.add(nt);
+    }
+  }
+  return Array.from(bag).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+}
+
+function renderFsTagChips(root, settings) {
+  const wrap = root.querySelector("#abgm_fs_tag_chips");
+  if (!wrap) return;
+
+  const selected = new Set((settings.fsUi?.selectedTags ?? []).map(abgmNormTag).filter(Boolean));
+  wrap.innerHTML = "";
+
+  // 선택된 태그 칩
+  for (const t of selected) {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "menu_button abgm-fs-chip";
+    chip.dataset.tag = t;
+    chip.textContent = `#${t} ✕`;
+    wrap.appendChild(chip);
+  }
+
+  // 태그 선택 열기 버튼(칩)
+  const open = document.createElement("button");
+  open.type = "button";
+  open.className = "menu_button abgm-fs-chip abgm-fs-chip-open";
+  open.id = "abgm_fs_open_picker";
+  open.textContent = selected.size ? "Add tag" : "Filter tags";
+  wrap.appendChild(open);
+}
+
+function renderFsTagPicker(root, settings) {
+  const box = root.querySelector("#abgm_fs_tag_picker");
+  if (!box) return;
+
+  const all = collectAllTagsForTab(settings);
+  const selected = new Set((settings.fsUi?.selectedTags ?? []).map(abgmNormTag).filter(Boolean));
+
+  box.innerHTML = "";
+
+  if (!all.length) {
+    const p = document.createElement("div");
+    p.style.opacity = ".75";
+    p.style.fontSize = "12px";
+    p.style.padding = "8px 0";
+    p.textContent = "태그 없음";
+    box.appendChild(p);
+    return;
+  }
+
+  for (const t of all) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "menu_button abgm-fs-tagpick";
+    btn.dataset.tag = t;
+    btn.textContent = selected.has(t) ? `✅ ${t}` : t;
+    box.appendChild(btn);
+  }
+}
+
+function renderFsList(root, settings) {
+  const listEl = root.querySelector("#abgm_fs_list");
+  if (!listEl) return;
+
+  const selected = new Set((settings.fsUi?.selectedTags ?? []).map(abgmNormTag).filter(Boolean));
+  const q = String(settings.fsUi?.search ?? "");
+
+  const listRaw = getFsActiveList(settings);
+
+  // filter: AND + search
+  const filtered = listRaw.filter((it) => matchTagsAND(it?.tags ?? [], selected) && matchSearch(it, q));
+
+  listEl.innerHTML = "";
+
+  if (!filtered.length) {
+    const empty = document.createElement("div");
+    empty.style.opacity = ".75";
+    empty.style.fontSize = "12px";
+    empty.style.padding = "10px";
+    empty.textContent = "결과 없음";
+    listEl.appendChild(empty);
+    return;
+  }
+
+  for (const it of filtered) {
+    const id = String(it?.id ?? "");
+    const title = String(it?.title ?? it?.name ?? "(no title)");
+    const dur = abgmFmtDur(it?.durationSec ?? 0);
+    const tags = Array.isArray(it?.tags) ? it.tags.map(abgmNormTag).filter(Boolean) : [];
+    const src = String(it?.src ?? it?.fileKey ?? "");
+
+    const row = document.createElement("div");
+    row.className = "abgm-fs-item";
+    row.dataset.id = id;
+
+    row.innerHTML = `
+      <div class="abgm-fs-top">
+        <div class="abgm-fs-name" title="${escapeHtml(title)}">${escapeHtml(title)}</div>
+      </div>
+
+      <div class="abgm-fs-sub">
+        <div class="abgm-fs-time">${escapeHtml(dur)}</div>
+
+        <div class="abgm-fs-tags">
+          ${tags.map(t => `<button type="button" class="abgm-fs-tag menu_button" data-tag="${escapeHtml(t)}">#${escapeHtml(t)}</button>`).join("")}
+        </div>
+
+        <div class="abgm-fs-actions">
+          <button type="button" class="menu_button abgm-fs-play" title="Play" data-src="${escapeHtml(src)}">▶</button>
+          <button type="button" class="menu_button abgm-fs-copy" title="Copy" data-src="${escapeHtml(src)}">Copy</button>
+        </div>
+      </div>
+    `;
+
+    listEl.appendChild(row);
+  }
+}
+
+function renderFsAll(root, settings) {
+  // tab active UI
+  const tabs = root.querySelectorAll(".abgm-fs-tab");
+  tabs?.forEach?.((b) => {
+    const t = String(b.dataset.tab || "");
+    b.classList.toggle("is-active", t === String(settings.fsUi?.tab || "free"));
+  });
+
+  // search ui
+  const search = root.querySelector("#abgm_fs_search");
+  if (search) search.value = String(settings.fsUi?.search ?? "");
+
+  renderFsTagChips(root, settings);
+  renderFsTagPicker(root, settings);
+  renderFsList(root, settings);
+}
+
+// open/close
+function closeFreeSourcesModal() {
+  const overlay = document.getElementById(FS_OVERLAY_ID);
+  if (overlay) overlay.remove();
+  window.removeEventListener("keydown", abgmFsOnEsc);
+}
+
+function abgmFsOnEsc(e) {
+  if (e.key === "Escape") closeFreeSourcesModal();
+}
+
+// main
+async function openFreeSourcesModal() {
+  if (document.getElementById(FS_OVERLAY_ID)) return;
+
+  let html = "";
+  try {
+    html = await loadHtml("templates/freesources.html");
+  } catch (e) {
+    console.error("[AutoBGM] freesources.html load failed", e);
+    return;
+  }
+
+  const overlay = document.createElement("div");
+  overlay.id = FS_OVERLAY_ID;
+  overlay.className = "autobgm-overlay"; // 니 기존 overlay css 재활용
+  overlay.innerHTML = html;
+
+  // 바깥 클릭 닫기(원하면)
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) closeFreeSourcesModal();
+  });
+
+  const host = getModalHost();
+  const cs = getComputedStyle(host);
+  if (cs.position === "static") host.style.position = "relative";
+
+  // overlay 스타일(니 openModal 스타일이랑 맞춤)
+  const setO = (k, v) => overlay.style.setProperty(k, v, "important");
+  setO("position", "absolute");
+  setO("inset", "0");
+  setO("display", "block");
+  setO("overflow", "auto");
+  setO("-webkit-overflow-scrolling", "touch");
+  setO("background", "rgba(0,0,0,.55)");
+  setO("z-index", "2147483647");
+  setO("padding", "0");
+
+  host.appendChild(overlay);
+  window.addEventListener("keydown", abgmFsOnEsc);
+
+  initFreeSourcesModal(overlay);
+  console.log("[AutoBGM] freesources modal opened");
+}
+
+function initFreeSourcesModal(overlay) {
+  const settings = ensureSettings();
+  const root = overlay;
+
+  // close btn
+  root.querySelector(".abgm-fs-close")?.addEventListener("click", closeFreeSourcesModal);
+
+  // tab switch
+  root.querySelectorAll(".abgm-fs-tab")?.forEach?.((btn) => {
+    btn.addEventListener("click", () => {
+      settings.fsUi.tab = String(btn.dataset.tab || "free");
+      settings.fsUi.selectedTags = []; // 탭 바뀌면 필터 초기화(원하면 유지로 바꿔도 됨)
+      saveSettingsDebounced();
+      renderFsAll(root, settings);
+    });
+  });
+
+  // search
+  const search = root.querySelector("#abgm_fs_search");
+  search?.addEventListener("input", (e) => {
+    settings.fsUi.search = e.target.value || "";
+    saveSettingsDebounced();
+    renderFsList(root, settings);
+  });
+
+  // clear
+  root.querySelector("#abgm_fs_clear")?.addEventListener("click", () => {
+    settings.fsUi.search = "";
+    settings.fsUi.selectedTags = [];
+    saveSettingsDebounced();
+    renderFsAll(root, settings);
+  });
+
+  // tag chips + picker (event delegation)
+  root.addEventListener("click", (e) => {
+    // remove chip
+    const chip = e.target.closest(".abgm-fs-chip");
+    if (chip && chip.dataset.tag) {
+      const t = abgmNormTag(chip.dataset.tag);
+      const arr = (settings.fsUi.selectedTags ?? []).map(abgmNormTag).filter(Boolean);
+      settings.fsUi.selectedTags = arr.filter(x => x !== t);
+      saveSettingsDebounced();
+      renderFsAll(root, settings);
+      return;
+    }
+
+    // open picker
+    if (e.target.id === "abgm_fs_open_picker") {
+      const picker = root.querySelector("#abgm_fs_tag_picker");
+      if (!picker) return;
+      picker.style.display = picker.style.display === "none" ? "block" : "none";
+      return;
+    }
+
+    // pick tag toggle
+    const pick = e.target.closest(".abgm-fs-tagpick");
+    if (pick && pick.dataset.tag) {
+      const t = abgmNormTag(pick.dataset.tag);
+      const set = new Set((settings.fsUi.selectedTags ?? []).map(abgmNormTag).filter(Boolean));
+      if (set.has(t)) set.delete(t);
+      else set.add(t);
+      settings.fsUi.selectedTags = Array.from(set);
+      saveSettingsDebounced();
+      renderFsAll(root, settings);
+      return;
+    }
+
+    // play
+    const playBtn = e.target.closest(".abgm-fs-play");
+    if (playBtn) {
+      const src = String(playBtn.dataset.src || "").trim();
+      if (!src) return;
+      // 프리소스 미리듣기: 니 playAsset 재활용(테스트 플레이어)
+      try { playAsset(src, 0.9); } catch {}
+      return;
+    }
+
+    // copy
+    const copyBtn = e.target.closest(".abgm-fs-copy");
+    if (copyBtn) {
+      const src = String(copyBtn.dataset.src || "").trim();
+      if (!src) return;
+      navigator.clipboard?.writeText?.(src).catch(() => {});
+      return;
+    }
+
+    // tag 클릭(아이템 태그) -> 지금은 "필터에 추가"로만 처리 (팝업은 다음 단계)
+    const tagBtn = e.target.closest(".abgm-fs-tag");
+    if (tagBtn && tagBtn.dataset.tag) {
+      const t = abgmNormTag(tagBtn.dataset.tag);
+      const set = new Set((settings.fsUi.selectedTags ?? []).map(abgmNormTag).filter(Boolean));
+      set.add(t);
+      settings.fsUi.selectedTags = Array.from(set);
+      saveSettingsDebounced();
+      renderFsAll(root, settings);
+      return;
+    }
+  });
+
+  // 첫 렌더
+  renderFsAll(root, settings);
+}
+
+// ===============================
+// (연결) "BGM List의 MP3 추가 버튼 좌측" 버튼에서 호출만 하면 됨
+// 예: root.querySelector("#abgm_open_freesources")?.addEventListener("click", openFreeSourcesModal);
+// ===============================
 
 /** ========= UI render ========= */
 function getBgmSort(settings) {
