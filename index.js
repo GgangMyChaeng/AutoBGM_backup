@@ -433,48 +433,78 @@ async function loadHtml(relPath) {
   return await res.text();
 }
 
-/** ========= 제공된 프리소스 인식 ========= */
+/** ========= 제공된 프리소스 인식 (JSON -> settings.freeSources "싹 덮어쓰기") ========= */
+
+let __abgmFreeSourcesLoaded = false;
+
 async function loadBundledFreeSources() {
   const url = new URL("data/freesources.json", import.meta.url);
+  url.searchParams.set("v", String(Date.now())); // 개발 중 캐시 방지
   const res = await fetch(url);
   if (!res.ok) {
     console.warn("[AutoBGM] freesources.json load failed:", res.status);
     return [];
   }
   const json = await res.json();
+  // 구조 유지: { sources: [...] }
   return Array.isArray(json?.sources) ? json.sources : [];
 }
 
-// settings.freeSources에 "없는 것만" 추가 (id 기준)
-async function mergeBundledFreeSourcesIntoSettings(settings) {
-  settings.freeSources ??= [];
+function simpleHash(s) {
+  const str = String(s || "");
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0).toString(36);
+}
 
-  const existingIds = new Set(settings.freeSources.map(s => String(s?.id ?? "")));
+function normalizeFreeSourceItem(raw) {
+  const src = String(raw?.src ?? raw?.url ?? raw?.fileKey ?? "").trim();
+  if (!src) return null;
 
-  const bundled = await loadBundledFreeSources();
+  const title = String(raw?.title ?? raw?.name ?? "").trim() || nameFromSource(src);
+  const durationSec = Number(raw?.durationSec ?? raw?.duration ?? 0) || 0;
 
-  let added = 0;
-  for (const src of bundled) {
-    const id = String(src?.id ?? "").trim();
-    if (!id) continue;
-    if (existingIds.has(id)) continue; // 중복 방지
+  const tagsRaw = raw?.tags;
+  const tags = Array.isArray(tagsRaw)
+    ? tagsRaw.map(t => String(t || "").trim()).filter(Boolean)
+    : String(tagsRaw || "")
+        .split(/[,\n]+/)
+        .map(t => t.trim())
+        .filter(Boolean);
 
-    settings.freeSources.push({
-      id,
-      title: String(src?.title ?? ""),
-      src: String(src?.src ?? ""),
-      durationSec: Number(src?.durationSec ?? 0),
-      tags: Array.isArray(src?.tags) ? src.tags : []
-    });
+  // id는 믿지 말고, 없으면 src 기반으로 안정 생성
+  const id = String(raw?.id || "").trim() || `fs_${simpleHash(src)}`;
 
-    existingIds.add(id);
-    added++;
+  return { id, src, title, durationSec, tags };
+}
+
+/**
+ * JSON을 진실로 두고 settings.freeSources를 "항상" JSON값으로 교체
+ * - src 기준으로 유니크(중복 src면 마지막 승)
+ */
+async function syncBundledFreeSourcesIntoSettings(settings, { force = false, save = true } = {}) {
+  if (__abgmFreeSourcesLoaded && !force) return;
+
+  const bundledRaw = await loadBundledFreeSources();
+
+  const map = new Map(); // key: src
+  for (const r of bundledRaw) {
+    const it = normalizeFreeSourceItem(r);
+    if (!it) continue;
+    map.set(it.src, it); // 마지막이 승리
   }
 
-  if (added > 0) {
+  settings.freeSources = Array.from(map.values());
+  __abgmFreeSourcesLoaded = true;
+
+  if (save) {
     try { saveSettingsDebounced?.(); } catch {}
-    console.log("[AutoBGM] freeSources merged:", added);
   }
+
+  console.log("[AutoBGM] freeSources synced:", settings.freeSources.length);
 }
 
 /** ========= Settings schema + migration =========
@@ -1429,6 +1459,7 @@ function abgmFsOnEsc(e) {
 
 // main
 async function openFreeSourcesModal() {
+  await syncFreeSourcesFromJson({ force: true, save: true });
   if (document.getElementById(FS_OVERLAY_ID)) return;
 
   let html = "";
@@ -3115,13 +3146,13 @@ async function bootstrapDataOnce() {
   await mergeBundledFreeSourcesIntoSettings(settings);
 }
 
-/** ========= init ========= */
-function init() {
+/** ========= init 이닛 ========= */
+async function init() {
   // 중복 로드/실행 방지 (메뉴 2개 뜨는 거 방지)
   if (window.__AUTOBGM_BOOTED__) return;
   window.__AUTOBGM_BOOTED__ = true;
 
-  bootstrapDataOnce().catch(console.error);
+  await bootFreeSourcesSync();
   mount();
   startEngine();
   const obs = new MutationObserver(() => mount());
