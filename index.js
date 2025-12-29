@@ -2414,6 +2414,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
     const fileKey = file.name;
 
     await idbPut(fileKey, file);
+    const durationSec = await abgmGetDurationSecFromBlob(file);
     const assets = ensureAssetList(settings);
     assets[fileKey] = { fileKey, label: fileKey.replace(/\.mp3$/i, "") };
 
@@ -2427,6 +2428,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
         priority: 0,
         volume: 1.0,
         volLocked: false,
+        durationSec,
       });
     }
 
@@ -3496,7 +3498,6 @@ function startEngine() {
   _engineTimer = setInterval(engineTick, 900);
   engineTick();
 }
-  
 
 (async () => {
   try {
@@ -3516,3 +3517,27 @@ function startEngine() {
     console.error("[AutoBGM] boot failed", e);
   }
 })();
+
+// ====== mp3 및 url 시간 인식 ======
+async function abgmGetDurationSecFromBlob(blob) {
+  return new Promise((resolve) => {
+    const audio = document.createElement("audio");
+    audio.preload = "metadata";
+
+    const url = URL.createObjectURL(blob);
+
+    audio.onloadedmetadata = () => {
+      const sec = audio.duration;
+      URL.revokeObjectURL(url);
+      resolve(Number.isFinite(sec) ? sec : 0);
+    };
+
+    audio.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(0);
+    };
+
+    audio.src = url;
+  });
+}
+
