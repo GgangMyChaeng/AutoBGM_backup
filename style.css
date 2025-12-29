@@ -1041,22 +1041,28 @@ body.autobgm-modal-open{ overflow:hidden; }
 
 /* tabs */
 .abgm-fs-tabs{
-  display:flex;
-  gap:8px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:0;
+  width:260px; /* 필요하면 조절 */
   align-items:center;
 }
 
 .abgm-fs-tab{
-  border-radius:12px;
-  padding:8px 14px;
-  opacity:.8;
-  transition:opacity .12s ease, transform .12s ease;
+  border:0;
+  background:transparent;
+  border-radius:14px;
+  padding:8px 0;
+  opacity:.55;
+  color:rgba(255,255,255,.75);
+  transition:opacity .12s ease;
 }
 
 .abgm-fs-tab.is-active{
   opacity:1;
-  transform:translateY(-1px);
-  box-shadow:0 0 0 1px rgba(255,255,255,.14) inset;
+  color:rgba(255,255,255,.95);
+  transform:none;
+  box-shadow:none;
 }
 
 /* search row */
@@ -1085,20 +1091,21 @@ body.autobgm-modal-open{ overflow:hidden; }
 /* category bar */
 .abgm-fs-catbar{
   margin-top:10px;
-  display:flex;
+  display:grid;
+  grid-template-columns:repeat(6, 1fr);
   gap:8px;
-  flex-wrap:wrap;
 }
 
 .abgm-fs-cat{
-  border-radius:12px;
-  padding:7px 12px;
-  opacity:.75;
+  border-radius:14px;
+  padding:8px 0;
+  text-align:center;
+  opacity:.7;
 }
 
 .abgm-fs-cat.is-active{
   opacity:1;
-  box-shadow:0 0 0 1px rgba(255,255,255,.14) inset;
+  box-shadow:none;
 }
 
 /* dropdown picker (doesn't "consume space" vibe) */
@@ -1146,8 +1153,8 @@ body.autobgm-modal-open{ overflow:hidden; }
 }
 
 .abgm-fs-main{
-  flex:1;
-  display:flex;
+  flex:0 0 auto;
+  display:inline-flex;
   flex-direction:column;
   gap:6px;
   text-align:left;
@@ -1156,6 +1163,8 @@ body.autobgm-modal-open{ overflow:hidden; }
   color:inherit;
   padding:0;
   cursor:pointer;
+
+  max-width:60%; /* 제목 너무 길면 컷 */
 }
 
 .abgm-fs-name{
@@ -1171,7 +1180,8 @@ body.autobgm-modal-open{ overflow:hidden; }
 }
 
 .abgm-fs-side{
-  width:132px; /* “버튼 영역” 고정 */
+  margin-left:auto;
+  flex:0 0 240px;   /* 녹색 영역 느낌(원하면 조절) */
   display:flex;
   align-items:center;
   justify-content:flex-end;
@@ -1191,12 +1201,15 @@ body.autobgm-modal-open{ overflow:hidden; }
 .abgm-fs-tagpanel{
   display:none;
   width:100%;
-  max-height:62px;     /* 버튼 영역 느낌 */
+  max-height:62px;
   overflow:auto;
   padding:6px;
   border-radius:12px;
   border:1px solid rgba(255,255,255,.12);
   background:rgba(0,0,0,.25);
+
+  line-height:1.2;
+  word-break:break-word;
 }
 
 .abgm-fs-tag{
