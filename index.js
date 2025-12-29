@@ -433,6 +433,50 @@ async function loadHtml(relPath) {
   return await res.text();
 }
 
+/** ========= 제공된 프리소스 인식 ========= */
+async function loadBundledFreeSources() {
+  const url = new URL("data/freesources.json", import.meta.url);
+  const res = await fetch(url);
+  if (!res.ok) {
+    console.warn("[AutoBGM] freesources.json load failed:", res.status);
+    return [];
+  }
+  const json = await res.json();
+  return Array.isArray(json?.sources) ? json.sources : [];
+}
+
+// settings.freeSources에 "없는 것만" 추가 (id 기준)
+async function mergeBundledFreeSourcesIntoSettings(settings) {
+  settings.freeSources ??= [];
+
+  const existingIds = new Set(settings.freeSources.map(s => String(s?.id ?? "")));
+
+  const bundled = await loadBundledFreeSources();
+
+  let added = 0;
+  for (const src of bundled) {
+    const id = String(src?.id ?? "").trim();
+    if (!id) continue;
+    if (existingIds.has(id)) continue; // 중복 방지
+
+    settings.freeSources.push({
+      id,
+      title: String(src?.title ?? ""),
+      src: String(src?.src ?? ""),
+      durationSec: Number(src?.durationSec ?? 0),
+      tags: Array.isArray(src?.tags) ? src.tags : []
+    });
+
+    existingIds.add(id);
+    added++;
+  }
+
+  if (added > 0) {
+    try { saveSettingsDebounced?.(); } catch {}
+    console.log("[AutoBGM] freeSources merged:", added);
+  }
+}
+
 /** ========= Settings schema + migration =========
  * preset.bgms[]: { id, fileKey, keywords, priority, volume, volLocked }
  * preset.defaultBgmKey: "neutral_01.mp3"
@@ -2858,7 +2902,7 @@ root.querySelector("#abgm_bgm_tbody")?.addEventListener("change", async (e) => {
   setupHelpToggles(root);
 } // initModal 닫기
 
-/** ========= Side menu mount ========= */
+/** ========= Side menu mount 마운트 ========= */
 async function mount() {
   const host = document.querySelector("#extensions_settings");
   if (!host) return;
@@ -3060,11 +3104,22 @@ async function mount() {
   }
 }
 
+// 프리소스 관련
+async function bootstrapDataOnce() {
+  if (window.__AUTOBGM_FS_BOOTSTRAPPED__) return;
+  window.__AUTOBGM_FS_BOOTSTRAPPED__ = true;
+
+  const settings = ensureSettings(); // 기존 거 그대로 사용
+  await mergeBundledFreeSourcesIntoSettings(settings);
+}
+
+/** ========= init ========= */
 function init() {
   // 중복 로드/실행 방지 (메뉴 2개 뜨는 거 방지)
   if (window.__AUTOBGM_BOOTED__) return;
   window.__AUTOBGM_BOOTED__ = true;
 
+  bootstrapDataOnce().catch(console.error);
   mount();
   startEngine();
   const obs = new MutationObserver(() => mount());
