@@ -1090,10 +1090,10 @@ body.autobgm-modal-open{ overflow:hidden; }
 
 /* category bar */
 .abgm-fs-catbar{
-  margin-top:10px;
+  margin-top:12px;
   display:grid;
   grid-template-columns:repeat(6, 1fr);
-  gap:8px;
+  gap:10px;
 }
 
 .abgm-fs-cat{
@@ -1144,27 +1144,30 @@ body.autobgm-modal-open{ overflow:hidden; }
 /* item row */
 .abgm-fs-item{
   display:flex;
-  align-items:stretch;
-  gap:10px;
-  padding:10px;
-  border:1px solid rgba(255,255,255,.10);
-  border-radius:14px;
-  background:rgba(0,0,0,.18);
+  align-items:center;
+  gap:12px;
+  padding:12px 14px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:12px;
+  background:rgba(0,0,0,.22);
+  transition:background .15s ease;
+}
+.abgm-fs-item:hover{
+  background:rgba(0,0,0,.32);
 }
 
 .abgm-fs-main{
-  flex:0 0 auto;
-  display:inline-flex;
+  flex:1 1 auto;
+  min-width:0; /* 이거 중요: flex 자식이 텍스트 오버플로우 제대로 먹게 */
+  display:flex;
   flex-direction:column;
-  gap:6px;
-  text-align:left;
+  gap:4px;
   background:transparent;
   border:0;
   color:inherit;
   padding:0;
   cursor:pointer;
-
-  max-width:60%; /* 제목 너무 길면 컷 */
+  text-align:left;
 }
 
 .abgm-fs-name{
@@ -1180,12 +1183,12 @@ body.autobgm-modal-open{ overflow:hidden; }
 }
 
 .abgm-fs-side{
-  margin-left:auto;
-  flex:0 0 240px;   /* 녹색 영역 느낌(원하면 조절) */
+  flex:0 0 auto;
+  min-width:200px;
+  max-width:280px;
   display:flex;
   align-items:center;
   justify-content:flex-end;
-  position:relative;
 }
 
 /* actions default */
@@ -1201,26 +1204,34 @@ body.autobgm-modal-open{ overflow:hidden; }
 .abgm-fs-tagpanel{
   display:none;
   width:100%;
-  max-height:62px;
-  overflow:auto;
-  padding:6px;
-  border-radius:12px;
-  border:1px solid rgba(255,255,255,.12);
-  background:rgba(0,0,0,.25);
-
-  line-height:1.2;
-  word-break:break-word;
+  max-height:80px;
+  overflow-y:auto;
+  overflow-x:hidden;
+  padding:8px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(0,0,0,.3);
+  
+  /* 핵심: 가로로 태그 나열 */
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  align-items:flex-start;
 }
 
 .abgm-fs-tag{
   display:inline-block;
-  margin:4px 6px 0 0;
-  border-radius:10px;
-  padding:5px 9px;
-  font-size:12px;
-  opacity:.85;
+  flex-shrink:0;
+  margin:0;
+  border-radius:8px;
+  padding:6px 12px;
+  font-size:11px;
+  opacity:.88;
+  white-space:nowrap;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.12);
 }
 
 /* toggle class */
 .abgm-fs-item.show-tags .abgm-fs-actions{ display:none; }
-.abgm-fs-item.show-tags .abgm-fs-tagpanel{ display:block; }
+.abgm-fs-item.show-tags .abgm-fs-tagpanel{ display:flex; }
