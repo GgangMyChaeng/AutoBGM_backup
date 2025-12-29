@@ -1105,6 +1105,7 @@ body.autobgm-modal-open{ overflow:hidden; }
 }
 
 .abgm-fs-cat{
+  width:100%;
   border-radius:10px;
   padding:10px 8px;
   text-align:center;
