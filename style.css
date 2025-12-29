@@ -1043,24 +1043,32 @@ body.autobgm-modal-open{ overflow:hidden; }
 .abgm-fs-tabs{
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:0;
-  width:260px; /* 필요하면 조절 */
-  align-items:center;
+  gap:8px;
+  width:100%;
+  max-width:300px;
 }
 
 .abgm-fs-tab{
-  border:0;
-  background:transparent;
-  border-radius:14px;
-  padding:8px 0;
-  opacity:.55;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.04);
+  border-radius:10px;
+  padding:10px 16px;
+  text-align:center;
+  opacity:.65;
   color:rgba(255,255,255,.75);
-  transition:opacity .12s ease;
+  transition:all .15s ease;
+  cursor:pointer;
+  font-size:14px;
 }
-
+.abgm-fs-tab:hover{
+  opacity:.85;
+  background:rgba(255,255,255,.08);
+}
 .abgm-fs-tab.is-active{
   opacity:1;
   color:rgba(255,255,255,.95);
+  background:rgba(255,255,255,.14);
+  border-color:rgba(255,255,255,.22);
   transform:none;
   box-shadow:none;
 }
@@ -1097,14 +1105,24 @@ body.autobgm-modal-open{ overflow:hidden; }
 }
 
 .abgm-fs-cat{
-  border-radius:14px;
-  padding:8px 0;
+  border-radius:10px;
+  padding:10px 8px;
   text-align:center;
-  opacity:.7;
+  opacity:.65;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.08);
+  transition:all .15s ease;
+  cursor:pointer;
+  font-size:13px;
 }
-
+.abgm-fs-cat:hover{
+  opacity:.85;
+  background:rgba(255,255,255,.08);
+}
 .abgm-fs-cat.is-active{
   opacity:1;
+  background:rgba(255,255,255,.12);
+  border-color:rgba(255,255,255,.2);
   box-shadow:none;
 }
 
