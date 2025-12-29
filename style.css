@@ -1202,7 +1202,6 @@ body.autobgm-modal-open{ overflow:hidden; }
 
 /* tag panel (replaces action area) */
 .abgm-fs-tagpanel{
-  display:none;
   width:100%;
   max-height:80px;
   overflow-y:auto;
@@ -1212,8 +1211,8 @@ body.autobgm-modal-open{ overflow:hidden; }
   border:1px solid rgba(255,255,255,.14);
   background:rgba(0,0,0,.3);
   
-  /* 핵심: 가로로 태그 나열 */
-  display:flex;
+  /* 가로 배치용 */
+  display:none; /* 기본은 숨김 */
   flex-wrap:wrap;
   gap:6px;
   align-items:flex-start;
