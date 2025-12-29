@@ -1234,4 +1234,4 @@ body.autobgm-modal-open{ overflow:hidden; }
 
 /* toggle class */
 .abgm-fs-item.show-tags .abgm-fs-actions{ display:none; }
-.abgm-fs-item.show-tags .abgm-fs-tagpanel{ display:flex; }
+.abgm-fs-item.show-tags .abgm-fs-tagpanel{ display:block; }
