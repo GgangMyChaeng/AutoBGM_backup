@@ -1498,12 +1498,13 @@ async function openFreeSourcesModal() {
   host.appendChild(overlay);
   window.addEventListener("keydown", abgmFsOnEsc);
 
-  initFreeSourcesModal(overlay);
+  await initFreeSourcesModal(overlay);
   console.log("[AutoBGM] freesources modal opened");
 }
 
-function initFreeSourcesModal(overlay) {
+async function initFreeSourcesModal(overlay) {
   const settings = ensureSettings();
+  await syncBundledFreeSourcesIntoSettings(settings, { force: true, save: true });
   const root = overlay;
 
   // close btn
@@ -1527,7 +1528,6 @@ function initFreeSourcesModal(overlay) {
       renderFsAll(root, settings);
     });
   });
-
 
   // search
   const search = root.querySelector("#abgm_fs_search");
@@ -1611,8 +1611,7 @@ function initFreeSourcesModal(overlay) {
     }
   });
 
-  // 첫 렌더
-  renderFsAll(root, settings);
+  renderFsAll(root, settings); // 첫 렌더
 }
 
 // ===============================
