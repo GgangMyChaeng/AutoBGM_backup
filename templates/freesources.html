@@ -1,84 +1,36 @@
-<div class="abgm-fs-wrap" style="
-  max-width: 900px;
-  max-height: 85vh;
-  margin: 20px auto;
-  padding: 20px;
-  border: 1px solid rgba(255,255,255,.18);
-  border-radius: 16px;
-  background: rgba(10,10,10,.95);
-  backdrop-filter: blur(12px);
-  overflow-y: auto;
-  box-shadow: 0 8px 32px rgba(0,0,0,.4);
-">
-
-  <!-- 헤더 -->
-  <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-    <b id="abgm_fs_title">Free Sources</b>
-    <div class="menu_button abgm-fs-close" title="Close">
-      <i class="fa-solid fa-xmark"></i>
+<div class="abgm-fs-wrap">
+  <!-- top row: tabs + close -->
+  <div class="abgm-fs-topbar">
+    <div class="abgm-fs-tabs" role="tablist" aria-label="Sources tabs">
+      <button type="button" class="abgm-fs-tab is-active" data-tab="free" role="tab" aria-selected="true">Free</button>
+      <button type="button" class="abgm-fs-tab" data-tab="my" role="tab" aria-selected="false">My</button>
     </div>
+
+    <button type="button" class="menu_button abgm-fs-close" title="Close" aria-label="Close">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
   </div>
 
-  <!-- 탭 -->
-  <div style="display:flex; gap:8px; margin-top:10px;">
-    <button type="button" class="menu_button abgm-fs-tab is-active" data-tab="free">Free</button>
-    <button type="button" class="menu_button abgm-fs-tab" data-tab="my">My</button>
-  </div>
-
-    <!-- 필터 바 -->
-  <div style="display:flex; gap:8px; align-items:center; margin-top:10px; flex-wrap:wrap;">
+  <!-- search row -->
+  <div class="abgm-fs-searchrow">
     <input id="abgm_fs_search" type="text" placeholder="Search..."
-      style="flex:1; min-width:160px; padding:8px 10px; border-radius:10px;
-      border:1px solid rgba(255,255,255,.14); background:rgba(0,0,0,.25); color:inherit;" />
-
-    <button id="abgm_fs_clear" type="button" class="menu_button">Clear</button>
+      class="abgm-fs-search" />
+    <button id="abgm_fs_clear" type="button" class="menu_button abgm-fs-clear">Clear</button>
   </div>
 
-  <!-- 선택 요약 패널(= 지금 필터 뭐 걸렸는지) -->
-<div id="abgm_fs_summary" style="
-  margin-top:10px;
-  padding:10px;
-  border:1px solid rgba(255,255,255,.12);
-  border-radius:12px;
-  background:rgba(0,0,0,.18);
-  display:flex;
-  gap:10px;
-  align-items:baseline;
-  flex-wrap:wrap;
-">
-  <small style="opacity:.75;">Filter</small>
-  <b id="abgm_fs_summary_text" style="opacity:.95;">(none)</b>
-</div>
+  <!-- category bar (tag group selector) -->
+  <div id="abgm_fs_catbar" class="abgm-fs-catbar" aria-label="Tag categories">
+    <button type="button" class="menu_button abgm-fs-cat is-active" data-cat="all">All</button>
+    <button type="button" class="menu_button abgm-fs-cat" data-cat="bpm">BPM</button>
+    <button type="button" class="menu_button abgm-fs-cat" data-cat="genre">Genre</button>
+    <button type="button" class="menu_button abgm-fs-cat" data-cat="inst">Inst</button>
+    <button type="button" class="menu_button abgm-fs-cat" data-cat="mood">Mood</button>
+    <button type="button" class="menu_button abgm-fs-cat" data-cat="lyric">Lyric</button>
+  </div>
 
-  <!-- 카테고리 바 (가로 한 줄) -->
-<div id="abgm_fs_catbar" style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
-  <button type="button" class="menu_button abgm-fs-cat is-active" data-cat="all">All</button>
-  <button type="button" class="menu_button abgm-fs-cat" data-cat="bpm">BPM</button>
-  <button type="button" class="menu_button abgm-fs-cat" data-cat="genre">Genre</button>
-  <button type="button" class="menu_button abgm-fs-cat" data-cat="inst">Inst</button>
-  <button type="button" class="menu_button abgm-fs-cat" data-cat="mood">Mood</button>
-  <button type="button" class="menu_button abgm-fs-cat" data-cat="lyric">Lyric</button>
-</div>
+  <!-- dropdown tag picker (overlay style) -->
+  <div id="abgm_fs_tag_picker" class="abgm-fs-picker" style="display:none;"></div>
 
-  <!-- 태그 피커 제목(현재 카테고리) -->
-<div id="abgm_fs_picker_title" style="margin-top:10px; opacity:.8; font-size:12px;">
-  Select tags
-</div>
-
-  <!-- 선택된 태그 칩 -->
-  <div id="abgm_fs_tag_chips" style="display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;"></div>
-
-  <!-- 태그 피커(토글로 열림) -->
-  <div id="abgm_fs_tag_picker" style="
-    display:none;
-    margin-top:8px;
-    padding:8px;
-    border:1px solid rgba(255,255,255,.12);
-    border-radius:10px;
-    background:rgba(0,0,0,.18);
-  "></div>
-
-  <!-- 리스트 -->
-  <div id="abgm_fs_list" style="margin-top:10px; display:flex; flex-direction:column; gap:8px;"></div>
-
+  <!-- list -->
+  <div id="abgm_fs_list" class="abgm-fs-list"></div>
 </div>
