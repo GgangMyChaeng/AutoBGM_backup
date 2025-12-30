@@ -189,13 +189,27 @@
       "title": "Sunday Brunch 2",
       "src": "http://dl.dropbox.com/s/p4llxvdzwga3jdxqwwbgx/Sunday-Brunch-2.mp3?rlkey=6x5bvf4cgdgubs9t1w6ojfcuo&st=lc9f2apw&dl=0",
       "durationSec": 137,
-      "tags": ["Sample", "no lyric", "115", "Bossa Nova", "Acoustic Pop"]
+      "tags": ["no lyric", "115", "Bossa Nova", "Acoustic Pop"]
     },
     {
       "id": "Velvet-Noise-1",
       "title": "Velvet Noise 1",
       "src": "https://www.dropbox.com/scl/fi/ez30q9tgmua38dnu351dq/Velvet-Noise-1.wav?rlkey=f7zhnd68rf5j4ewqqj3q7bp77&st=bvmdkhzm&raw=1",
       "durationSec": 153,
+      "tags": ["no lyric", "88", "Future RnB", "Neo Soul"]
+    },
+    {
+      "id": "Velvet-Noise-2",
+      "title": "Velvet Noise 2",
+      "src": "https://www.dropbox.com/scl/fi/0wl1guwurso6x4oep0qdu/Velvet-Noise-2.wav?rlkey=2envjekdu4w11fp3brz4lt7hr&st=d91mper4&dl=0",
+      "durationSec": 131,
+      "tags": ["no lyric", "88", "Future RnB", "Neo Soul"]
+    },
+    {
+      "id": "Velvet-Noise-3",
+      "title": "Velvet Noise 3",
+      "src": "https://www.dropbox.com/scl/fi/rgu8ybb6c5sbgo1v5it58/Velvet-Noise-3.wav?rlkey=caq3quuxxypff0ytqivmx2qkp&st=vij7ec2t&dl=0",
+      "durationSec": 142,
       "tags": ["no lyric", "88", "Future RnB", "Neo Soul"]
     }
   ]
