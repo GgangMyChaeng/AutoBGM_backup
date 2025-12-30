@@ -1562,7 +1562,9 @@ function renderFsTagPicker(root, settings) {
     btn.type = "button";
     btn.className = "menu_button abgm-fs-tagpick";
     btn.dataset.tag = t;
-    btn.textContent = selected.has(t) ? `✅ ${t}` : t;
+    const label = tagPretty(t);
+    btn.textContent = selected.has(t) ? `✅ ${label}` : label;
+    btn.title = t; // hover하면 원본(genre:xxx) 보이게
     box.appendChild(btn);
   }
 }
@@ -1640,7 +1642,7 @@ function renderFsList(root, settings) {
         </div>
 
         <div class="abgm-fs-tagpanel">
-          ${tags.map(t => `<button type="button" class="abgm-fs-tag menu_button" data-tag="${escapeHtml(t)}">#${escapeHtml(t)}</button>`).join("")}
+          ${tags.map(t => `<button type="button" class="abgm-fs-tag menu_button" data-tag="${escapeHtml(t)}" title="${escapeHtml(t)}">#${escapeHtml(tagPretty(t))}</button>`).join("")}
         </div>
       </div>
     `;
