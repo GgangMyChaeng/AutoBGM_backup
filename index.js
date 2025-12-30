@@ -1386,6 +1386,14 @@ function renderFsList(root, settings) {
   const listEl = root.querySelector("#abgm_fs_list");
   if (!listEl) return;
 
+  const filtered = listRaw
+  .filter((it) => matchTagsAND(it?.tags ?? [], selected) && matchSearch(it, q))
+  .sort((a, b) => {
+    const an = String(a?.title ?? a?.name ?? "").trim();
+    const bn = String(b?.title ?? b?.name ?? "").trim();
+    return an.localeCompare(bn, undefined, { numeric: true, sensitivity: "base" });
+  });
+
   const selected = new Set((settings.fsUi?.selectedTags ?? []).map(abgmNormTag).filter(Boolean));
   const q = String(settings.fsUi?.search ?? "");
 
