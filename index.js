@@ -1087,6 +1087,22 @@ function isProbablyUrl(s) {
   return /^https?:\/\//i.test(v);
 }
 
+// ===== Dropbox URL normalize (audio용) =====
+function dropboxToRaw(u) {
+  try {
+    const url = new URL(String(u || "").trim());
+    if (!/dropbox\.com$/i.test(url.hostname)) return String(u || "").trim();
+
+    // 미리보기 파라미터 제거 + raw=1 강제
+    url.searchParams.delete("dl");
+    url.searchParams.set("raw", "1");
+
+    return url.toString();
+  } catch {
+    return String(u || "").trim();
+  }
+}
+
 /** ========= ZIP (JSZip 필요) ========= */
 async function ensureJSZipLoaded() {
   if (window.JSZip) return window.JSZip;
@@ -2842,15 +2858,19 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
       return;
     }
 
-  // Source (정규화된 거)
-  if (e.target.classList.contains("abgm_source")) {
+// Source (정규화된 거)
+if (e.target.classList.contains("abgm_source")) {
   const oldKey = String(bgm.fileKey ?? "");
-  const newKey = String(e.target.value || "").trim();
+
+  let newKey = String(e.target.value || "").trim();
+  newKey = dropboxToRaw(newKey);     // 여기
+  e.target.value = newKey;           // 입력창도 변환된 걸로 보여주기
+
   bgm.fileKey = newKey;
 
   if (oldKey && preset.defaultBgmKey === oldKey) {
-      preset.defaultBgmKey = newKey;
-    }
+    preset.defaultBgmKey = newKey;
+  }
 
   saveSettingsDebounced();
   renderDefaultSelect(root, settings);
