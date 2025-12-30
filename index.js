@@ -1684,8 +1684,6 @@ async function initFreeSourcesModal(overlay) {
     if (!inPicker && !inCat) picker.style.display = "none";
   }, true);
 
-DD@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
   renderFsAll(root, settings);
 }
 
