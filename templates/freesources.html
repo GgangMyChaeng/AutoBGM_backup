@@ -8,6 +8,7 @@
   background: rgba(10,10,10,.95);
   backdrop-filter: blur(12px);
   overflow-y: auto;
+  overflow: visible;
   box-shadow: 0 8px 32px rgba(0,0,0,.4);
 ">
   
@@ -28,6 +29,21 @@
     <input id="abgm_fs_search" type="text" placeholder="Search..."
       class="abgm-fs-search" />
     <button id="abgm_fs_clear" type="button" class="menu_button abgm-fs-clear">Clear</button>
+  </div>
+
+  <!-- preview volume row (Free/My separated) -->
+  <div class="abgm-fs-prevrow" aria-label="Preview volume">
+    <small class="abgm-fs-prevlabel">Preview</small>
+
+    <input id="abgm_fs_prevvol" type="range" min="0" max="100" step="1"
+      class="abgm-fs-prevvol" value="60" />
+
+    <span id="abgm_fs_prevvol_val" class="abgm-fs-prevval">60%</span>
+
+    <button id="abgm_fs_prevvol_lock" type="button"
+      class="menu_button abgm-iconbtn abgm-fs-prevlock" title="Lock slider">
+      <i class="fa-solid fa-lock-open"></i>
+    </button>
   </div>
 
   <!-- category bar (tag group selector) -->
