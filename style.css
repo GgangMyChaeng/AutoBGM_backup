@@ -1035,7 +1035,16 @@ body.autobgm-modal-open{ overflow:hidden; }
   overflow: visible;
 }
 
-#abgm_fs_tag_picker { position: absolute; z-index: 50; }
+#abgm_fs_tag_picker{
+  position: absolute;
+  z-index: 50;
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  align-content:flex-start;
+  overflow:auto;
+  padding:8px;
+}
 
 /* top bar */
 .abgm-fs-topbar{
@@ -1195,8 +1204,10 @@ body.autobgm-modal-open{ overflow:hidden; }
 
 .abgm-fs-tagpick{
   margin:4px 6px 0 0;
+  flex:0 0 auto;
+  white-space:nowrap;
+  padding:8px 10px;
   border-radius:10px;
-  padding:6px 10px;
   opacity:.9;
 }
 
