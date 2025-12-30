@@ -1287,11 +1287,18 @@ const PHRASE_ALIASES = new Map([
   ["acoustic pop", ["inst:acoustic", "genre:pop"]],
   ["neo soul", ["genre:neo_soul"]],
   ["bossa nova", ["genre:bossa_nova"]],
-  ["lo-fi hip hop", ["genre:lofi_hiphop"]],
+  ["lo-fi hip hop", ["mood:lofi", "genre:hiphop"]],
   ["glitch hop", ["genre:glitch_hop"]],
   ["jazz hop", ["genre:jazz_hop"]],
-  ["industrial techno", ["genre:industrial_techno"]],
+  ["industrial techno", ["genre:industrial", "genre:techno"]],
   ["electronic/edm", ["genre:electronic", "genre:edm"]],
+  ["darksynth", ["genre:darksynth", "mood:dark", "inst:synth"]],
+  ["french glitch", ["genre:french", "genre:glitch"]],
+  ["808 bassline", ["inst:808_bass"]],
+  ["industrial horror", ["mood:industrial", "mood:horror"]],
+  ["mechanical groove", ["mood:mechanical", "mood:groove"]],
+  ["night vibes", ["mood:night_vibes"]],
+  ["tension", ["mood:tense"]],
 ]);
 
 const GENRE_WORDS = new Set([
@@ -1301,12 +1308,12 @@ const GENRE_WORDS = new Set([
 
 const MOOD_WORDS = new Set([
   "calm","dark","sad","happy","tense","chill","cozy","epic","mysterious",
-  "alternative","chaotic","cinematic","cold","cyberpunk","tension","night","tight"
+  "alternative","chaotic","cinematic","cold","cyberpunk","tension","night","tight","lofi"
 ]);
 
 const INST_WORDS = new Set([
   "piano","guitar","strings","synth","bass","drums","orchestra",
-  "acoustic","808","turntable","scratch"
+  "acoustic","808","turntable","scratch","808_bass"
 ]);
 
 const LYRIC_WORDS = new Set([
@@ -1435,6 +1442,35 @@ function fsSetPreviewLock(settings, locked) {
   const tab = String(settings?.fsUi?.tab || "free");
   if (tab === "my") settings.fsUi.previewVolLockMy = !!locked;
   else settings.fsUi.previewVolLockFree = !!locked;
+}
+
+// ===== tag display helper (tagCat 근처에 추가 추천) =====
+function tagVal(t){
+  const s = abgmNormTag(t);
+  const i = s.indexOf(":");
+  return i > 0 ? s.slice(i + 1) : s;
+}
+
+const TAG_PRETTY_MAP = new Map([
+  ["rnb", "R&B"],
+  ["hiphop", "hip-hop"],
+  ["lofi", "lo-fi"],
+  ["idm", "IDM"],
+  ["edm", "EDM"],
+]);
+
+function tagPretty(t){
+  const s = abgmNormTag(t);
+  const cat = tagCat(s);
+  let v = tagVal(s).replace(/[_]+/g, " ").trim(); // neo_soul -> neo soul
+
+  // 약간만 보기 좋게
+  if (TAG_PRETTY_MAP.has(v)) v = TAG_PRETTY_MAP.get(v);
+
+  // bpm은 표시만 예쁘게
+  if (cat === "bpm") return `${v} BPM`;
+
+  return v;
 }
 
 // 카테고리별 태그 수집
