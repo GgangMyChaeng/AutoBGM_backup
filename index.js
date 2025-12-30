@@ -1254,8 +1254,30 @@ function abgmFmtDur(sec) {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
+function bpmToTempoTag(bpm){
+  const n = Number(bpm);
+  if (!Number.isFinite(n)) return "";
+  if (n < 60)  return "tempo:larghissimo";
+  if (n < 66)  return "tempo:largo";
+  if (n < 76)  return "tempo:adagio";
+  if (n < 108) return "tempo:andante";
+  if (n < 120) return "tempo:moderato";
+  if (n < 156) return "tempo:allegro";
+  if (n < 176) return "tempo:vivace";
+  if (n < 200) return "tempo:presto";
+  return "tempo:prestissimo";
+}
+
 function abgmNormTag(t) {
-  return String(t || "").trim().toLowerCase();
+  const s = String(t || "").trim().toLowerCase();
+  if (!s) return "";
+
+  // 숫자만 있으면 bpm으로 보기
+  if (/^\d{2,3}$/.test(s)) {
+    const bpm = Number(s);
+    if (bpm >= 40 && bpm <= 260) return `bpm:${bpm}`; // 140 -> bpm:140
+  }
+  return s;
 }
 
 function matchTagsAND(itemTags = [], selectedSet) {
@@ -1315,6 +1337,31 @@ function tagCat(t) {
   return s.slice(0, i);
 }
 
+const TAG_CAT_ORDER = ["genre","mood","inst","lyric","bpm","tempo","etc"];
+
+function tagSortKey(t){
+  const s = abgmNormTag(t);
+  const cat = tagCat(s);
+  const ci = TAG_CAT_ORDER.indexOf(cat);
+  const catRank = ci === -1 ? 999 : ci;
+
+  // bpm은 숫자 정렬
+  if (cat === "bpm") {
+    const n = Number(s.split(":")[1] ?? 0);
+    return [catRank, n, s];
+  }
+  return [catRank, 0, s];
+}
+
+function sortTags(arr){
+  return [...arr].sort((a,b)=>{
+    const A = tagSortKey(a), B = tagSortKey(b);
+    if (A[0] !== B[0]) return A[0]-B[0];
+    if (A[1] !== B[1]) return A[1]-B[1];
+    return String(A[2]).localeCompare(String(B[2]), undefined, {numeric:true, sensitivity:"base"});
+  });
+}
+
 function collectAllTagsForTabAndCat(settings) {
   const list = getFsActiveList(settings);
   const cat = String(settings?.fsUi?.cat || "all");
@@ -1328,6 +1375,7 @@ function collectAllTagsForTabAndCat(settings) {
       bag.add(t);
     }
   }
+  return sortTags(Array.from(bag));
   return Array.from(bag).sort((a,b)=>a.localeCompare(b, undefined, {numeric:true}));
 } // 태그 수집 닫
 
@@ -1381,6 +1429,23 @@ function renderFsTagPicker(root, settings) {
     box.appendChild(btn);
   }
 }
+
+function fsRelayoutTagPicker(root) {
+  const box = root.querySelector("#abgm_fs_tag_picker");
+  if (!box || box.style.display === "none") return;
+
+  const wrap   = root.querySelector(".abgm-fs-wrap") || root;
+  const catbar = root.querySelector("#abgm_fs_catbar");
+  if (!catbar) return;
+
+  const top = catbar.offsetTop + catbar.offsetHeight + 8;
+  box.style.top = `${top}px`;
+
+  const wrapH = wrap.clientHeight || 0;
+  const maxH = Math.max(120, wrapH - top - 12);
+  box.style.maxHeight = `${Math.min(240, maxH)}px`;
+}
+
 
 function renderFsList(root, settings) {
   const listEl = root.querySelector("#abgm_fs_list");
@@ -1548,6 +1613,9 @@ async function initFreeSourcesModal(overlay) {
   await syncBundledFreeSourcesIntoSettings(settings, { force: true, save: true });
 
   const root = overlay;
+
+  root.addEventListener("scroll", () => fsRelayoutTagPicker(root), true);
+  window.addEventListener("resize", () => fsRelayoutTagPicker(root));
 
   // close btn
   root.querySelector(".abgm-fs-close")?.addEventListener("click", closeFreeSourcesModal);
