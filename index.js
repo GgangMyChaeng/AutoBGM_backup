@@ -1268,15 +1268,54 @@ function bpmToTempoTag(bpm){
   return "tempo:prestissimo";
 }
 
+const GENRE_WORDS = new Set([
+  "blues","jazz","rock","pop","country","classical","folk","funk","soul","reggae","metal","ambient",
+  "electronic","edm","hiphop","rap" // 취향껏 추가
+]);
+
+const MOOD_WORDS = new Set([
+  "calm","dark","sad","happy","tense","chill","cozy","epic","mysterious"
+]);
+
+const INST_WORDS = new Set([
+  "piano","guitar","strings","synth","bass","drums","orchestra"
+]);
+
+const LYRIC_WORDS = new Set([
+  "lyric","lyrics","no lyric","instrumental","vocal"
+]);
+
+const TAG_ALIASES = new Map([
+  ["hip-hop", "hiphop"],
+  ["hip hop", "hiphop"],
+  ["r&b", "rnb"],
+  ["rnb", "rnb"],
+  ["electronic/edm", "electronic"], // 필요하면 edm도 같이 넣는 식으로 바꿔도 됨
+]);
+
 function abgmNormTag(t) {
-  const s = String(t || "").trim().toLowerCase();
+  let s = String(t || "").trim().toLowerCase();
   if (!s) return "";
+
+  // alias 정리 (공백/기호 변종 통일)
+  if (TAG_ALIASES.has(s)) s = TAG_ALIASES.get(s);
 
   // 숫자만 있으면 bpm으로 보기
   if (/^\d{2,3}$/.test(s)) {
     const bpm = Number(s);
-    if (bpm >= 40 && bpm <= 260) return `bpm:${bpm}`; // 140 -> bpm:140
+    if (bpm >= 40 && bpm <= 260) return `bpm:${bpm}`;
   }
+
+  // 이미 cat:tag면 그대로
+  if (s.includes(":")) return s;
+
+  // 맨단어 자동 카테고리 분류
+  if (GENRE_WORDS.has(s)) return `genre:${s}`;
+  if (MOOD_WORDS.has(s))  return `mood:${s}`;
+  if (INST_WORDS.has(s))  return `inst:${s}`;
+  if (LYRIC_WORDS.has(s)) return `lyric:${s}`;
+
+  // 못 찾으면 기존처럼 etc 취급(그냥 단어)
   return s;
 }
 
