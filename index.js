@@ -1315,16 +1315,19 @@ const PHRASE_ALIASES = new Map([
   ["mechanical groove", ["mood:mechanical", "mood:groove"]],
   ["night vibes", ["mood:night_vibes"]],
   ["tension", ["mood:tense"]],
+  ["high-energy j-rock", ["mood:high-energy", "genre:j-rock"]],
 ]);
 
 const GENRE_WORDS = new Set([
   "blues","jazz","rock","pop","country","classical","folk","funk","soul","reggae","metal","ambient",
-  "electronic","edm","hiphop","rap","rnb","drill","idm","techno"
+  "electronic","edm","hiphop","rap","rnb","drill","idm","techno","glitch","j-rock"
 ]);
 
 const MOOD_WORDS = new Set([
   "calm","dark","sad","happy","tense","chill","cozy","epic","mysterious",
-  "alternative","chaotic","cinematic","cold","cyberpunk","tension","night","tight","lofi"
+  "alternative","chaotic","cinematic","cold","cyberpunk","tension","night","tight","lofi",
+  "east asian influence","exploration","high-energy","hopeless","horizon","military",
+  "underscore","mundane","soft"
 ]);
 
 const INST_WORDS = new Set([
@@ -1333,7 +1336,7 @@ const INST_WORDS = new Set([
 ]);
 
 const LYRIC_WORDS = new Set([
-  "lyric","lyrics","no lyric","instrumental","vocal"
+  "lyric","lyrics","no lyric","instrumental","vocal","male","female"
 ]);
 
 function abgmCanonRawTag(raw) {
