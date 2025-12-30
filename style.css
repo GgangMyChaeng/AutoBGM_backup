@@ -1028,12 +1028,14 @@ body.autobgm-modal-open{ overflow:hidden; }
   border-radius:14px;
   background:rgba(0,0,0,.18);
   margin-top:10px;
-  position:relative; /* picker absolute 기준 */
   display:flex;
   flex-direction:column;
   max-height:85vh;   /* freesources.html 인라인에 이미 있으면 중복 OK */
-  overflow:hidden;   /* 상단 고정 느낌 */
+  position: relative;
+  overflow: visible;
 }
+
+#abgm_fs_tag_picker { position: absolute; z-index: 50; }
 
 /* top bar */
 .abgm-fs-topbar{
