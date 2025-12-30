@@ -1038,10 +1038,10 @@ body.autobgm-modal-open{ overflow:hidden; }
 #abgm_fs_tag_picker{
   position: absolute;
   z-index: 50;
-  display:flex !important;
-  flex-wrap:wrap !important;
-  gap:6px !important;
-  align-content:flex-start !important;
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  align-content:flex-start;
   overflow:auto;
   padding:8px;
 }
