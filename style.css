@@ -1100,6 +1100,48 @@ body.autobgm-modal-open{ overflow:hidden; }
   white-space:nowrap;
 }
 
+/* preview 볼륨들 */
+.abgm-fs-prevrow{
+  margin-top:10px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap; /* 화면 좁을 때 안전빵 */
+}
+
+.abgm-fs-prevlabel{
+  opacity:.8;
+  white-space:nowrap;
+}
+
+.abgm-fs-prevvol{
+  width: clamp(160px, 32vw, 320px);
+  max-width: 360px;
+  min-width: 160px;
+  flex: 0 1 auto;
+}
+
+.abgm-fs-prevval{
+  width: 54px;
+  text-align:right;
+  opacity:.85;
+  white-space:nowrap;
+}
+
+.abgm-fs-prevlock{
+  width: 34px;
+  height: 30px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius: 10px;
+}
+
+.abgm-fs-prevvol:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+
 /* category bar */
 .abgm-fs-catbar{
   margin-top:12px;
