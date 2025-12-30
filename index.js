@@ -1596,6 +1596,10 @@ async function initFreeSourcesModal(overlay) {
     fsSetPreviewVol100(settings, e.target.value);
     saveSettingsDebounced();
     renderFsPreviewVol(root, settings);
+    try {
+    const v = fsGetPreviewVol100(settings) / 100;
+    if (_testAudio && _testAudio.src) _testAudio.volume = Math.max(0, Math.min(1, v));
+    } catch {}
   });
 
   // clear
