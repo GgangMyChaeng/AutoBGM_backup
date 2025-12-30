@@ -1029,6 +1029,10 @@ body.autobgm-modal-open{ overflow:hidden; }
   background:rgba(0,0,0,.18);
   margin-top:10px;
   position:relative; /* picker absolute 기준 */
+  display:flex;
+  flex-direction:column;
+  max-height:85vh;   /* freesources.html 인라인에 이미 있으면 중복 OK */
+  overflow:hidden;   /* 상단 고정 느낌 */
 }
 
 /* top bar */
@@ -1158,6 +1162,11 @@ body.autobgm-modal-open{ overflow:hidden; }
   display:flex;
   flex-direction:column;
   gap:10px;
+  flex:1 1 auto;
+  min-height:0;      /* flex에서 overflow 먹이려면 필수 */
+  overflow:auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
 }
 
 /* item row */
@@ -1204,19 +1213,10 @@ body.autobgm-modal-open{ overflow:hidden; }
 /* 모바일: 2줄까지 허용 + 라인클램프 */
 @media (max-width: 520px){
   .abgm-fs-name{
-    white-space: normal;          /* 줄바꿈 허용 */
+    white-space: nowrap;          /* 한 줄 고정 */
     overflow: hidden;             /* 넘치면 숨김 */
     text-overflow: ellipsis;
-
-    display: -webkit-box;         /* 라인클램프 트릭 */
-    -webkit-line-clamp: 2;        /* 2줄까지만 */
-    -webkit-box-orient: vertical;
-    line-height: 1.2;
-  }
-
-  /* 버튼영역이 너무 넓어서 제목을 잡아먹으면 여기 줄여야 함 */
-  .abgm-fs-side{
-    width: 110px;   /* 기존 132px → 모바일에서만 슬림 */
+    display: block;
   }
 }
 
@@ -1227,8 +1227,9 @@ body.autobgm-modal-open{ overflow:hidden; }
 
 .abgm-fs-side{
   flex:0 0 auto;
-  min-width:200px;
-  max-width:280px;
+  width: auto;
+  min-width:0px;
+  max-width:none;
   display:flex;
   align-items:center;
   justify-content:flex-end;
@@ -1240,7 +1241,7 @@ body.autobgm-modal-open{ overflow:hidden; }
   gap:8px;
   align-items:center;
   justify-content:flex-end;
-  width:100%;
+  width:auto;
 }
 
 /* tag panel (replaces action area) */
