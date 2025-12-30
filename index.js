@@ -1382,30 +1382,23 @@ function renderFsTagPicker(root, settings) {
   const box = root.querySelector("#abgm_fs_tag_picker");
   if (!box) return;
 
-  // picker 열려있지 않으면 내용 굳이 렌더 안 해도 됨
-  const open = box.style.display !== "none";
+  // computed 기준으로 진짜 열림/닫힘 판단
+  const open = getComputedStyle(box).display !== "none";
   if (!open) return;
 
   const wrap   = root.querySelector(".abgm-fs-wrap") || root;
   const catbar = root.querySelector("#abgm_fs_catbar");
   if (!catbar) return;
 
-  // --- 위치 계산 (catbar 바로 아래) ---
   const top = catbar.offsetTop + catbar.offsetHeight + 8;
   box.style.top = `${top}px`;
 
-  // --- 높이 제한 (남은 공간 기준) ---
   const wrapH = wrap.clientHeight || 0;
   const maxH = Math.max(120, wrapH - top - 12);
   box.style.maxHeight = `${Math.min(240, maxH)}px`;
 
-  // --- 태그 렌더 ---
   const all = collectAllTagsForTabAndCat(settings);
-  const selected = new Set(
-    (settings.fsUi?.selectedTags ?? [])
-      .map(abgmNormTag)
-      .filter(Boolean)
-  );
+  const selected = new Set((settings.fsUi?.selectedTags ?? []).map(abgmNormTag).filter(Boolean));
 
   box.innerHTML = "";
 
