@@ -1196,6 +1196,30 @@ body.autobgm-modal-open{ overflow:hidden; }
   white-space:nowrap;
 }
 
+/* flex 자식 텍스트는 min-width:0 없으면 안 줄어듦 */
+.abgm-fs-item { min-width: 0; }
+.abgm-fs-main { min-width: 0; }  /* 이게 제일 중요 */
+.abgm-fs-name { min-width: 0; }
+
+/* 모바일: 2줄까지 허용 + 라인클램프 */
+@media (max-width: 520px){
+  .abgm-fs-name{
+    white-space: normal;          /* 줄바꿈 허용 */
+    overflow: hidden;             /* 넘치면 숨김 */
+    text-overflow: ellipsis;
+
+    display: -webkit-box;         /* 라인클램프 트릭 */
+    -webkit-line-clamp: 2;        /* 2줄까지만 */
+    -webkit-box-orient: vertical;
+    line-height: 1.2;
+  }
+
+  /* 버튼영역이 너무 넓어서 제목을 잡아먹으면 여기 줄여야 함 */
+  .abgm-fs-side{
+    width: 110px;   /* 기존 132px → 모바일에서만 슬림 */
+  }
+}
+
 .abgm-fs-time{
   opacity:.75;
   font-size:12px;
