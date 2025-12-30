@@ -1038,10 +1038,10 @@ body.autobgm-modal-open{ overflow:hidden; }
 #abgm_fs_tag_picker{
   position: absolute;
   z-index: 50;
-  display:flex;
-  flex-wrap:wrap;
-  gap:6px;
-  align-content:flex-start;
+  display:flex !important;
+  flex-wrap:wrap !important;
+  gap:6px !important;
+  align-content:flex-start !important;
   overflow:auto;
   padding:8px;
 }
@@ -1203,8 +1203,12 @@ body.autobgm-modal-open{ overflow:hidden; }
 }
 
 .abgm-fs-tagpick{
+  width:auto !important;
+  display:inline-flex !important;
+  align-items:center;
+  justify-content:center;
   margin:4px 6px 0 0;
-  flex:0 0 auto;
+  flex:0 0 auto !important;
   white-space:nowrap;
   padding:8px 10px;
   border-radius:10px;
