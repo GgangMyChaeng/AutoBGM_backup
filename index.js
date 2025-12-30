@@ -564,6 +564,10 @@ function ensureSettings() {
   s.mySources ??= [];
   s.fsUi ??= { tab: "free", selectedTags: [], search: "" };
   s.fsUi.cat ??= "all";
+  s.fsUi.previewVolFree ??= 60; // 0~100
+  s.fsUi.previewVolMy ??= 60;   // 0~100
+  s.fsUi.previewVolLockFree ??= false;
+  s.fsUi.previewVolLockMy ??= false;
 
   // 안전장치
   if (!s.presets || Object.keys(s.presets).length === 0) {
@@ -1280,6 +1284,29 @@ function getFsActiveList(settings) {
   return Array.isArray(arr) ? arr : [];
 }
 
+// 프리뷰 볼륨
+function fsGetPreviewVol100(settings) {
+  const tab = String(settings?.fsUi?.tab || "free");
+  const v = (tab === "my") ? settings?.fsUi?.previewVolMy : settings?.fsUi?.previewVolFree;
+  const n = Math.max(0, Math.min(100, Number(v ?? 60)));
+  return Number.isFinite(n) ? n : 60;
+}
+function fsSetPreviewVol100(settings, v100) {
+  const tab = String(settings?.fsUi?.tab || "free");
+  const n = Math.max(0, Math.min(100, Number(v100 ?? 60)));
+  if (tab === "my") settings.fsUi.previewVolMy = n;
+  else settings.fsUi.previewVolFree = n;
+}
+function fsGetPreviewLock(settings) {
+  const tab = String(settings?.fsUi?.tab || "free");
+  return tab === "my" ? !!settings?.fsUi?.previewVolLockMy : !!settings?.fsUi?.previewVolLockFree;
+}
+function fsSetPreviewLock(settings, locked) {
+  const tab = String(settings?.fsUi?.tab || "free");
+  if (tab === "my") settings.fsUi.previewVolLockMy = !!locked;
+  else settings.fsUi.previewVolLockFree = !!locked;
+}
+
 // 카테고리별 태그 수집
 function tagCat(t) {
   const s = String(t || "").trim().toLowerCase();
@@ -1312,8 +1339,26 @@ function renderFsTagPicker(root, settings) {
   const open = box.style.display !== "none";
   if (!open) return;
 
+  const wrap   = root.querySelector(".abgm-fs-wrap") || root;
+  const catbar = root.querySelector("#abgm_fs_catbar");
+  if (!catbar) return;
+
+  // --- 위치 계산 (catbar 바로 아래) ---
+  const top = catbar.offsetTop + catbar.offsetHeight + 8;
+  box.style.top = `${top}px`;
+
+  // --- 높이 제한 (남은 공간 기준) ---
+  const wrapH = wrap.clientHeight || 0;
+  const maxH = Math.max(120, wrapH - top - 12);
+  box.style.maxHeight = `${Math.min(240, maxH)}px`;
+
+  // --- 태그 렌더 ---
   const all = collectAllTagsForTabAndCat(settings);
-  const selected = new Set((settings.fsUi?.selectedTags ?? []).map(abgmNormTag).filter(Boolean));
+  const selected = new Set(
+    (settings.fsUi?.selectedTags ?? [])
+      .map(abgmNormTag)
+      .filter(Boolean)
+  );
 
   box.innerHTML = "";
 
@@ -1414,6 +1459,24 @@ function renderFsAll(root, settings) {
 
   renderFsTagPicker(root, settings);
   renderFsList(root, settings);
+  renderFsPreviewVol(root, settings);
+}
+
+function renderFsPreviewVol(root, settings) {
+  const range = root.querySelector("#abgm_fs_prevvol");
+  const valEl = root.querySelector("#abgm_fs_prevvol_val");
+  const lockBtn = root.querySelector("#abgm_fs_prevvol_lock");
+  const lockIcon = lockBtn?.querySelector?.("i");
+  if (!range) return;
+
+  const v100 = fsGetPreviewVol100(settings);
+  const locked = fsGetPreviewLock(settings);
+
+  range.value = String(v100);
+  range.disabled = !!locked;
+  if (valEl) valEl.textContent = `${v100}%`;
+  if (lockIcon) lockIcon.className = `fa-solid ${locked ? "fa-lock" : "fa-lock-open"}`;
+  if (lockBtn) lockBtn.classList.toggle("abgm-locked", !!locked);
 }
 
 // open/close
@@ -1526,6 +1589,15 @@ async function initFreeSourcesModal(overlay) {
     renderFsList(root, settings);
   });
 
+  // 프리뷰 볼륨
+  const prevRange = root.querySelector("#abgm_fs_prevvol");
+  prevRange?.addEventListener("input", (e) => {
+    if (fsGetPreviewLock(settings)) return;
+    fsSetPreviewVol100(settings, e.target.value);
+    saveSettingsDebounced();
+    renderFsPreviewVol(root, settings);
+  });
+
   // clear
   root.querySelector("#abgm_fs_clear")?.addEventListener("click", () => {
     settings.fsUi.search = "";
@@ -1562,12 +1634,22 @@ async function initFreeSourcesModal(overlay) {
       return;
     }
 
+    // Preview Vol
+    const prevLockBtn = e.target.closest("#abgm_fs_prevvol_lock");
+    if (prevLockBtn) {
+      fsSetPreviewLock(settings, !fsGetPreviewLock(settings));
+      saveSettingsDebounced();
+      renderFsPreviewVol(root, settings);
+      return;
+    }
+
     // play
     const playBtn = e.target.closest(".abgm-fs-play");
     if (playBtn) {
       const src = String(playBtn.dataset.src || "").trim();
       if (!src) return;
-      try { playAsset(src, 0.9); } catch {}
+      const v = fsGetPreviewVol100(settings) / 100;
+      try { playAsset(src, v); } catch {}
       return;
     }
 
@@ -1601,6 +1683,8 @@ async function initFreeSourcesModal(overlay) {
     const inCat = e.target.closest(".abgm-fs-catbar");
     if (!inPicker && !inCat) picker.style.display = "none";
   }, true);
+
+DD@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
   renderFsAll(root, settings);
 }
