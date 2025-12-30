@@ -1513,13 +1513,21 @@ function collectAllTagsForTabAndCat(settings) {
 
   for (const it of list) {
     for (const raw of (it?.tags ?? [])) {
-    for (const t of abgmNormTags(raw)) {
+      const t = abgmNormTag(raw);
       if (!t) continue;
-      if (cat !== "all" && tagCat(t) !== cat) continue;
+
+      const c = tagCat(t);
+
+      // All = "분류 안 된 것만" (콜론 없는 태그들 = etc)
+      if (cat === "all") {
+        if (c !== "etc") continue;
+      } else {
+        if (c !== cat) continue;
+      }
+
       bag.add(t);
     }
   }
-}
   return sortTags(Array.from(bag));
 } // 태그 수집 닫
 
