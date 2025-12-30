@@ -281,6 +281,90 @@
       "src": "https://www.dropbox.com/scl/fi/mee8d5ew7cqmpgkeseh7q/Clearance-2.wav?rlkey=gq4tpl5ei0w5bh1ezh9zijr87&st=ouio2ygh&raw=1",
       "durationSec": 247,
       "tags": ["no lyric", "electronic", "ambient", "cinematic", "underscore"]
+    },
+    {
+      "id": "After-Rain-1",
+      "title": "After Rain 1",
+      "src": "https://www.dropbox.com/scl/fi/8lg7m5zg6iw4jlr0rqf39/After-Rain-1.wav?rlkey=onf56dvoi0zpgg8d8ngqehiqn&st=l4ri391f&dl=0",
+      "durationSec": 39,
+      "tags": ["no lyric", "ambient", "East Asian influence"]
+    },
+    {
+      "id": "After-Rain-2",
+      "title": "After Rain 2",
+      "src": "https://www.dropbox.com/scl/fi/vrmxbtyo3qb10gnbaklmg/After-Rain-2.wav?rlkey=h0k2hcwr2mnirak5ws59afd9f&st=viq8r8zf&dl=0",
+      "durationSec": 109,
+      "tags": ["no lyric", "ambient", "East Asian influence"]
+    },
+    {
+      "id": "After-Rain-3",
+      "title": "After Rain 3",
+      "src": "https://www.dropbox.com/scl/fi/hbb4w2zpt5ygnsredl89a/After-Rain-3.wav?rlkey=9q1323oav3dkfx3ol97u8w0ry&st=3hp2k6wt&dl=0",
+      "durationSec": 207,
+      "tags": ["no lyric", "ambient", "East Asian influence"]
+    },
+    {
+      "id": "After-Rain-4",
+      "title": "After Rain 4",
+      "src": "https://www.dropbox.com/scl/fi/n4nkt3ntg3t1b23fexqyn/After-Rain-4.wav?rlkey=owl6cxmhtbgj6pdovve47jtmw&st=tcb3yk5y&dl=0",
+      "durationSec": 207,
+      "tags": ["no lyric", "ambient", "East Asian influence"]
+    },
+    {
+      "id": "Still-Blue-1",
+      "title": "Still Blue 1",
+      "src": "https://www.dropbox.com/scl/fi/3vro3t5fzcxtotuf53xss/Still-Blue-1.wav?rlkey=pin03zc4a7jsrgbigynto9gqt&st=nvmt8dcc&dl=0",
+      "durationSec": 42,
+      "tags": ["no lyric", "ambient", "East Asian influence"]
+    },
+    {
+      "id": "Still-Blue-2",
+      "title": "Still Blue 2",
+      "src": "https://www.dropbox.com/scl/fi/gi5juj0kjuam5c8omag5n/Still-Blue-2.wav?rlkey=0mb1z9fgvvnp4hmyf3ege5qhf&st=rn9g1yo2&dl=0",
+      "durationSec": 57,
+      "tags": ["no lyric", "ambient", "East Asian influence"]
+    },
+    {
+      "id": "Still-Blue-3",
+      "title": "Still Blue 3",
+      "src": "https://www.dropbox.com/scl/fi/mtsg58ctyjuzrzz05g34g/Still-Blue-3.wav?rlkey=tftp9ho048wi7icsylhybzar0&st=nnqgem13&dl=0",
+      "durationSec": 233,
+      "tags": ["no lyric", "ambient", "East Asian influence"]
+    },
+    {
+      "id": "Still-Blue-4",
+      "title": "Still Blue 4",
+      "src": "https://www.dropbox.com/scl/fi/t71b7fnk8844aafth78vo/Still-Blue-4.wav?rlkey=7xo63ndtvkyu5ew8d844n4j7h&st=748r70m2&dl=0",
+      "durationSec": 244,
+      "tags": ["no lyric", "ambient", "East Asian influence"]
+    },
+    {
+      "id": "Almost-1",
+      "title": "Almost 1",
+      "src": "https://www.dropbox.com/scl/fi/l893of5eed4hyan9cwvyk/Almost-1.wav?rlkey=4x33tb1uf6m82lezuhjo4792i&st=n4eb5jvv&dl=0",
+      "durationSec": 176,
+      "tags": ["no lyric", "ambient", "East Asian influence"]
+    },
+    {
+      "id": "Almost-2",
+      "title": "Almost 2",
+      "src": "https://www.dropbox.com/scl/fi/ktpp7lownvyjk6h8xge0p/Almost-2.wav?rlkey=soadbe1gywttsgtzi1dkmcvsj&st=n18uie5m&dl=0",
+      "durationSec": 177,
+      "tags": ["no lyric", "ambient", "East Asian influence"]
+    },
+    {
+      "id": "Chop-1",
+      "title": "Chop 1",
+      "src": "https://www.dropbox.com/scl/fi/5ts1fs11z3yi4t8njrc82/Chop-1.wav?rlkey=6czrx97y5shhdfdten0x8vwfw&st=dm41d1y7&dl=0",
+      "durationSec": 220,
+      "tags": ["no lyric", "ambient", "East Asian influence"]
+    },
+    {
+      "id": "Chop-2",
+      "title": "Chop 2",
+      "src": "https://www.dropbox.com/scl/fi/t6v77qp8e9j5h6jeu1zrp/Chop-2.wav?rlkey=qv8ewndvc21udj22rprsxjxg7&st=fl75421h&dl=0",
+      "durationSec": 220,
+      "tags": ["no lyric", "ambient", "East Asian influence"]
     }
   ]
 }
