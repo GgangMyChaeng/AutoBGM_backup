@@ -1268,60 +1268,129 @@ function bpmToTempoTag(bpm){
   return "tempo:prestissimo";
 }
 
+/* =========================
+   Tag auto categorizer
+   ========================= */
+
+// 단어(1토큰) 별칭 (주로 기호/표기 통일)
+const TAG_ALIASES = new Map([
+  ["hip-hop", "hiphop"],
+  ["hip hop", "hiphop"],
+  ["r&b", "rnb"],
+  ["rnb", "rnb"],
+  ["lofi", "lo-fi"], // 취향
+]);
+
+// “문구(여러 단어)”를 통째로 확정 매핑 (제일 정확함)
+const PHRASE_ALIASES = new Map([
+  ["alternative r&b", ["mood:alternative", "genre:rnb"]],
+  ["acoustic pop", ["inst:acoustic", "genre:pop"]],
+  ["neo soul", ["genre:neo_soul"]],
+  ["bossa nova", ["genre:bossa_nova"]],
+  ["lo-fi hip hop", ["genre:lofi_hiphop"]],
+  ["glitch hop", ["genre:glitch_hop"]],
+  ["jazz hop", ["genre:jazz_hop"]],
+  ["industrial techno", ["genre:industrial_techno"]],
+  ["electronic/edm", ["genre:electronic", "genre:edm"]],
+]);
+
 const GENRE_WORDS = new Set([
   "blues","jazz","rock","pop","country","classical","folk","funk","soul","reggae","metal","ambient",
-  "electronic","edm","hiphop","rap" // 취향껏 추가
+  "electronic","edm","hiphop","rap","rnb","drill","idm","techno"
 ]);
 
 const MOOD_WORDS = new Set([
-  "calm","dark","sad","happy","tense","chill","cozy","epic","mysterious"
+  "calm","dark","sad","happy","tense","chill","cozy","epic","mysterious",
+  "alternative","chaotic","cinematic","cold","cyberpunk","tension","night","tight"
 ]);
 
 const INST_WORDS = new Set([
-  "piano","guitar","strings","synth","bass","drums","orchestra"
+  "piano","guitar","strings","synth","bass","drums","orchestra",
+  "acoustic","808","turntable","scratch"
 ]);
 
 const LYRIC_WORDS = new Set([
   "lyric","lyrics","no lyric","instrumental","vocal"
 ]);
 
-const TAG_ALIASES = new Map([
-  ["hip-hop", "hiphop"],
-  ["hip hop", "hiphop"],
-  ["r&b", "rnb"],
-  ["rnb", "rnb"],
-  ["electronic/edm", "electronic"], // 필요하면 edm도 같이 넣는 식으로 바꿔도 됨
-]);
-
-function abgmNormTag(t) {
-  let s = String(t || "").trim().toLowerCase();
+function abgmCanonRawTag(raw) {
+  let s = String(raw || "").trim().toLowerCase();
   if (!s) return "";
 
-  // alias 정리 (공백/기호 변종 통일)
-  if (TAG_ALIASES.has(s)) s = TAG_ALIASES.get(s);
+  // 공백 정리
+  s = s.replace(/\s+/g, " ");
 
-  // 숫자만 있으면 bpm으로 보기
+  // 숫자만 있으면 bpm
   if (/^\d{2,3}$/.test(s)) {
     const bpm = Number(s);
     if (bpm >= 40 && bpm <= 260) return `bpm:${bpm}`;
   }
 
-  // 이미 cat:tag면 그대로
-  if (s.includes(":")) return s;
+  // 통째 문구 별칭 먼저
+  if (PHRASE_ALIASES.has(s)) return s;
 
-  // 맨단어 자동 카테고리 분류
-  if (GENRE_WORDS.has(s)) return `genre:${s}`;
-  if (MOOD_WORDS.has(s))  return `mood:${s}`;
-  if (INST_WORDS.has(s))  return `inst:${s}`;
-  if (LYRIC_WORDS.has(s)) return `lyric:${s}`;
+  // 일반 별칭 적용 (예: "r&b" → "rnb")
+  if (TAG_ALIASES.has(s)) s = TAG_ALIASES.get(s);
 
-  // 못 찾으면 기존처럼 etc 취급(그냥 단어)
   return s;
+}
+
+// ✅ “하나 입력”을 “여러 태그”로 확장
+function abgmNormTags(raw) {
+  const s0 = abgmCanonRawTag(raw);
+  if (!s0) return [];
+
+  // bpm:xxx 같은 건 그대로 단일 반환
+  if (s0.startsWith("bpm:")) return [s0];
+
+  // 이미 cat:tag 형태면 그대로
+  if (s0.includes(":") && !PHRASE_ALIASES.has(s0)) return [s0];
+
+  // 문구 확정 매핑
+  if (PHRASE_ALIASES.has(s0)) return PHRASE_ALIASES.get(s0).slice();
+
+  // "/" 같은 구분자 들어오면 나눠서 재귀 처리
+  if (s0.includes("/")) {
+    return s0.split("/").flatMap(part => abgmNormTags(part));
+  }
+
+  // 여러 단어면 “마지막 단어=장르” 휴리스틱 (대충 알터네이티브 알앤비 같은 거)
+  const toks = s0.split(" ").filter(Boolean);
+  if (toks.length >= 2) {
+    const lastRaw = toks[toks.length - 1];
+    const last = TAG_ALIASES.get(lastRaw) || lastRaw;
+
+    // 마지막이 장르면: genre:last + 앞 단어들은 mood/inst로 분류 시도
+    if (GENRE_WORDS.has(last)) {
+      const out = [`genre:${last}`];
+      for (const w0 of toks.slice(0, -1)) {
+        const w = TAG_ALIASES.get(w0) || w0;
+        if (INST_WORDS.has(w)) out.push(`inst:${w}`);
+        else if (MOOD_WORDS.has(w)) out.push(`mood:${w}`);
+        else out.push(w); // 모르면 기존처럼 etc(콜론 없는 태그)로 둠
+      }
+      return out;
+    }
+  }
+
+  // 한 단어면 단어사전으로 분류
+  if (GENRE_WORDS.has(s0)) return [`genre:${s0}`];
+  if (MOOD_WORDS.has(s0))  return [`mood:${s0}`];
+  if (INST_WORDS.has(s0))  return [`inst:${s0}`];
+  if (LYRIC_WORDS.has(s0)) return [`lyric:${s0}`];
+
+  // 모르면 그대로 (etc)
+  return [s0];
+}
+
+// 기존 코드 호환용: “단일 문자열”만 필요한 곳에서 쓰기
+function abgmNormTag(raw) {
+  return abgmNormTags(raw)[0] || "";
 }
 
 function matchTagsAND(itemTags = [], selectedSet) {
   if (!selectedSet || selectedSet.size === 0) return true;
-  const set = new Set((itemTags || []).map(abgmNormTag).filter(Boolean));
+  const set = new Set((itemTags || []).flatMap(abgmNormTags).filter(Boolean));
   for (const t of selectedSet) {
     if (!set.has(abgmNormTag(t))) return false;
   }
@@ -1408,12 +1477,13 @@ function collectAllTagsForTabAndCat(settings) {
 
   for (const it of list) {
     for (const raw of (it?.tags ?? [])) {
-      const t = abgmNormTag(raw);
+    for (const t of abgmNormTags(raw)) {
       if (!t) continue;
       if (cat !== "all" && tagCat(t) !== cat) continue;
       bag.add(t);
     }
   }
+}
   return sortTags(Array.from(bag));
 } // 태그 수집 닫
 
