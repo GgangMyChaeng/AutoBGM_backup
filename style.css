@@ -1424,6 +1424,7 @@ body.autobgm-modal-open{ overflow:hidden; }
   align-items: center;
   justify-content: center;
   transition: transform 0.15s ease;
+  aspect-ratio: 1 / 1;  /* 정사각형 비율 고정 */
 }
 
 .abgm-menu-btn:hover {
@@ -1435,8 +1436,8 @@ body.autobgm-modal-open{ overflow:hidden; }
 }
 
 .abgm-menu-icon {
-  max-width: 85%;
-  max-height: 85%;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
   pointer-events: none;
 }
