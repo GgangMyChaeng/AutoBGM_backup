@@ -1437,8 +1437,8 @@ body.autobgm-modal-open{ overflow:hidden; }
 }
 
 .abgm-menu-icon {
-  max-width: 30%;
-  max-height: 30%;
+  max-width: 60%;
+  max-height: 60%;
   object-fit: contain;
   pointer-events: none;
 }
