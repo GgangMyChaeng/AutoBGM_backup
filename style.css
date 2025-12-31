@@ -35,6 +35,21 @@
   transform: scale(0.95);
 }
 
+.abgm-floating-icon{
+  overflow:hidden; /* 원형 밖으로 삐져나오는 거 컷 */
+}
+
+.abgm-floating-img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  border-radius:50%;
+
+  pointer-events:none;     /* 마우스 이벤트는 버튼(div)로만 */
+  -webkit-user-drag:none;  /* 크롬 계열 기본 드래그 차단 */
+  user-select:none;
+}
+
 /* ===== Floating Menu (drag-down) ===== */
 .abgm-fm-overlay{
   position:fixed;
