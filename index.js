@@ -787,6 +787,7 @@ function updateNowPlayingUI() {
     }
 
     setNowControlsLocked(!settings.enabled);
+    updateMenuNPAnimation();
   } catch (e) {
     console.error("[AutoBGM] updateNowPlayingUI failed:", e);
   }
@@ -3504,6 +3505,8 @@ async function bootstrapDataOnce() {
 
 /** ========= Floating Button ========= */
 let _floatingBtn = null;
+let _floatingMenu = null;
+let _floatingMenuOpen = false;
 let _floatingDragging = false;
 let _floatingDragOffset = { x: 0, y: 0 };
 
@@ -3543,6 +3546,116 @@ function removeFloatingButton() {
     _floatingBtn.remove();
     _floatingBtn = null;
   }
+}
+
+// 플로팅 메뉴 생성
+function createFloatingMenu() {
+  if (_floatingMenu) return _floatingMenu;
+
+  const menu = document.createElement("div");
+  menu.id = "abgm_floating_menu";
+  menu.className = "abgm-floating-menu";
+  menu.innerHTML = `
+    <div class="abgm-floating-menu-bg">
+      <img src="@@메뉴몸체이미지@@" class="abgm-menu-body-img" alt="Menu">
+    </div>
+    <div class="abgm-floating-menu-buttons">
+      <button type="button" class="abgm-menu-btn abgm-menu-np" data-action="nowplaying" title="Now Playing">
+        <img src="@@NP이미지@@" class="abgm-menu-icon abgm-menu-icon-np" alt="NP">
+      </button>
+      <button type="button" class="abgm-menu-btn abgm-menu-debug" data-action="debug" title="Debug">
+        <img src="@@Debug_OFF이미지@@" class="abgm-menu-icon abgm-menu-icon-debug" alt="Debug">
+      </button>
+      <button type="button" class="abgm-menu-btn abgm-menu-help" data-action="help" title="Help">
+        <img src="@@Help이미지@@" class="abgm-menu-icon" alt="Help">
+      </button>
+      <button type="button" class="abgm-menu-btn abgm-menu-settings" data-action="settings" title="Settings">
+        <img src="@@Settings이미지@@" class="abgm-menu-icon" alt="Settings">
+      </button>
+    </div>
+  `;
+
+  // 버튼 클릭 이벤트
+  menu.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-action]");
+    if (!btn) return;
+
+    const action = btn.dataset.action;
+    
+    if (action === "nowplaying") {
+      // Now Playing 섹션 열기 (나중에 구현)
+      console.log("[AutoBGM] Now Playing clicked");
+    } else if (action === "debug") {
+      toggleDebugMode();
+    } else if (action === "help") {
+      // Help 섹션 열기 (나중에 구현)
+      console.log("[AutoBGM] Help clicked");
+    } else if (action === "settings") {
+      openModal();
+      closeFloatingMenu();
+    }
+  });
+
+  // 메뉴 바깥 클릭하면 닫기
+  menu.addEventListener("click", (e) => {
+    if (e.target === menu) closeFloatingMenu();
+  });
+
+  document.body.appendChild(menu);
+  _floatingMenu = menu;
+  return menu;
+}
+
+function openFloatingMenu() {
+  if (_floatingMenuOpen) return;
+  const menu = createFloatingMenu();
+  menu.classList.add("is-open");
+  _floatingMenuOpen = true;
+  updateMenuDebugIcon();
+  updateMenuNPAnimation();
+}
+
+function closeFloatingMenu() {
+  if (!_floatingMenu) return;
+  _floatingMenu.classList.remove("is-open");
+  _floatingMenuOpen = false;
+}
+
+function removeFloatingMenu() {
+  if (_floatingMenu) {
+    _floatingMenu.remove();
+    _floatingMenu = null;
+    _floatingMenuOpen = false;
+  }
+}
+
+function toggleDebugMode() {
+  const s = ensureSettings();
+  s.debugMode = !s.debugMode;
+  __abgmDebugMode = !!s.debugMode;
+  if (!__abgmDebugMode) __abgmDebugLine = "";
+  saveSettingsDebounced();
+  updateMenuDebugIcon();
+  updateNowPlayingUI();
+}
+
+function updateMenuDebugIcon() {
+  if (!_floatingMenu) return;
+  const s = ensureSettings();
+  const on = !!s.debugMode;
+  const icon = _floatingMenu.querySelector(".abgm-menu-icon-debug");
+  if (icon) {
+    icon.src = on ? "@@Debug_ON이미지@@" : "@@Debug_OFF이미지@@";
+  }
+}
+
+function updateMenuNPAnimation() {
+  if (!_floatingMenu) return;
+  const icon = _floatingMenu.querySelector(".abgm-menu-icon-np");
+  if (!icon) return;
+
+  const isPlaying = !!_engineCurrentFileKey && !_bgmAudio.paused;
+  icon.classList.toggle("is-playing", isPlaying);
 }
 
 function onDragStart(e) {
@@ -3594,14 +3707,47 @@ function onDragEnd(e) {
   document.removeEventListener("mouseup", onDragEnd);
   document.removeEventListener("touchend", onDragEnd);
 
-  // 벽에 스냅
+  const rect = _floatingBtn.getBoundingClientRect();
+  const y = rect.top + rect.height / 2;
+  const screenH = window.innerHeight;
+
+  // 상단 1/4 영역 → 비활성화
+  if (y < screenH * 0.25) {
+    const s = ensureSettings();
+    s.floating.enabled = false;
+    saveSettingsDebounced();
+    removeFloatingButton();
+    removeFloatingMenu();
+
+    // window.html 토글 버튼 UI도 갱신
+    const toggle = document.querySelector("#autobgm_floating_toggle");
+    if (toggle) {
+      const stateEl = toggle.querySelector(".autobgm-menu-state");
+      if (stateEl) stateEl.textContent = "Off";
+    }
+    return;
+  }
+
+  // 하단 절반 영역 → 메뉴 열기
+  if (y > screenH * 0.5) {
+    snapToEdge();
+    openFloatingMenu();
+    
+    const s = ensureSettings();
+    const rect2 = _floatingBtn.getBoundingClientRect();
+    s.floating.x = rect2.left;
+    s.floating.y = rect2.top;
+    saveSettingsDebounced();
+    return;
+  }
+
+  // 중간 영역 → 그냥 벽에 스냅만
   snapToEdge();
 
-  // 위치 저장
-  const settings = ensureSettings();
-  const rect = _floatingBtn.getBoundingClientRect();
-  settings.floating.x = rect.left;
-  settings.floating.y = rect.top;
+  const s = ensureSettings();
+  const rect3 = _floatingBtn.getBoundingClientRect();
+  s.floating.x = rect3.left;
+  s.floating.y = rect3.top;
   saveSettingsDebounced();
 }
 
@@ -3647,6 +3793,9 @@ async function init() {
   
   const obs = new MutationObserver(() => mount());
   obs.observe(document.body, { childList: true, subtree: true });
+  // 창 크기 변경 리스너
+  window.addEventListener("resize", updateFloatingButtonPosition);
+  window.addEventListener("orientationchange", updateFloatingButtonPosition);
 }
 
 /** ========= 엔진틱 ========= */
@@ -4014,6 +4163,30 @@ _bgmAudio.addEventListener("ended", () => {
   }
 });
 
+// 창 크기 변경 시 플로팅 버튼 위치 조정
+function updateFloatingButtonPosition() {
+  if (!_floatingBtn) return;
+  
+  const rect = _floatingBtn.getBoundingClientRect();
+  const w = rect.width;
+  const h = rect.height;
+  const centerX = rect.left + w / 2;
+
+  // 어느 쪽 벽에 붙어있었는지 판별
+  const isLeft = centerX < window.innerWidth / 2;
+
+  let targetX = isLeft ? (-w / 2) : (window.innerWidth - w / 2);
+  let targetY = Math.max(0, Math.min(window.innerHeight - h, rect.top));
+
+  _floatingBtn.style.left = `${targetX}px`;
+  _floatingBtn.style.top = `${targetY}px`;
+
+  const s = ensureSettings();
+  s.floating.x = targetX;
+  s.floating.y = targetY;
+  saveSettingsDebounced();
+}
+
 function startEngine() {
   if (_engineTimer) clearInterval(_engineTimer);
   _engineTimer = setInterval(engineTick, 900);
@@ -4061,3 +4234,4 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
