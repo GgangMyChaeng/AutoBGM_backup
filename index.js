@@ -3660,9 +3660,11 @@ function createFloatingButton() {
   const btn = document.createElement("div");
   btn.id = "abgm_floating_btn";
   btn.className = "abgm-floating-btn";
-btn.innerHTML = `
+
+  const FLOATING_ICON_URL = "https://i.postimg.cc/P5Dxmj6T/Floating.png";
+  btn.innerHTML = `
   <div class="abgm-floating-icon">
-    <img src="https://i.postimg.cc/P5Dxmj6T/Floating.png" alt="AutoBGM">
+    <img class="abgm-floating-img" src="${FLOATING_ICON_URL}" alt="AutoBGM" draggable="false">
   </div>
 `;
 
@@ -4225,4 +4227,5 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
