@@ -1377,8 +1377,8 @@ body.autobgm-modal-open{ overflow:hidden; }
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%) scale(0.8);
-  width: 400px;
-  height: 300px;
+  width: 800px;
+  height: 600px;
   max-width: 90vw;
   max-height: 90vh;
   z-index: 999998;
