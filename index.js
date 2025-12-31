@@ -3563,13 +3563,13 @@ function createFloatingMenu() {
         <img src="https://i.postimg.cc/3R8x5D3T/Now_Playing.png" class="abgm-menu-icon abgm-menu-icon-np" alt="NP">
       </button>
       <button type="button" class="abgm-menu-btn abgm-menu-debug" data-action="debug" title="Debug">
-        <img src="https://i.postimg.cc/QCVNVGBW/Debug_Off.png" class="abgm-menu-icon abgm-menu-icon-debug" alt="Debug">
+        <img src="https://i.postimg.cc/sDNDNb5c/Debug_off.png" class="abgm-menu-icon abgm-menu-icon-debug" alt="Debug">
       </button>
       <button type="button" class="abgm-menu-btn abgm-menu-help" data-action="help" title="Help">
         <img src="https://i.postimg.cc/NGPfSMVZ/Help.png" class="abgm-menu-icon" alt="Help">
       </button>
       <button type="button" class="abgm-menu-btn abgm-menu-settings" data-action="settings" title="Settings">
-        <img src="https://i.postimg.cc/dtktYFcK/Settings.png" class="abgm-menu-icon" alt="Settings">
+        <img src="https://i.postimg.cc/j5cRQ1sC/Settings.png" class="abgm-menu-icon" alt="Settings">
       </button>
     </div>
   `;
@@ -3644,7 +3644,7 @@ function updateMenuDebugIcon() {
   const on = !!s.debugMode;
   const icon = _floatingMenu.querySelector(".abgm-menu-icon-debug");
   if (icon) {
-    icon.src = on ? "https://i.postimg.cc/1XTmqCw9/Debug_On.png" : "https://i.postimg.cc/QCVNVGBW/Debug_Off.png";
+    icon.src = on ? "https://i.postimg.cc/N0hGgTJ7/Debug_on.png" : "https://i.postimg.cc/sDNDNb5c/Debug_off.png";
   }
 }
 
@@ -4239,6 +4239,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
