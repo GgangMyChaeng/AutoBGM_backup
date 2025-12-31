@@ -3557,20 +3557,20 @@ function createFloatingMenu() {
   menu.className = "abgm-floating-menu";
   menu.innerHTML = `
     <div class="abgm-floating-menu-bg">
-      <img src="@@메뉴몸체이미지@@" class="abgm-menu-body-img" alt="Menu">
+      <img src="https://i.postimg.cc/6p5Tk9G0/Home.png" class="abgm-menu-body-img" alt="Menu">
     </div>
     <div class="abgm-floating-menu-buttons">
       <button type="button" class="abgm-menu-btn abgm-menu-np" data-action="nowplaying" title="Now Playing">
-        <img src="@@NP이미지@@" class="abgm-menu-icon abgm-menu-icon-np" alt="NP">
+        <img src="https://i.postimg.cc/3R8x5D3T/Now_Playing.png" class="abgm-menu-icon abgm-menu-icon-np" alt="NP">
       </button>
       <button type="button" class="abgm-menu-btn abgm-menu-debug" data-action="debug" title="Debug">
-        <img src="@@Debug_OFF이미지@@" class="abgm-menu-icon abgm-menu-icon-debug" alt="Debug">
+        <img src="https://i.postimg.cc/QCVNVGBW/Debug_Off.png" class="abgm-menu-icon abgm-menu-icon-debug" alt="Debug">
       </button>
       <button type="button" class="abgm-menu-btn abgm-menu-help" data-action="help" title="Help">
-        <img src="@@Help이미지@@" class="abgm-menu-icon" alt="Help">
+        <img src="https://i.postimg.cc/NGPfSMVZ/Help.png" class="abgm-menu-icon" alt="Help">
       </button>
       <button type="button" class="abgm-menu-btn abgm-menu-settings" data-action="settings" title="Settings">
-        <img src="@@Settings이미지@@" class="abgm-menu-icon" alt="Settings">
+        <img src="https://i.postimg.cc/dtktYFcK/Settings.png" class="abgm-menu-icon" alt="Settings">
       </button>
     </div>
   `;
@@ -3645,7 +3645,7 @@ function updateMenuDebugIcon() {
   const on = !!s.debugMode;
   const icon = _floatingMenu.querySelector(".abgm-menu-icon-debug");
   if (icon) {
-    icon.src = on ? "@@Debug_ON이미지@@" : "@@Debug_OFF이미지@@";
+    icon.src = on ? "https://i.postimg.cc/1XTmqCw9/Debug_On.png" : "https://i.postimg.cc/QCVNVGBW/Debug_Off.png";
   }
 }
 
@@ -4234,4 +4234,5 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
