@@ -3550,8 +3550,13 @@ function removeFloatingButton() {
 
 // 플로팅 메뉴 생성
 function createFloatingMenu() {
-  if (_floatingMenu) return _floatingMenu;
+  if (_floatingMenu) {
+    console.log("[FloatingMenu] 기존 메뉴 재사용");
+    return _floatingMenu;
+  }
 
+  console.log("[FloatingMenu] 새 메뉴 생성 시작");
+    
   const menu = document.createElement("div");
   menu.id = "abgm_floating_menu";
   menu.className = "abgm-floating-menu";
@@ -3581,6 +3586,7 @@ function createFloatingMenu() {
     if (!btn) return;
 
     const action = btn.dataset.action;
+    console.log("[FloatingMenu] 버튼 클릭:", action);
     
     if (action === "nowplaying") {
       // Now Playing 섹션 열기 (나중에 구현)
@@ -3602,17 +3608,27 @@ function createFloatingMenu() {
   });
 
   document.body.appendChild(menu);
+  console.log("[FloatingMenu] 메뉴 DOM 추가됨");
+  
   _floatingMenu = menu;
   return menu;
 }
 
 function openFloatingMenu() {
+  console.log("[FloatingMenu] openFloatingMenu 호출됨, 현재 열림 상태:", _floatingMenuOpen);
   if (_floatingMenuOpen) return;
+  
   const menu = createFloatingMenu();
+  console.log("[FloatingMenu] 메뉴 생성/가져옴:", menu);
+  
   menu.classList.add("is-open");
+  console.log("[FloatingMenu] is-open 클래스 추가됨");
+  
   _floatingMenuOpen = true;
   updateMenuDebugIcon();
   updateMenuNPAnimation();
+  
+  console.log("[FloatingMenu] 메뉴 열림 완료");
 }
 
 function closeFloatingMenu() {
@@ -3710,6 +3726,8 @@ function onDragEnd(e) {
   const rect = _floatingBtn.getBoundingClientRect();
   const y = rect.top + rect.height / 2;
   const screenH = window.innerHeight;
+
+  console.log("[FloatingBtn] dragEnd y:", y, "screenH:", screenH, "threshold:", screenH * 0.5);
 
   // 상단 1/4 영역 → 비활성화
   if (y < screenH * 0.25) {
@@ -4234,6 +4252,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
