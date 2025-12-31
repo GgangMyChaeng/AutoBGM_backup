@@ -3708,10 +3708,16 @@ function onDragEnd(e) {
 
   const rect = _floatingBtn.getBoundingClientRect();
   const y = rect.top + rect.height / 2;
-  const screenH = window.innerHeight;
+  
+  // SillyTavern 영역 기준 (body 아닌 실제 컨텐츠 영역)
+  const appEl = document.querySelector("#app") || document.querySelector("main") || document.body;
+  const appRect = appEl.getBoundingClientRect();
+  const screenH = appRect.height;
+  const topThreshold = appRect.top + screenH * 0.25;
+  const bottomThreshold = appRect.top + screenH * 0.5;
 
   // 상단 1/4 영역 → 비활성화
-  if (y < screenH * 0.25) {
+  if (y < topThreshold) {
     const s = ensureSettings();
     s.floating.enabled = false;
     saveSettingsDebounced();
@@ -3728,7 +3734,7 @@ function onDragEnd(e) {
   }
 
   // 하단 절반 영역 → 메뉴 열기
-  if (y > screenH * 0.5) {
+  if (y > bottomThreshold) {
     snapToEdge();
     openFloatingMenu();
     
@@ -4233,5 +4239,6 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
