@@ -1372,7 +1372,7 @@ body.autobgm-modal-open{ overflow:hidden; }
 .abgm-fs-item.show-tags .abgm-fs-tagpanel{ display:flex; }
 
 /* ===== Floating Menu ===== */
-.abgm-floating-menu{
+.abgm-floating-menu {
   position: fixed;
   left: 50%;
   top: 50%;
@@ -1394,6 +1394,17 @@ body.autobgm-modal-open{ overflow:hidden; }
   transform: translate(-50%, -50%) scale(1);
   opacity: 1;
   pointer-events: auto;
+}
+
+/* 좁은 폭/낮은 높이에서는 "센터링"을 포기하고 위에 붙여서 가출 방지 */
+@media (max-width: 480px), (max-height: 520px){
+  .abgm-floating-menu{
+    top: 12px;
+    transform: translateX(-50%) scale(0.95);
+  }
+  .abgm-floating-menu.is-open{
+    transform: translateX(-50%) scale(1);
+  }
 }
 
 .abgm-floating-menu-bg {
