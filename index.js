@@ -550,6 +550,12 @@ function ensureSettings() {
     chatStates: {},
     ui: { bgmSort: "added_asc" },
   };
+  
+  floating: {
+      enabled: false,
+      x: null,
+      y: null,
+    },
 
   const s = extension_settings[SETTINGS_KEY];
   s.globalVolLocked ??= false;
@@ -558,6 +564,8 @@ function ensureSettings() {
 
   s.ui ??= { bgmSort: "added_asc" };
   s.ui.bgmSort ??= "added_asc";
+  s.floating ??= { enabled: false, x: null, y: null };
+  s.floating.enabled ??= false;
 
   // ensureSettings 프리소스
   s.freeSources ??= [];
@@ -3442,6 +3450,32 @@ async function mount() {
       syncDebugUI();
       updateNowPlayingUI();
     });
+
+    // Floating 버튼 토글
+    const floatingToggle = root.querySelector("#autobgm_floating_toggle");
+    const syncFloatingUI = () => {
+      const s = ensureSettings();
+      const on = !!s.floating.enabled;
+      if (!floatingToggle) return;
+
+      const stateEl = floatingToggle.querySelector(".autobgm-menu-state");
+      if (stateEl) stateEl.textContent = on ? "On" : "Off";
+    };
+
+    syncFloatingUI();
+
+    floatingToggle?.addEventListener("click", () => {
+      const s = ensureSettings();
+      s.floating.enabled = !s.floating.enabled;
+      saveSettingsDebounced();
+      syncFloatingUI();
+
+      if (s.floating.enabled) {
+        createFloatingButton();
+      } else {
+        removeFloatingButton();
+      }
+    });
     
     helpBtn?.addEventListener("click", () => {
       if (!helpText) return;
@@ -3469,6 +3503,134 @@ async function bootstrapDataOnce() {
   await mergeBundledFreeSourcesIntoSettings(settings);
 }
 
+/** ========= Floating Button ========= */
+let _floatingBtn = null;
+let _floatingDragging = false;
+let _floatingDragOffset = { x: 0, y: 0 };
+
+function createFloatingButton() {
+  if (_floatingBtn) return _floatingBtn;
+
+  const settings = ensureSettings();
+  
+  const btn = document.createElement("div");
+  btn.id = "abgm_floating_btn";
+  btn.className = "abgm-floating-btn";
+  btn.innerHTML = `
+    <div class="abgm-floating-icon">
+      <!-- placeholder: 나중에 SVG로 교체 -->
+      <div style="width:100%; height:100%; background:rgba(255,255,255,.15); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:24px;">
+        🎵
+      </div>
+    </div>
+  `;
+
+  // 초기 위치
+  const x = settings.floating.x ?? window.innerWidth - 40;
+  const y = settings.floating.y ?? window.innerHeight - 100;
+  btn.style.left = `${x}px`;
+  btn.style.top = `${y}px`;
+
+  // 드래그 시작
+  btn.addEventListener("mousedown", onDragStart);
+  btn.addEventListener("touchstart", onDragStart, { passive: false });
+
+  document.body.appendChild(btn);
+  _floatingBtn = btn;
+  return btn;
+}
+
+function removeFloatingButton() {
+  if (_floatingBtn) {
+    _floatingBtn.remove();
+    _floatingBtn = null;
+  }
+}
+
+function onDragStart(e) {
+  e.preventDefault();
+  _floatingDragging = true;
+
+  const rect = _floatingBtn.getBoundingClientRect();
+  const clientX = e.type.startsWith("touch") ? e.touches[0].clientX : e.clientX;
+  const clientY = e.type.startsWith("touch") ? e.touches[0].clientY : e.clientY;
+
+  _floatingDragOffset.x = clientX - rect.left;
+  _floatingDragOffset.y = clientY - rect.top;
+
+  _floatingBtn.classList.add("dragging");
+
+  document.addEventListener("mousemove", onDragMove);
+  document.addEventListener("touchmove", onDragMove, { passive: false });
+  document.addEventListener("mouseup", onDragEnd);
+  document.addEventListener("touchend", onDragEnd);
+}
+
+function onDragMove(e) {
+  if (!_floatingDragging) return;
+  e.preventDefault();
+
+  const clientX = e.type.startsWith("touch") ? e.touches[0].clientX : e.clientX;
+  const clientY = e.type.startsWith("touch") ? e.touches[0].clientY : e.clientY;
+
+  let x = clientX - _floatingDragOffset.x;
+  let y = clientY - _floatingDragOffset.y;
+
+  // 화면 밖 방지
+  const w = _floatingBtn.offsetWidth;
+  const h = _floatingBtn.offsetHeight;
+  x = Math.max(-w / 2, Math.min(window.innerWidth - w / 2, x));
+  y = Math.max(0, Math.min(window.innerHeight - h, y));
+
+  _floatingBtn.style.left = `${x}px`;
+  _floatingBtn.style.top = `${y}px`;
+}
+
+function onDragEnd(e) {
+  if (!_floatingDragging) return;
+  _floatingDragging = false;
+  _floatingBtn.classList.remove("dragging");
+
+  document.removeEventListener("mousemove", onDragMove);
+  document.removeEventListener("touchmove", onDragMove);
+  document.removeEventListener("mouseup", onDragEnd);
+  document.removeEventListener("touchend", onDragEnd);
+
+  // 벽에 스냅
+  snapToEdge();
+
+  // 위치 저장
+  const settings = ensureSettings();
+  const rect = _floatingBtn.getBoundingClientRect();
+  settings.floating.x = rect.left;
+  settings.floating.y = rect.top;
+  saveSettingsDebounced();
+}
+
+function snapToEdge() {
+  const rect = _floatingBtn.getBoundingClientRect();
+  const w = rect.width;
+  const centerX = rect.left + w / 2;
+
+  let targetX = rect.left;
+
+  // 좌/우 중 가까운 쪽으로
+  if (centerX < window.innerWidth / 2) {
+    // 좌측 벽에 반쯤 걸치게
+    targetX = -w / 2;
+  } else {
+    // 우측 벽에 반쯤 걸치게
+    targetX = window.innerWidth - w / 2;
+  }
+
+  _floatingBtn.style.transition = "left 0.2s ease-out";
+  _floatingBtn.style.left = `${targetX}px`;
+
+  setTimeout(() => {
+    _floatingBtn.style.transition = "";
+  }, 200);
+}
+
 /** ========= init 이닛 ========= */
 async function init() {
   // 중복 로드/실행 방지 (메뉴 2개 뜨는 거 방지)
@@ -3478,6 +3640,13 @@ async function init() {
   await bootFreeSourcesSync();
   mount();
   startEngine();
+  
+  // 플로팅 버튼 초기화
+  const settings = ensureSettings();
+  if (settings.floating.enabled) {
+    createFloatingButton();
+  }
+  
   const obs = new MutationObserver(() => mount());
   obs.observe(document.body, { childList: true, subtree: true });
 }
