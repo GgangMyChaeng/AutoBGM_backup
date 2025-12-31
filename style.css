@@ -1453,25 +1453,6 @@ body.autobgm-modal-open{ overflow:hidden; }
   to { transform: rotate(360deg); }
 }
 
-/* 모바일 대응 */
-@media (max-width: 520px) {
-  .abgm-floating-menu {
-    width: 85vw;
-    height: auto;
-    aspect-ratio: 4 / 3;
-  }
-
-  .abgm-floating-menu-buttons {
-    padding: 20px;
-    gap: 10px;
-  }
-
-  .abgm-menu-icon {
-    max-width: 75%;
-    max-height: 75%;
-  }
-}
-
 /* 플로팅 메뉴창 버튼 위치 조정 */
 .abgm-menu-np .abgm-menu-icon {
    transform: translateX(40%);
