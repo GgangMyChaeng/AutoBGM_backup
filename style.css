@@ -1474,20 +1474,20 @@ body.autobgm-modal-open{ overflow:hidden; }
 
 /* 플로팅 메뉴창 버튼 위치 조정 */
 .abgm-menu-np .abgm-menu-icon {
-   transform: translateX(10%);
-   transform: translateY(-10%)
+   transform: translateX(40%);
+   transform: translateY(-30%)
 }
 
 .abgm-menu-help .abgm-menu-icon {
-   transform: translateX(10%);
-   transform: translateY(-20%)
+   transform: translateX(40%);
+   transform: translateY(-60%)
 }
 
 .abgm-menu-debug .abgm-menu-icon {
-  transform: translateX(-10%);
+  transform: translateX(-40%);
 }
 
 .abgm-menu-settings .abgm-menu-icon {
-  transform: translateX(-10%);
-  transform: translateY(-10%)
+  transform: translateX(-40%);
+  transform: translateY(-60%)
 }
