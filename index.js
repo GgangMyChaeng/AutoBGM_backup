@@ -549,13 +549,12 @@ function ensureSettings() {
     assets: {},
     chatStates: {},
     ui: { bgmSort: "added_asc" },
-  };
-  
-  floating: {
+    floating: {
       enabled: false,
       x: null,
       y: null,
     },
+  };
 
   const s = extension_settings[SETTINGS_KEY];
   s.globalVolLocked ??= false;
