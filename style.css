@@ -1471,3 +1471,23 @@ body.autobgm-modal-open{ overflow:hidden; }
     max-height: 75%;
   }
 }
+
+/* 플로팅 메뉴창 버튼 위치 조정 */
+.abgm-menu-np .abgm-menu-icon {
+   transform: translateX(10%);
+   transform: translateY(-10%)
+}
+
+.abgm-menu-help .abgm-menu-icon {
+   transform: translateX(10%);
+   transform: translateY(-20%)
+}
+
+.abgm-menu-debug .abgm-menu-icon {
+  transform: translateX(-10%);
+}
+
+.abgm-menu-settings .abgm-menu-icon {
+  transform: translateX(-10%);
+  transform: translateY(-10%)
+}
