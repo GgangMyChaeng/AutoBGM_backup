@@ -785,7 +785,8 @@ function updateNowPlayingUI() {
         settings?.keywordMode ? "Mode: Keyword" :
         `Mode: ${settings?.playMode || "manual"}`;
     }
-
+    
+    try { updateFloatingMenuIcons(); } catch {}
     setNowControlsLocked(!settings.enabled);
   } catch (e) {
     console.error("[AutoBGM] updateNowPlayingUI failed:", e);
@@ -3505,7 +3506,151 @@ async function bootstrapDataOnce() {
 /** ========= Floating Button ========= */
 let _floatingBtn = null;
 let _floatingDragging = false;
-let _floatingDragOffset = { x: 0, y: 0 };
+let _floatingStartPos = { x: 0, y: 0 };
+
+const ABGM_FLOATMENU_OVERLAY_ID = "abgm_floatmenu_overlay";
+
+// 메뉴/아이콘 이미지들 (URL이든 base64든 상관없음)
+// base64면: "data:image/png;base64,...." 형태로 넣으면 됨
+const ABGM_FLOATMENU_BODY_IMG       = "@@FLOAT_MENU_BODY_IMAGE@@";
+const ABGM_FLOATMENU_ICON_NP        = "@@FLOAT_MENU_ICON_NOWPLAYING@@";
+const ABGM_FLOATMENU_ICON_DEBUG_OFF = "@@FLOAT_MENU_ICON_DEBUG_OFF@@";
+const ABGM_FLOATMENU_ICON_DEBUG_ON  = "@@FLOAT_MENU_ICON_DEBUG_ON@@"; // 예: https://i.postimg.cc/1XTmqCw9/Debug-On.png
+const ABGM_FLOATMENU_ICON_HELP      = "@@FLOAT_MENU_ICON_HELP@@";
+const ABGM_FLOATMENU_ICON_SETTINGS  = "@@FLOAT_MENU_ICON_SETTINGS@@";
+
+function _abgmViewportH() {
+  return (window.visualViewport && window.visualViewport.height) ? window.visualViewport.height : window.innerHeight;
+}
+
+function _abgmSyncFloatingToggleUI(on) {
+  const stateEl = document.querySelector("#autobgm_floating_toggle .autobgm-menu-state");
+  if (stateEl) stateEl.textContent = on ? "On" : "Off";
+}
+
+function closeFloatingMenu() {
+  const ov = document.getElementById(ABGM_FLOATMENU_OVERLAY_ID);
+  if (!ov) return;
+  ov.classList.remove("is-open");
+  setTimeout(() => ov.remove(), 160);
+}
+
+function openFloatingMenu() {
+  if (document.getElementById(ABGM_FLOATMENU_OVERLAY_ID)) {
+    updateFloatingMenuIcons();
+    return;
+  }
+
+  const ov = document.createElement("div");
+  ov.id = ABGM_FLOATMENU_OVERLAY_ID;
+  ov.className = "abgm-fm-overlay";
+  ov.innerHTML = `
+    <div class="abgm-fm-backdrop" data-abgm-fm-close="1"></div>
+    <div class="abgm-fm-panel" role="dialog" aria-label="AutoBGM quick menu">
+      <div class="abgm-fm-body" style="background-image:url('${ABGM_FLOATMENU_BODY_IMG}')">
+        <button class="abgm-fm-btn" data-action="np" title="Now Playing">
+          <img src="${ABGM_FLOATMENU_ICON_NP}" alt="Now Playing">
+        </button>
+
+        <button class="abgm-fm-btn" data-action="debug" title="Debug">
+          <img src="${ABGM_FLOATMENU_ICON_DEBUG_OFF}" alt="Debug">
+        </button>
+
+        <button class="abgm-fm-btn" data-action="help" title="Help">
+          <img src="${ABGM_FLOATMENU_ICON_HELP}" alt="Help">
+        </button>
+
+        <button class="abgm-fm-btn" data-action="settings" title="Settings">
+          <img src="${ABGM_FLOATMENU_ICON_SETTINGS}" alt="Settings">
+        </button>
+      </div>
+    </div>
+  `;
+
+  ov.addEventListener("click", (e) => {
+    const target = e.target;
+    if (target?.dataset?.abgmFmClose) {
+      closeFloatingMenu();
+      return;
+    }
+
+    const btn = target.closest?.(".abgm-fm-btn");
+    if (!btn) return;
+
+    const act = btn.dataset.action;
+
+    if (act === "debug") {
+      const s = ensureSettings();
+      s.debugMode = !s.debugMode;
+      __abgmDebugMode = !!s.debugMode;
+      if (!__abgmDebugMode) __abgmDebugLine = "";
+      saveSettingsDebounced();
+
+      // drawer debug 버튼도 같이 반영
+      const dbgBtn = document.getElementById("autobgm_debug_btn");
+      if (dbgBtn) {
+        dbgBtn.title = `Debug: ${__abgmDebugMode ? "ON" : "OFF"}`;
+        const icon = dbgBtn.querySelector("i");
+        if (icon) {
+          icon.classList.toggle("fa-bug", !__abgmDebugMode);
+          icon.classList.toggle("fa-bug-slash", __abgmDebugMode);
+        }
+      }
+
+      updateNowPlayingUI();
+      updateFloatingMenuIcons();
+      return;
+    }
+
+    // 나머지는 "섹션별 UI" 붙이기 전까지 임시로 모달 열어둠
+    if (act === "np" || act === "help" || act === "settings") {
+      try { openModal?.(); } catch {}
+      closeFloatingMenu();
+    }
+  });
+
+  document.body.appendChild(ov);
+
+  // 애니메이션 트리거
+  requestAnimationFrame(() => ov.classList.add("is-open"));
+
+  updateFloatingMenuIcons();
+}
+
+function updateFloatingMenuIcons() {
+  const ov = document.getElementById(ABGM_FLOATMENU_OVERLAY_ID);
+  if (!ov) return;
+
+  const isPlaying = !!(_bgmAudio && !_bgmAudio.paused && !_bgmAudio.ended && _engineCurrentFileKey);
+
+  const npBtn = ov.querySelector('.abgm-fm-btn[data-action="np"]');
+  if (npBtn) npBtn.classList.toggle("is-playing", isPlaying);
+
+  const dbgBtn = ov.querySelector('.abgm-fm-btn[data-action="debug"]');
+  const dbgImg = dbgBtn?.querySelector("img");
+  if (dbgBtn) dbgBtn.classList.toggle("is-on", !!__abgmDebugMode);
+  if (dbgImg) dbgImg.src = __abgmDebugMode ? ABGM_FLOATMENU_ICON_DEBUG_ON : ABGM_FLOATMENU_ICON_DEBUG_OFF;
+}
+
+function disableFloatingByDrag() {
+  closeFloatingMenu();
+
+  const s = ensureSettings();
+  s.floating.enabled = false;
+  saveSettingsDebounced();
+  _abgmSyncFloatingToggleUI(false);
+
+  if (!_floatingBtn) return;
+
+  const h = _floatingBtn.offsetHeight || 64;
+  _floatingBtn.style.transition = "top .18s ease, opacity .18s ease";
+  _floatingBtn.style.top = `${-h - 12}px`;
+  _floatingBtn.style.opacity = "0";
+
+  setTimeout(() => {
+    removeFloatingButton();
+  }, 190);
+}
 
 function createFloatingButton() {
   if (_floatingBtn) return _floatingBtn;
@@ -3549,7 +3694,10 @@ function onDragStart(e) {
   e.preventDefault();
   _floatingDragging = true;
 
+  closeFloatingMenu();
+
   const rect = _floatingBtn.getBoundingClientRect();
+  _floatingStartPos = { x: rect.left, y: rect.top };
   const clientX = e.type.startsWith("touch") ? e.touches[0].clientX : e.clientX;
   const clientY = e.type.startsWith("touch") ? e.touches[0].clientY : e.clientY;
 
@@ -3594,15 +3742,33 @@ function onDragEnd(e) {
   document.removeEventListener("mouseup", onDragEnd);
   document.removeEventListener("touchend", onDragEnd);
 
-  // 벽에 스냅
+  const rect = _floatingBtn.getBoundingClientRect();
+  const centerY = rect.top + rect.height / 2;
+  const movedY = rect.top - (_floatingStartPos?.y ?? rect.top);
+
+  const vh = _abgmViewportH();
+  const topZoneY = Math.max(80, Math.floor(vh * 0.14)); // 상단 14% (최소 80px)
+  const menuZoneY = Math.floor(vh * 0.55);              // 중단~하단
+
+  // 1) 위로 올리면 비활성화(사라지기)
+  if (centerY <= topZoneY) {
+    disableFloatingByDrag();
+    return;
+  }
+
+  // 2) 평소엔 벽 스냅 + 위치 저장
   snapToEdge();
 
-  // 위치 저장
   const settings = ensureSettings();
-  const rect = _floatingBtn.getBoundingClientRect();
-  settings.floating.x = rect.left;
-  settings.floating.y = rect.top;
+  const rect2 = _floatingBtn.getBoundingClientRect();
+  settings.floating.x = rect2.left;
+  settings.floating.y = rect2.top;
   saveSettingsDebounced();
+
+  // 3) 아래로 끌어서 놓으면 메뉴 오픈 (약간이라도 아래로 이동했을 때만)
+  if (centerY >= menuZoneY && movedY > 18) {
+    openFloatingMenu();
+  }
 }
 
 function snapToEdge() {
