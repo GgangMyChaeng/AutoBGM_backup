@@ -1614,15 +1614,14 @@ function openNowPlayingGlass() {
             <i class="fa-solid fa-list"></i>
           </button>
 
-          <button class="abgm-np-pill abgm-np-back" type="button" id="abgm_np_back" title="Back">
-            <i class="fa-solid fa-arrow-left"></i>
-          </button>
-
           <button class="abgm-np-pill" type="button" id="abgm_np_mode" title="Mode">
             <img id="abgm_np_mode_icon" src="${ABGM_NP_MODE_ICON.manual}" class="abgm-np-icon abgm-np-icon-sm" alt="mode" />
             <span id="abgm_np_mode_text" class="abgm-np-sr">Manual</span>
           </button>
 
+            <button class="abgm-np-pill abgm-np-back" type="button" id="abgm_np_back" title="Back">
+            <i class="fa-solid fa-arrow-left"></i>
+          </button>
         </div>
 
       </div>
@@ -4868,4 +4867,5 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
