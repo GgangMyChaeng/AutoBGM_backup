@@ -1221,32 +1221,12 @@ function closeModal() {
 const NP_GLASS_OVERLAY_ID = "ABGM_NP_GLASS_OVERLAY";
 
 // NP Glass: play mode icons (image = direct link)
-// 기본은 data-uri SVG라서 바로 동작함... 나중에 PNG 직링으로 갈아끼우면 끝
-function abgmSvgData(svg) {
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-}
-
 const ABGM_NP_MODE_ICON = {
-  // ▶ (manual)
-  manual: abgmSvgData(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="9 7 19 12 9 17 9 7"/></svg>`
-  ),
-  // 🔂 (loop one)
-  loop_one: abgmSvgData(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/><path d="M12 10v6"/><path d="M14 12l-2-2-2 2"/></svg>`
-  ),
-  // 🔁 (loop list)
-  loop_list: abgmSvgData(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>`
-  ),
-  // 🔀 (random)
-  random: abgmSvgData(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20l6-6"/><path d="M4 4l6 6"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M15 9l6-6"/></svg>`
-  ),
-  // 💬 (keyword)
-  keyword: abgmSvgData(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/><path d="M8 8h8"/><path d="M8 12h5"/></svg>`
-  ),
+  manual:   "https://i.postimg.cc/SR9HXrhj/Play.png",
+  loop_one: "https://i.postimg.cc/L4PW3NcK/Loop_One.png",
+  loop_list:"https://i.postimg.cc/jdQkGCqp/Loop_List.png",
+  random:   "https://i.postimg.cc/L8xQ87PM/Random.png",
+  keyword:  "https://i.postimg.cc/8CsKJHdc/Keyword.png",
 };
 
 function closeNowPlayingGlass() {
@@ -4500,6 +4480,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
