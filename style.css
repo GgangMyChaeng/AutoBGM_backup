@@ -1640,3 +1640,145 @@ body.autobgm-modal-open{ overflow:hidden; }
   white-space: nowrap;
   border: 0;
 }
+
+/* =========================
+   NP Glass - Playlist Page
+   ========================= */
+
+.abgm-np-glass-inner{
+  height: 100%;
+}
+
+.abgm-pl-card{
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  background: rgba(255,255,255,.92);
+  color: rgba(0,0,0,.88);
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.abgm-pl-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+
+  padding: 10px 12px;
+  background: rgba(255,255,255,.98);
+  border-bottom: 1px solid rgba(0,0,0,.06);
+}
+
+.abgm-pl-title{
+  font-weight: 800;
+  letter-spacing: .2px;
+  opacity: .92;
+}
+
+.abgm-pl-topbtn{
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,.10);
+  background: rgba(0,0,0,.03);
+}
+
+.abgm-pl-presetbar{
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(0,0,0,.06);
+  background: rgba(255,255,255,.98);
+}
+
+.abgm-pl-select{
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,.10);
+  background: rgba(0,0,0,.02);
+  color: inherit;
+  outline: none;
+}
+
+.abgm-pl-list{
+  flex: 1;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 6px 0;
+}
+
+.abgm-pl-empty{
+  padding: 14px 12px;
+  opacity: .65;
+  font-size: 12px;
+}
+
+.abgm-pl-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 12px;
+
+  padding: 10px 12px;
+}
+
+.abgm-pl-item + .abgm-pl-item{
+  border-top: 1px solid rgba(0,0,0,.06);
+}
+
+.abgm-pl-item.is-current{
+  background: rgba(0,0,0,.04);
+}
+
+.abgm-pl-left{
+  min-width: 0;
+  flex: 1;
+}
+
+.abgm-pl-row1{
+  display:flex;
+  align-items:baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.abgm-pl-name{
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.abgm-pl-dur{
+  opacity: .55;
+  font-size: 12px;
+  flex: 0 0 auto;
+}
+
+.abgm-pl-play{
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,.10);
+  background: rgba(0,0,0,.03);
+}
+
+.abgm-pl-footer{
+  padding: 10px 12px;
+  border-top: 1px solid rgba(0,0,0,.06);
+  background: rgba(255,255,255,.98);
+
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+}
+
+.abgm-pl-home{
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,.10);
+  background: rgba(0,0,0,.03);
+}
