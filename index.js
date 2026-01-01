@@ -3574,10 +3574,16 @@ function createFloatingMenu() {
     </div>
   `;
 
-  // 버튼 클릭 이벤트
+// 버튼 클릭 이벤트
   menu.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-action]");
-    if (!btn) return;
+    if (!btn) {
+      // 버튼이 아닌 메뉴 바깥(배경) 클릭 시 닫기
+      if (e.target === menu) {
+        closeFloatingMenu();
+      }
+      return;
+    }
 
     const action = btn.dataset.action;
     
@@ -3591,14 +3597,6 @@ function createFloatingMenu() {
       console.log("[AutoBGM] Help clicked");
     } else if (action === "settings") {
       openModal();
-      closeFloatingMenu();
-    }
-  });
-
- // 메뉴 바깥 클릭하면 닫기 (버튼 영역 제외)
-  menu.addEventListener("click", (e) => {
-    // 버튼 영역 클릭이 아니면 메뉴만 닫기
-    if (e.target === menu) {
       closeFloatingMenu();
     }
   });
@@ -4252,6 +4250,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
