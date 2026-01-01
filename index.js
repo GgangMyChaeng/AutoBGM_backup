@@ -774,6 +774,18 @@ function updateNowPlayingUI() {
       btnPlay.title = icon === "▶️" ? "Pause" : (icon === "⏸️" ? "Play" : "Start");
     }
 
+    // ===== NP Glass 아이콘 동기화 NP 아이콘 =====
+    const glassIcon = document.querySelector("#abgm_np_play img");
+    if (glassIcon) {
+      if (!fk) {
+        glassIcon.src = "https://i.postimg.cc/VLy3x3qC/Stop.png";
+      } else if (_bgmAudio?.paused) {
+        glassIcon.src = "https://i.postimg.cc/SR9HXrhj/Play.png";
+      } else {
+        glassIcon.src = "https://i.postimg.cc/v8xJSQVQ/Pause.png";
+      }
+    }
+
     if (btnMode) {
       const modeIcon =
         settings?.keywordMode ? "💬" :
@@ -1212,7 +1224,8 @@ function openNowPlayingGlass() {
 
         <div class="abgm-np-ctrl">
           <button class="abgm-np-btn" type="button" id="abgm_np_prev" title="Prev" disabled>⏮</button>
-          <button class="abgm-np-btn abgm-np-btn-main" type="button" id="abgm_np_play" title="Play/Pause">⏯</button>
+          <button class="abgm-np-btn abgm-np-btn-main" type="button" id="abgm_np_play" title="Play/Pause">
+          <img src="https://i.postimg.cc/SR9HXrhj/Play.png" class="abgm-np-icon" alt="play"/></button>
           <button class="abgm-np-btn" type="button" id="abgm_np_next" title="Next" disabled>⏭</button>
         </div>
 
@@ -1255,7 +1268,10 @@ function openNowPlayingGlass() {
   setO("padding", "0");
 
   host.appendChild(overlay);
-
+  const playBtn = overlay.querySelector("#abgm_np_play");
+  playBtn?.addEventListener("click", () => {
+    togglePlayPause(); // ← 기존 NP 재생/일시정지 함수
+  });
   // 사이즈 맞추기(기존 유틸 재활용)
   try {
     fitModalToHost(overlay, host);
@@ -4378,6 +4394,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
