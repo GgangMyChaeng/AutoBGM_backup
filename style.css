@@ -1385,7 +1385,9 @@ body.autobgm-modal-open{ overflow:hidden; }
   
   /* 글래스모피즘 맛으로 */
   width: min(420px, 88vw);
-  height: min(420px, 88vw);
+  height: min(420px, 88vh);
+  max-width: 88vw;
+  max-height: 88vh;
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
@@ -1406,14 +1408,9 @@ body.autobgm-modal-open{ overflow:hidden; }
 @media (max-width: 480px), (max-height: 520px){
   .abgm-floating-menu{
     width: min(340px, 85vw);
-    height: min(340px, 85vw);
+    height: min(340px, 85vh);
     max-width: 85vw;
     max-height: 85vh;
-    top: 50%;
-    transform: translate(-50%, -50%) scale(0.95);
-  }
-  .abgm-floating-menu.is-open{
-    transform: translate(-50%, -50%) scale(1);
   }
 }
 
@@ -1421,7 +1418,7 @@ body.autobgm-modal-open{ overflow:hidden; }
 @media (max-width: 360px) or (max-height: 640px){
   .abgm-floating-menu{
     width: min(300px, 82vw);
-    height: min(300px, 82vw);
+    height: min(300px, 82vh);
   }
 }
 
