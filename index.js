@@ -1879,14 +1879,18 @@ function openNowPlayingGlass() {
 
   // overlay 스타일(기존 모달 방식 맞춤)
   const setO = (k, v) => overlay.style.setProperty(k, v, "important");
-  setO("position", "absolute");
+
+  // 스크롤은 리스트에서만, 오버레이는 고정
+  setO("position", "fixed");          // ← absolute 말고 fixed
   setO("inset", "0");
   setO("display", "block");
-  setO("overflow", "hidden");
-  setO("background", "rgba(0,0,0,.55)");
+  setO("overflow", "hidden");         // ← auto 금지 (이게 상/하단 같이 움직이던 원인)
+  setO("background", "rgba(0,0,0,.55)"); // ← 기존 값 rgba(0,0,0,55) 는 이상함
   setO("z-index", "2147483647");
   setO("padding", "0");
 
+  // 뒤 배경(채팅창) 스크롤도 막기
+  document.body.classList.add("abgm-np-open");
   host.appendChild(overlay);
 
   // ===== NP(Home) events =====
@@ -5122,6 +5126,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
