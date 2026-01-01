@@ -1789,7 +1789,11 @@ function openNowPlayingGlass() {
   overlay.dataset.abgmPage = "np";
 
   overlay.innerHTML = `
-    <div class="autobgm-modal abgm-np-glass">
+    <div class="autobgm-modal abgm-np-glass" style="
+      width: min(360px, 75vw);
+      height: min(480px, 80vh);
+      aspect-ratio: 3/4;
+    ">
       <div class="abgm-np-glass-inner">
 
         <!-- ===== Page: NP (Home) ===== -->
@@ -5122,3 +5126,4 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
