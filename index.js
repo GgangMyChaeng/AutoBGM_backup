@@ -1265,11 +1265,10 @@ function openNowPlayingGlass() {
 
   window.addEventListener("keydown", onNpGlassEsc);
 
-  // 뒤로가기 버튼(지금은 그냥 닫기 = 홈 복귀)
+  // 뒤로가기 버튼
   overlay.querySelector("#abgm_np_back")?.addEventListener("click", () => {
     closeNowPlayingGlass();
-    // 원하면 여기서 openFloatingMenu()로 홈 다시 띄워도 됨
-    // openFloatingMenu();
+    openFloatingMenu();
   });
 
   // 일단 표시만 업데이트(곡/프리셋명)
@@ -4379,6 +4378,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
