@@ -1383,9 +1383,9 @@ body.autobgm-modal-open{ overflow:hidden; }
   opacity: 0;
   pointer-events: none;
   
-  /* 글래스모피즘 맛으로 */
-  width: min(420px, 88vw);
-  height: min(420px, 88vh);
+  /* 화면 안에 딱 들어오게 - 가로/세로 둘 다 체크 */
+  width: min(420px, 88vw, 88vh);
+  height: min(420px, 88vw, 88vh);
   max-width: 88vw;
   max-height: 88vh;
   background: rgba(255, 255, 255, 0.08);
@@ -1407,18 +1407,16 @@ body.autobgm-modal-open{ overflow:hidden; }
 /* 모바일 대응 - 화면 안에 딱 맞게 */
 @media (max-width: 480px), (max-height: 520px){
   .abgm-floating-menu{
-    width: min(340px, 85vw);
-    height: min(340px, 85vh);
-    max-width: 85vw;
-    max-height: 85vh;
+    width: min(340px, 85vw, 85vh);
+    height: min(340px, 85vw, 85vh);
   }
 }
 
 /* 초소형 화면 추가 대응 */
 @media (max-width: 360px) or (max-height: 640px){
   .abgm-floating-menu{
-    width: min(300px, 82vw);
-    height: min(300px, 82vh);
+    width: min(300px, 82vw, 82vh);
+    height: min(300px, 82vw, 82vh);
   }
 }
 
@@ -1438,24 +1436,25 @@ body.autobgm-modal-open{ overflow:hidden; }
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr;
-  padding: 32px;
-  gap: 24px;
+  padding: min(32px, 8%);  /* ← 작은 화면에선 패딩도 줄어듦 */
+  gap: min(24px, 6%);      /* ← 작은 화면에선 간격도 줄어듦 */
 }
 
 .abgm-menu-btn {
   background: rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 20px;
+  border-radius: min(20px, 5%);  /* ← 작은 화면에선 라운드도 줄어듦 */
   padding: 0;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
-  aspect-ratio: 1 / 1;
   width: 100%;
   height: 100%;
+  min-width: 0;   /* ← 중요! */
+  min-height: 0;  /* ← 중요! */
 }
 
 .abgm-menu-btn:hover {
@@ -1472,6 +1471,8 @@ body.autobgm-modal-open{ overflow:hidden; }
 .abgm-menu-icon {
   max-width: 55%;
   max-height: 55%;
+  width: auto;
+  height: auto;
   object-fit: contain;
   pointer-events: none;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
