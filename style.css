@@ -1402,14 +1402,26 @@ body.autobgm-modal-open{ overflow:hidden; }
   pointer-events: auto;
 }
 
-/* 모바일 대응 */
+/* 모바일 대응 - 화면 안에 딱 맞게 */
 @media (max-width: 480px), (max-height: 520px){
   .abgm-floating-menu{
+    width: min(340px, 85vw);
+    height: min(340px, 85vw);
+    max-width: 85vw;
+    max-height: 85vh;
     top: 50%;
     transform: translate(-50%, -50%) scale(0.95);
   }
   .abgm-floating-menu.is-open{
     transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* 초소형 화면 추가 대응 */
+@media (max-width: 360px) or (max-height: 640px){
+  .abgm-floating-menu{
+    width: min(300px, 82vw);
+    height: min(300px, 82vw);
   }
 }
 
