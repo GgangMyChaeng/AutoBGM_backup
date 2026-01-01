@@ -3595,9 +3595,12 @@ function createFloatingMenu() {
     }
   });
 
-  // 메뉴 바깥 클릭하면 닫기
+ // 메뉴 바깥 클릭하면 닫기 (버튼 영역 제외)
   menu.addEventListener("click", (e) => {
-    if (e.target === menu) closeFloatingMenu();
+    // 버튼 영역 클릭이 아니면 메뉴만 닫기
+    if (e.target === menu) {
+      closeFloatingMenu();
+    }
   });
 
   document.body.appendChild(menu);
@@ -3707,24 +3710,34 @@ function onDragEnd(e) {
   document.removeEventListener("touchend", onDragEnd);
 
   const rect = _floatingBtn.getBoundingClientRect();
-  const y = rect.top + rect.height / 2;
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
   
-  // SillyTavern 영역 기준 (body 아닌 실제 컨텐츠 영역)
+  // SillyTavern 영역 기준
   const appEl = document.querySelector("#app") || document.querySelector("main") || document.body;
   const appRect = appEl.getBoundingClientRect();
+  
+  const screenW = appRect.width;
   const screenH = appRect.height;
-  const topThreshold = appRect.top + screenH * 0.25;
-  const bottomThreshold = appRect.top + screenH * 0.5;
+  
+  // 상단 중앙 영역 (화면 가로 중앙 ±25%, 세로 상단 20% 이내)
+  const topCenterLeft = appRect.left + screenW * 0.25;
+  const topCenterRight = appRect.left + screenW * 0.75;
+  const topThreshold = appRect.top + screenH * 0.2;
+  
+  // 하단 중앙 영역 (화면 가로 중앙 ±25%, 세로 하단 20% 이내)
+  const bottomCenterLeft = appRect.left + screenW * 0.25;
+  const bottomCenterRight = appRect.left + screenW * 0.75;
+  const bottomThreshold = appRect.top + screenH * 0.8;
 
-  // 상단 1/4 영역 → 비활성화
-  if (y < topThreshold) {
+  // 상단 중앙에 놓으면 → 비활성화
+  if (centerY < topThreshold && centerX > topCenterLeft && centerX < topCenterRight) {
     const s = ensureSettings();
     s.floating.enabled = false;
     saveSettingsDebounced();
     removeFloatingButton();
     removeFloatingMenu();
 
-    // window.html 토글 버튼 UI도 갱신
     const toggle = document.querySelector("#autobgm_floating_toggle");
     if (toggle) {
       const stateEl = toggle.querySelector(".autobgm-menu-state");
@@ -3733,8 +3746,8 @@ function onDragEnd(e) {
     return;
   }
 
-  // 하단 절반 영역 → 메뉴 열기
-  if (y > bottomThreshold) {
+  // 하단 중앙에 놓으면 → 메뉴 열기
+  if (centerY > bottomThreshold && centerX > bottomCenterLeft && centerX < bottomCenterRight) {
     snapToEdge();
     openFloatingMenu();
     
@@ -3746,7 +3759,7 @@ function onDragEnd(e) {
     return;
   }
 
-  // 중간 영역 → 그냥 벽에 스냅만
+  // 그 외: 벽에 스냅만
   snapToEdge();
 
   const s = ensureSettings();
@@ -4239,6 +4252,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
