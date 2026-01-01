@@ -3726,8 +3726,8 @@ function onDragEnd(e) {
   const topThreshold = appRect.top + screenH * 0.2;
   
   // 하단 중앙 영역 (화면 가로 중앙 ±25%, 세로 하단 20% 이내)
-  const bottomCenterLeft = appRect.left + screenW * 0.25;
-  const bottomCenterRight = appRect.left + screenW * 0.75;
+  const bottomCenterLeft = appRect.left + screenW * 0.35;
+  const bottomCenterRight = appRect.left + screenW * 0.85;
   const bottomThreshold = appRect.top + screenH * 0.8;
 
   // 상단 중앙에 놓으면 → 비활성화
@@ -4252,6 +4252,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
