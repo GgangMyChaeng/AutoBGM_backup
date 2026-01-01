@@ -746,6 +746,7 @@ function updateNowPlayingUI() {
     _abgmSetText("autobgm_now_meta", meta);
     updateNowPlayingGlassUI(title, presetName, modeLabel);
     updateNowPlayingGlassNavUI(settings, preset);
+    try { updateNowPlayingGlassPlaylistUI(settings); } catch {}
 
     const dbg = document.getElementById("autobgm_now_debug");
     if (dbg) {
@@ -1577,51 +1578,290 @@ function updateNowPlayingGlassNavUI(settings, preset) {
   nextBtn.title = nextBtn.disabled ? 'Next' : 'Next';
 }
 
+// ===== NP Glass: Playlist View =====
+const ABGM_SORT_CYCLE = [
+  "name_asc",
+  "name_desc",
+  "added_asc",
+  "added_desc",
+  "priority_desc",
+  "priority_asc",
+];
+
+function abgmSortNice(mode) {
+  const m = String(mode || "");
+  if (m === "name_asc") return "Name A→Z";
+  if (m === "name_desc") return "Name Z→A";
+  if (m === "added_asc") return "Added ↑";
+  if (m === "added_desc") return "Added ↓";
+  if (m === "priority_desc") return "Priority ↓";
+  if (m === "priority_asc") return "Priority ↑";
+  return m || "Sort";
+}
+
+function abgmCycleBgmSort(settings) {
+  settings.ui ??= {};
+  const cur = String(getBgmSort(settings) || "added_asc");
+  const i = ABGM_SORT_CYCLE.indexOf(cur);
+  const next = ABGM_SORT_CYCLE[(i + 1) % ABGM_SORT_CYCLE.length] || "added_asc";
+  settings.ui.bgmSort = next;
+  return next;
+}
+
+function abgmGetNpOverlay() {
+  return document.getElementById(NP_GLASS_OVERLAY_ID);
+}
+
+function abgmNpShowPage(page /* 'np' | 'pl' */) {
+  const overlay = abgmGetNpOverlay();
+  if (!overlay) return;
+
+  const np = overlay.querySelector('[data-abgm-page="np"]');
+  const pl = overlay.querySelector('[data-abgm-page="pl"]');
+
+  overlay.dataset.abgmPage = page;
+
+  if (np) np.style.display = (page === "np") ? "" : "none";
+  if (pl) pl.style.display = (page === "pl") ? "" : "none";
+
+  if (page === "pl") {
+    try { abgmRenderPlaylistPage(overlay); } catch {}
+  }
+}
+
+function abgmPlayFromPlaylist(fileKey) {
+  const fk = String(fileKey || "").trim();
+  if (!fk) return;
+
+  const settings = ensureSettings();
+  if (!settings.enabled) return;
+
+  // "리스트에서 골라 재생"이면 일단 수동 모드로 확정 (원하면 나중에 정책 바꿔도 됨)
+  settings.keywordMode = false;
+  settings.playMode = "manual";
+
+  const preset = getActivePreset(settings);
+  const b = findBgmByKey(preset, fk);
+  const vol01 = clamp01((settings.globalVolume ?? 0.7) * (b?.volume ?? 1));
+
+  saveSettingsDebounced();
+  ensurePlayFile(fk, vol01, false, preset?.id || "");
+  updateNowPlayingUI();
+}
+
+function abgmRenderPlaylistPage(overlay) {
+  const settings = ensureSettings();
+  const preset = getActivePreset(settings);
+
+  // --- preset select ---
+  const sel = overlay.querySelector("#abgm_pl_preset");
+  if (sel && !sel.__abgmBound) {
+    sel.__abgmBound = true;
+
+    sel.addEventListener("change", (e) => {
+      settings.activePresetId = String(e.target.value || settings.activePresetId || "");
+      saveSettingsDebounced();
+      try { abgmRenderPlaylistPage(overlay); } catch {}
+      try { updateNowPlayingUI(); } catch {}
+    });
+  }
+  if (sel) {
+    sel.innerHTML = "";
+    const presetsSorted = Object.values(settings.presets || {}).sort((a, b) =>
+      String(a?.name ?? a?.id ?? "").localeCompare(
+        String(b?.name ?? b?.id ?? ""),
+        undefined,
+        { numeric: true, sensitivity: "base" }
+      )
+    );
+
+    for (const p of presetsSorted) {
+      const opt = document.createElement("option");
+      opt.value = String(p.id);
+      opt.textContent = String(p.name || p.id);
+      if (String(p.id) === String(settings.activePresetId)) opt.selected = true;
+      sel.appendChild(opt);
+    }
+  }
+
+  // --- sort button ---
+  const sortBtn = overlay.querySelector("#abgm_pl_sort");
+  if (sortBtn && !sortBtn.__abgmBound) {
+    sortBtn.__abgmBound = true;
+
+    sortBtn.addEventListener("click", () => {
+      const next = abgmCycleBgmSort(settings);
+      saveSettingsDebounced();
+      sortBtn.title = `Sort: ${abgmSortNice(next)}`;
+      try { abgmRenderPlaylistPage(overlay); } catch {}
+    });
+  }
+  if (sortBtn) sortBtn.title = `Sort: ${abgmSortNice(getBgmSort(settings))}`;
+
+  // --- list render ---
+  const list = overlay.querySelector("#abgm_pl_list");
+  if (!list) return;
+
+  if (!list.__abgmBound) {
+    list.__abgmBound = true;
+
+    list.addEventListener("click", (e) => {
+      const play = e.target.closest(".abgm-pl-play");
+      if (!play) return;
+      const fk = String(play.dataset.filekey || "").trim();
+      abgmPlayFromPlaylist(fk);
+    });
+  }
+
+  const bgms = getSortedBgms(preset, getBgmSort(settings))
+    .filter(b => String(b?.fileKey ?? "").trim());
+
+  list.innerHTML = "";
+
+  if (!bgms.length) {
+    const empty = document.createElement("div");
+    empty.className = "abgm-pl-empty";
+    empty.textContent = "곡 없음";
+    list.appendChild(empty);
+    return;
+  }
+
+  const curKey = String(_engineCurrentFileKey || "");
+  const isPlaying = !!settings.enabled && !!curKey && !_bgmAudio?.paused;
+
+  for (const b of bgms) {
+    const fk = String(b.fileKey || "");
+    const name = getEntryName(b);
+    const dur = Number(b.durationSec ?? 0);
+    const durText = (Number.isFinite(dur) && dur > 0) ? abgmFmtTime(dur) : "";
+
+    const row = document.createElement("div");
+    row.className = "abgm-pl-item";
+    row.dataset.filekey = fk;
+
+    const isCur = (fk === curKey);
+    if (isCur) row.classList.add("is-current");
+
+    const icon = (isCur && isPlaying) ? "⏸" : "▶";
+
+    row.innerHTML = `
+      <div class="abgm-pl-left">
+        <div class="abgm-pl-row1">
+          <div class="abgm-pl-name" title="${escapeHtml(name)}">${escapeHtml(name)}</div>
+          <div class="abgm-pl-dur">${escapeHtml(durText ? `(${durText})` : "")}</div>
+        </div>
+      </div>
+
+      <button type="button" class="menu_button abgm-pl-play" data-filekey="${escapeHtml(fk)}" title="Play">
+        ${icon}
+      </button>
+    `;
+
+    list.appendChild(row);
+  }
+}
+
+function updateNowPlayingGlassPlaylistUI(settings) {
+  const overlay = abgmGetNpOverlay();
+  if (!overlay) return;
+  if (String(overlay.dataset.abgmPage || "np") !== "pl") return;
+
+  const fk = String(_engineCurrentFileKey || "");
+  const isPlaying = !!settings?.enabled && !!fk && !_bgmAudio?.paused;
+
+  overlay.querySelectorAll(".abgm-pl-item")?.forEach?.((row) => {
+    const key = String(row.dataset.filekey || "");
+    const isCur = key && fk && key === fk;
+
+    row.classList.toggle("is-current", isCur);
+
+    const btn = row.querySelector(".abgm-pl-play");
+    if (btn) btn.textContent = (isCur && isPlaying) ? "⏸" : "▶";
+  });
+}
+
 function openNowPlayingGlass() {
   if (document.getElementById(NP_GLASS_OVERLAY_ID)) return;
 
   const overlay = document.createElement("div");
   overlay.id = NP_GLASS_OVERLAY_ID;
   overlay.className = "autobgm-overlay"; // 기존 overlay CSS 재활용
+  overlay.dataset.abgmPage = "np";
+
   overlay.innerHTML = `
     <div class="autobgm-modal abgm-np-glass">
       <div class="abgm-np-glass-inner">
 
-        <div class="abgm-np-art" id="abgm_np_art">
-          <!-- 나중에 플로팅 NP 이미지 넣을 자리 -->
-        </div>
+        <!-- ===== Page: NP (Home) ===== -->
+        <div data-abgm-page="np">
 
-        <div class="abgm-np-title" id="abgm_np_title">(none)</div>
-        <div class="abgm-np-sub" id="abgm_np_preset">Preset</div>
+          <div class="abgm-np-art" id="abgm_np_art"></div>
 
-        <div class="abgm-np-seek-wrap">
-          <input id="abgm_np_seek" class="abgm-np-seek" type="range" min="0" max="0" value="0" />
-          <div class="abgm-np-time">
-            <span id="abgm_np_time_cur">0:00</span>
-            <span id="abgm_np_time_dur">0:00</span>
+          <div class="abgm-np-title" id="abgm_np_title">(none)</div>
+          <div class="abgm-np-sub" id="abgm_np_preset">Preset</div>
+
+          <div class="abgm-np-seek-wrap">
+            <input id="abgm_np_seek" class="abgm-np-seek" type="range" min="0" max="0" value="0" />
+            <div class="abgm-np-time">
+              <span id="abgm_np_time_cur">0:00</span>
+              <span id="abgm_np_time_dur">0:00</span>
+            </div>
           </div>
-        </div>
 
-        <div class="abgm-np-ctrl">
-          <button class=\"abgm-np-btn\" type=\"button\" id=\"abgm_np_prev\" title=\"Prev\" disabled><img id=\"abgm_np_prev_icon\" src=\"${ABGM_NP_CTRL_ICON.prev}\" class=\"abgm-np-icon\" alt=\"prev\"/></button>
-          <button class="abgm-np-btn abgm-np-btn-main" type="button" id="abgm_np_play" title="Play/Pause">
-          <img src="https://i.postimg.cc/SR9HXrhj/Play.png" class="abgm-np-icon" alt="play"/></button>
-          <button class=\"abgm-np-btn\" type=\"button\" id=\"abgm_np_next\" title=\"Next\" disabled><img id=\"abgm_np_next_icon\" src=\"${ABGM_NP_CTRL_ICON.next}\" class=\"abgm-np-icon\" alt=\"next\"/></button>
-        </div>
+          <div class="abgm-np-ctrl">
+            <button class="abgm-np-btn" type="button" id="abgm_np_prev" title="Prev" disabled>
+              <img id="abgm_np_prev_icon" src="${ABGM_NP_CTRL_ICON.prev}" class="abgm-np-icon" alt="prev"/>
+            </button>
 
-        <div class="abgm-np-bottom">
-          <button class="abgm-np-pill" type="button" id="abgm_np_list" title="Playlist">
-            <i class="fa-solid fa-list"></i>
-          </button>
+            <button class="abgm-np-btn abgm-np-btn-main" type="button" id="abgm_np_play" title="Play/Pause">
+              <img src="https://i.postimg.cc/SR9HXrhj/Play.png" class="abgm-np-icon" alt="play"/>
+            </button>
 
-          <button class="abgm-np-pill" type="button" id="abgm_np_mode" title="Mode">
-            <img id="abgm_np_mode_icon" src="${ABGM_NP_MODE_ICON.manual}" class="abgm-np-icon abgm-np-icon-sm" alt="mode" />
-            <span id="abgm_np_mode_text" class="abgm-np-sr">Manual</span>
-          </button>
+            <button class="abgm-np-btn" type="button" id="abgm_np_next" title="Next" disabled>
+              <img id="abgm_np_next_icon" src="${ABGM_NP_CTRL_ICON.next}" class="abgm-np-icon" alt="next"/>
+            </button>
+          </div>
+
+          <div class="abgm-np-bottom">
+            <button class="abgm-np-pill" type="button" id="abgm_np_list" title="Playlist">
+              <i class="fa-solid fa-list"></i>
+            </button>
+
+            <button class="abgm-np-pill" type="button" id="abgm_np_mode" title="Mode">
+              <img id="abgm_np_mode_icon" src="${ABGM_NP_MODE_ICON.manual}" class="abgm-np-icon abgm-np-icon-sm" alt="mode" />
+              <span id="abgm_np_mode_text" class="abgm-np-sr">Manual</span>
+            </button>
 
             <button class="abgm-np-pill abgm-np-back" type="button" id="abgm_np_back" title="Back">
-            <i class="fa-solid fa-arrow-left"></i>
-          </button>
+              <i class="fa-solid fa-arrow-left"></i>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- ===== Page: Playlist ===== -->
+        <div data-abgm-page="pl" style="display:none;">
+          <div class="abgm-pl-card">
+
+            <div class="abgm-pl-header">
+              <button type="button" class="menu_button abgm-pl-topbtn" id="abgm_pl_to_np" title="Back to NP">←</button>
+              <div class="abgm-pl-title">Playlist</div>
+              <button type="button" class="menu_button abgm-pl-topbtn" id="abgm_pl_sort" title="Sort">⋯</button>
+            </div>
+
+            <div class="abgm-pl-presetbar">
+              <select id="abgm_pl_preset" class="abgm-pl-select"></select>
+            </div>
+
+            <div id="abgm_pl_list" class="abgm-pl-list"></div>
+
+            <div class="abgm-pl-footer">
+              <button type="button" class="menu_button abgm-pl-home" id="abgm_pl_home" title="Back to Floating Menu">
+                <i class="fa-solid fa-arrow-left"></i>
+              </button>
+            </div>
+
+          </div>
         </div>
 
       </div>
@@ -1649,50 +1889,51 @@ function openNowPlayingGlass() {
   setO("padding", "0");
 
   host.appendChild(overlay);
+
+  // ===== NP(Home) events =====
   const playBtn = overlay.querySelector("#abgm_np_play");
   playBtn?.addEventListener("click", () => {
-    togglePlayPause(); // ← 기존 NP 재생/일시정지 함수
+    togglePlayPause();
   });
 
-  // Prev/Next (NP Glass)
   overlay.querySelector("#abgm_np_prev")?.addEventListener("click", (e) => { e.stopPropagation?.(); abgmNpPrevAction(); });
   overlay.querySelector("#abgm_np_next")?.addEventListener("click", (e) => { e.stopPropagation?.(); abgmNpNextAction(); });
 
-  // ===== NP seek (currentTime slider) =====
-const seek = overlay.querySelector("#abgm_np_seek");
-if (seek) {
-  const preview = () => {
-    const curEl = document.getElementById("abgm_np_time_cur");
-    const durEl = document.getElementById("abgm_np_time_dur");
-    const v = Number(seek.value || 0) / 1000;
-    const dur = Number(_bgmAudio?.duration);
-    if (curEl) curEl.textContent = abgmFmtTime(v);
-    if (durEl) durEl.textContent = Number.isFinite(dur) && dur > 0 ? abgmFmtTime(dur) : "0:00";
-  };
+  // NP seek
+  const seek = overlay.querySelector("#abgm_np_seek");
+  if (seek) {
+    const preview = () => {
+      const curEl = document.getElementById("abgm_np_time_cur");
+      const durEl = document.getElementById("abgm_np_time_dur");
+      const v = Number(seek.value || 0) / 1000;
+      const dur = Number(_bgmAudio?.duration);
+      if (curEl) curEl.textContent = abgmFmtTime(v);
+      if (durEl) durEl.textContent = Number.isFinite(dur) && dur > 0 ? abgmFmtTime(dur) : "0:00";
+    };
 
-  seek.addEventListener("input", () => {
-    _abgmNpIsSeeking = true;
-    preview();
-  });
+    seek.addEventListener("input", () => {
+      _abgmNpIsSeeking = true;
+      preview();
+    });
 
-  seek.addEventListener("change", () => {
-    const v = Number(seek.value || 0) / 1000;
-    if (Number.isFinite(v)) {
-      try { _bgmAudio.currentTime = Math.max(0, v); } catch {}
-    }
-    _abgmNpIsSeeking = false;
-    scheduleNpSeekUpdate();
-  });
+    seek.addEventListener("change", () => {
+      const v = Number(seek.value || 0) / 1000;
+      if (Number.isFinite(v)) {
+        try { _bgmAudio.currentTime = Math.max(0, v); } catch {}
+      }
+      _abgmNpIsSeeking = false;
+      scheduleNpSeekUpdate();
+    });
 
-  const endSeek = () => {
-    _abgmNpIsSeeking = false;
-    scheduleNpSeekUpdate();
-  };
-  seek.addEventListener("pointerup", endSeek);
-  seek.addEventListener("pointercancel", endSeek);
-}
+    const endSeek = () => {
+      _abgmNpIsSeeking = false;
+      scheduleNpSeekUpdate();
+    };
+    seek.addEventListener("pointerup", endSeek);
+    seek.addEventListener("pointercancel", endSeek);
+  }
 
-  // Mode cycle (NP Glass) : manual → loop_one → loop_list → random → keyword → manual ...
+  // Mode cycle
   const modeBtn = overlay.querySelector("#abgm_np_mode");
   modeBtn?.addEventListener("click", () => {
     const s = ensureSettings();
@@ -1715,12 +1956,32 @@ if (seek) {
       s.playMode = next;
     }
 
-  saveSettingsDebounced();
-  try { engineTick(); } catch {}
-  updateNowPlayingUI();
-});
-  
-  // 사이즈 맞추기(기존 유틸 재활용)
+    saveSettingsDebounced();
+    try { engineTick(); } catch {}
+    updateNowPlayingUI();
+  });
+
+  // 뒤로가기(플로팅 메뉴 홈)
+  overlay.querySelector("#abgm_np_back")?.addEventListener("click", () => {
+    closeNowPlayingGlass();
+    openFloatingMenu();
+  });
+
+  // ===== Playlist page events =====
+  overlay.querySelector("#abgm_np_list")?.addEventListener("click", () => {
+    abgmNpShowPage("pl");
+  });
+
+  overlay.querySelector("#abgm_pl_to_np")?.addEventListener("click", () => {
+    abgmNpShowPage("np");
+  });
+
+  overlay.querySelector("#abgm_pl_home")?.addEventListener("click", () => {
+    closeNowPlayingGlass();
+    openFloatingMenu();
+  });
+
+  // 사이즈 맞추기
   try {
     fitModalToHost(overlay, host);
     requestAnimationFrame(() => fitModalToHost(overlay, host));
@@ -1729,13 +1990,8 @@ if (seek) {
 
   window.addEventListener("keydown", onNpGlassEsc);
 
-  // 뒤로가기 버튼
-  overlay.querySelector("#abgm_np_back")?.addEventListener("click", () => {
-    closeNowPlayingGlass();
-    openFloatingMenu();
-  });
-
-  // 일단 표시만 업데이트(곡/프리셋명)
+  // 초기 업데이트
+  bindNowPlayingEventsOnce();
   updateNowPlayingUI();
 }
 
@@ -4867,5 +5123,6 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
