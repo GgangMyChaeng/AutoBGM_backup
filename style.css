@@ -1604,3 +1604,21 @@ body.autobgm-modal-open{ overflow:hidden; }
   pointer-events: none; /* 버튼 클릭 방해 안 하게 */
 }
 
+/* NP Glass 하단 pill 아이콘은 살짝 작게 */
+.abgm-np-icon-sm{
+  width: 22px;
+  height: 22px;
+}
+
+/* 화면엔 숨기고(스크린리더는 읽을 수 있게) */
+.abgm-np-sr{
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
