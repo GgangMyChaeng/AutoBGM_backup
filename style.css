@@ -1539,6 +1539,24 @@ body.autobgm-modal-open{ overflow:hidden; }
   opacity: .85;
 }
 
+/* seek wrapper + time labels */
+.abgm-np-seek-wrap{
+  width: min(360px, 86%);
+  margin: 2px auto 0;
+}
+.abgm-np-seek-wrap .abgm-np-seek{
+  width: 100%;
+  margin: 0;
+}
+.abgm-np-time{
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 4px;
+  font-size: 12px;
+  opacity: .75;
+}
+
 .abgm-np-ctrl{
   display: grid;
   grid-template-columns: 1fr auto 1fr;
