@@ -1596,3 +1596,11 @@ body.autobgm-modal-open{ overflow:hidden; }
   .abgm-np-art{ width: 150px; height: 150px; }
   .abgm-np-title{ font-size: 20px; }
 }
+
+.abgm-np-icon{
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  pointer-events: none; /* 버튼 클릭 방해 안 하게 */
+}
+
