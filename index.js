@@ -745,6 +745,7 @@ function updateNowPlayingUI() {
     _abgmSetText("autobgm_now_title", title);
     _abgmSetText("autobgm_now_meta", meta);
     updateNowPlayingGlassUI(title, presetName, modeLabel);
+    updateNowPlayingGlassNavUI(settings, preset);
 
     const dbg = document.getElementById("autobgm_now_debug");
     if (dbg) {
@@ -866,6 +867,7 @@ function ensureEngineFields(settings) {
     st.listIndex ??= 0;
     st.lastSig ??= "";
     st.defaultPlayedSig ??= "";
+    st.prevKey ??= "";
   }
 }
 
@@ -1296,6 +1298,16 @@ const ABGM_NP_MODE_ICON = {
   keyword:  "https://i.postimg.cc/8CsKJHdc/Keyword.png",
 };
 
+// NP Glass: control icons (inline svg data uri, replace with your direct image links if you want)
+const ABGM_NP_CTRL_ICON = {
+  prev:        'data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27white%27%3E%3Cpath%20d%3D%27M11%2019L4%2012l7-7v14zm9%200l-7-7%207-7v14z%27%2F%3E%3C%2Fsvg%3E',
+  next:        'data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27white%27%3E%3Cpath%20d%3D%27M13%205l7%207-7%207V5zM4%205l7%207-7%207V5z%27%2F%3E%3C%2Fsvg%3E',
+  useDefaultOn:'data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27white%27%3E%3Cpath%20d%3D%27M12%2017.27L18.18%2021l-1.64-7.03L22%209.24l-7.19-.61L12%202%209.19%208.63%202%209.24l5.46%204.73L5.82%2021z%27%2F%3E%3C%2Fsvg%3E',
+  useDefaultOff:'data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27white%27%20stroke-width%3D%272%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M12%2017.27L18.18%2021l-1.64-7.03L22%209.24l-7.19-.61L12%202%209.19%208.63%202%209.24l5.46%204.73L5.82%2021z%27%2F%3E%3C%2Fsvg%3E',
+  kwHold:      'data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27white%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M18.178%208.822a4%204%200%200%200-5.656%200L12%209.343l-.522-.521a4%204%200%201%200%200%205.656L12%2014.657l.522.521a4%204%200%201%200%205.656-5.656L12%2014.657%27%2F%3E%3C%2Fsvg%3E',
+  kwOnce:      'data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27white%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M8%207h2v10H8z%27%2F%3E%3Cpath%20d%3D%27M14%209h4%27%2F%3E%3Cpath%20d%3D%27M14%2015h4%27%2F%3E%3C%2Fsvg%3E',
+};
+
 function closeNowPlayingGlass() {
   const overlay = document.getElementById(NP_GLASS_OVERLAY_ID);
   if (overlay) overlay.remove();
@@ -1304,6 +1316,265 @@ function closeNowPlayingGlass() {
 
 function onNpGlassEsc(e) {
   if (e.key === "Escape") closeNowPlayingGlass();
+}
+
+
+function abgmGetNavCtx() {
+  try {
+    const settings = ensureSettings();
+    ensureEngineFields(settings);
+
+    const ctx = getSTContextSafe();
+    const chatKey = getChatKeyFromContext(ctx);
+
+    settings.chatStates[chatKey] ??= {
+      currentKey: "",
+      listIndex: 0,
+      lastSig: "",
+      defaultPlayedSig: "",
+      prevKey: "",
+    };
+
+    const st = settings.chatStates[chatKey];
+
+    let preset = settings.presets?.[settings.activePresetId];
+    if (!preset) preset = Object.values(settings.presets ?? {})[0];
+    if (!preset) return null;
+
+    const sort = getBgmSort(settings);
+    const keys = getSortedKeys(preset, sort);
+    const defKey = String(preset.defaultBgmKey ?? "");
+
+    const getVol = (fk) => {
+      const b = findBgmByKey(preset, fk);
+      return clamp01((settings.globalVolume ?? 0.7) * (b?.volume ?? 1));
+    };
+
+    return { settings, ctx, chatKey, st, preset, keys, defKey, getVol };
+  } catch {
+    return null;
+  }
+}
+
+function abgmNpPrevAction() {
+  const info = abgmGetNavCtx();
+  if (!info) return;
+  const { settings, st, preset, keys, defKey, getVol } = info;
+  if (!settings.enabled) return;
+
+  // Keyword mode: Prev button = Use Default toggle
+  if (settings.keywordMode) {
+    settings.useDefault = !settings.useDefault;
+    saveSettingsDebounced();
+    try { engineTick(); } catch {}
+    updateNowPlayingUI();
+    return;
+  }
+
+  const mode = settings.playMode || "manual";
+  if (!keys.length) return;
+
+  const cur = String(_engineCurrentFileKey || st.currentKey || "");
+  const remember = (nextKey) => {
+    if (cur && nextKey && cur !== nextKey) st.prevKey = cur;
+  };
+
+  // Random: Prev = last played key
+  if (mode === "random") {
+    const pk = String(st.prevKey || "");
+    if (!pk) return;
+    remember(pk);
+    st.currentKey = pk;
+    _engineCurrentFileKey = pk;
+    ensurePlayFile(pk, getVol(pk), false, preset.id);
+    saveSettingsDebounced();
+    updateNowPlayingUI();
+    return;
+  }
+
+  // When nothing is selected yet
+  if (!cur) {
+    const startKey = defKey || keys[keys.length - 1] || keys[0] || "";
+    if (!startKey) return;
+    st.currentKey = startKey;
+    if (mode === "loop_list") st.listIndex = Math.max(0, keys.indexOf(startKey));
+    _engineCurrentFileKey = startKey;
+    ensurePlayFile(startKey, getVol(startKey), mode === "loop_one", preset.id);
+    saveSettingsDebounced();
+    updateNowPlayingUI();
+    return;
+  }
+
+  let idx = keys.indexOf(cur);
+  if (idx < 0) idx = Math.max(0, Math.min(Number(st.listIndex || 0), keys.length - 1));
+
+  if (mode === "loop_list") {
+    idx = (idx - 1 + keys.length) % keys.length;
+    st.listIndex = idx;
+  } else {
+    idx = Math.max(0, idx - 1);
+  }
+
+  const nextKey = String(keys[idx] || "");
+  if (!nextKey) return;
+
+  remember(nextKey);
+  st.currentKey = nextKey;
+  _engineCurrentFileKey = nextKey;
+
+  const loop = (mode === "loop_one");
+  ensurePlayFile(nextKey, getVol(nextKey), loop, preset.id);
+  saveSettingsDebounced();
+  updateNowPlayingUI();
+}
+
+function abgmNpNextAction() {
+  const info = abgmGetNavCtx();
+  if (!info) return;
+  const { settings, st, preset, keys, defKey, getVol } = info;
+  if (!settings.enabled) return;
+
+  // Keyword mode: Next button = keyword logic toggle (hold ↔ once)
+  if (settings.keywordMode) {
+    settings.keywordOnce = !settings.keywordOnce;
+    saveSettingsDebounced();
+    try { engineTick(); } catch {}
+    updateNowPlayingUI();
+    return;
+  }
+
+  const mode = settings.playMode || "manual";
+  if (!keys.length) return;
+
+  const cur = String(_engineCurrentFileKey || st.currentKey || "");
+  const remember = (nextKey) => {
+    if (cur && nextKey && cur !== nextKey) st.prevKey = cur;
+  };
+
+  // When nothing is selected yet
+  if (!cur) {
+    const startKey = defKey || keys[0] || "";
+    if (!startKey) return;
+    st.currentKey = startKey;
+    if (mode === "loop_list") st.listIndex = Math.max(0, keys.indexOf(startKey));
+    _engineCurrentFileKey = startKey;
+    ensurePlayFile(startKey, getVol(startKey), mode === "loop_one", preset.id);
+    saveSettingsDebounced();
+    updateNowPlayingUI();
+    return;
+  }
+
+  // Random: Next = random (avoid current)
+  if (mode === "random") {
+    const nextKey = pickRandomKey(keys, cur);
+    if (!nextKey) return;
+    remember(nextKey);
+    st.currentKey = nextKey;
+    _engineCurrentFileKey = nextKey;
+    ensurePlayFile(nextKey, getVol(nextKey), false, preset.id);
+    saveSettingsDebounced();
+    updateNowPlayingUI();
+    return;
+  }
+
+  let idx = keys.indexOf(cur);
+  if (idx < 0) idx = Math.max(0, Math.min(Number(st.listIndex || 0), keys.length - 1));
+
+  if (mode === "loop_list") {
+    idx = (idx + 1) % keys.length;
+    st.listIndex = idx;
+  } else {
+    idx = Math.min(keys.length - 1, idx + 1);
+  }
+
+  const nextKey = String(keys[idx] || "");
+  if (!nextKey) return;
+
+  remember(nextKey);
+  st.currentKey = nextKey;
+  _engineCurrentFileKey = nextKey;
+
+  const loop = (mode === "loop_one");
+  ensurePlayFile(nextKey, getVol(nextKey), loop, preset.id);
+  saveSettingsDebounced();
+  updateNowPlayingUI();
+}
+
+function updateNowPlayingGlassNavUI(settings, preset) {
+  const prevBtn = document.getElementById('abgm_np_prev');
+  const nextBtn = document.getElementById('abgm_np_next');
+  if (!prevBtn || !nextBtn) return;
+
+  const prevIcon = document.getElementById('abgm_np_prev_icon');
+  const nextIcon = document.getElementById('abgm_np_next_icon');
+
+  // Keyword mode: replace with (Use Default / Logic) buttons
+  if (settings?.keywordMode) {
+    if (prevIcon) prevIcon.src = settings.useDefault ? ABGM_NP_CTRL_ICON.useDefaultOn : ABGM_NP_CTRL_ICON.useDefaultOff;
+    if (nextIcon) nextIcon.src = settings.keywordOnce ? ABGM_NP_CTRL_ICON.kwOnce : ABGM_NP_CTRL_ICON.kwHold;
+
+    prevBtn.disabled = !settings.enabled;
+    nextBtn.disabled = !settings.enabled;
+
+    prevBtn.title = settings.useDefault ? 'Use Default: ON' : 'Use Default: OFF';
+    nextBtn.title = settings.keywordOnce ? 'Keyword Logic: Once' : 'Keyword Logic: Hold';
+    return;
+  }
+
+  if (prevIcon) prevIcon.src = ABGM_NP_CTRL_ICON.prev;
+  if (nextIcon) nextIcon.src = ABGM_NP_CTRL_ICON.next;
+
+  if (!settings?.enabled) {
+    prevBtn.disabled = true;
+    nextBtn.disabled = true;
+    return;
+  }
+
+  const ctx = getSTContextSafe();
+  const chatKey = getChatKeyFromContext(ctx);
+  settings.chatStates ??= {};
+  settings.chatStates[chatKey] ??= { currentKey: '', listIndex: 0, lastSig: '', defaultPlayedSig: '', prevKey: '' };
+  ensureEngineFields(settings);
+
+  const st = settings.chatStates[chatKey];
+  const sort = getBgmSort(settings);
+  const keys = getSortedKeys(preset, sort);
+
+  if (!keys.length) {
+    prevBtn.disabled = true;
+    nextBtn.disabled = true;
+    return;
+  }
+
+  const mode = settings.playMode || 'manual';
+  const cur = String(_engineCurrentFileKey || st.currentKey || '');
+  let idx = cur ? keys.indexOf(cur) : -1;
+  if (idx < 0) idx = Math.max(0, Math.min(Number(st.listIndex || 0), keys.length - 1));
+
+  let canPrev = false;
+  let canNext = false;
+
+  if (mode === 'loop_list') {
+    canPrev = keys.length > 1;
+    canNext = keys.length > 1;
+  } else if (mode === 'random') {
+    canNext = keys.length > 1;
+    canPrev = !!st.prevKey;
+  } else {
+    if (!cur) {
+      canPrev = keys.length > 0;
+      canNext = keys.length > 0;
+    } else {
+      canPrev = idx > 0;
+      canNext = idx < keys.length - 1;
+    }
+  }
+
+  prevBtn.disabled = !canPrev;
+  nextBtn.disabled = !canNext;
+
+  prevBtn.title = prevBtn.disabled ? 'Prev' : 'Prev';
+  nextBtn.title = nextBtn.disabled ? 'Next' : 'Next';
 }
 
 function openNowPlayingGlass() {
@@ -1332,10 +1603,10 @@ function openNowPlayingGlass() {
         </div>
 
         <div class="abgm-np-ctrl">
-          <button class="abgm-np-btn" type="button" id="abgm_np_prev" title="Prev" disabled>⏮</button>
+          <button class=\"abgm-np-btn\" type=\"button\" id=\"abgm_np_prev\" title=\"Prev\" disabled><img id=\"abgm_np_prev_icon\" src=\"${ABGM_NP_CTRL_ICON.prev}\" class=\"abgm-np-icon\" alt=\"prev\"/></button>
           <button class="abgm-np-btn abgm-np-btn-main" type="button" id="abgm_np_play" title="Play/Pause">
           <img src="https://i.postimg.cc/SR9HXrhj/Play.png" class="abgm-np-icon" alt="play"/></button>
-          <button class="abgm-np-btn" type="button" id="abgm_np_next" title="Next" disabled>⏭</button>
+          <button class=\"abgm-np-btn\" type=\"button\" id=\"abgm_np_next\" title=\"Next\" disabled><img id=\"abgm_np_next_icon\" src=\"${ABGM_NP_CTRL_ICON.next}\" class=\"abgm-np-icon\" alt=\"next\"/></button>
         </div>
 
         <div class="abgm-np-bottom">
@@ -1374,7 +1645,7 @@ function openNowPlayingGlass() {
   setO("display", "block");
   setO("overflow", "auto");
   setO("-webkit-overflow-scrolling", "touch");
-  setO("background", "rgba(0,0,0,55)");
+  setO("background", "rgba(0,0,0,.55)");
   setO("z-index", "2147483647");
   setO("padding", "0");
 
@@ -1383,6 +1654,10 @@ function openNowPlayingGlass() {
   playBtn?.addEventListener("click", () => {
     togglePlayPause(); // ← 기존 NP 재생/일시정지 함수
   });
+
+  // Prev/Next (NP Glass)
+  overlay.querySelector("#abgm_np_prev")?.addEventListener("click", (e) => { e.stopPropagation?.(); abgmNpPrevAction(); });
+  overlay.querySelector("#abgm_np_next")?.addEventListener("click", (e) => { e.stopPropagation?.(); abgmNpNextAction(); });
 
   // ===== NP seek (currentTime slider) =====
 const seek = overlay.querySelector("#abgm_np_seek");
@@ -3414,7 +3689,7 @@ if (e.target.closest(".abgm_move")) {
       const ctx = getSTContextSafe();
       const chatKey = getChatKeyFromContext(ctx);
       settings.chatStates ??= {};
-      settings.chatStates[chatKey] ??= { currentKey: "", listIndex: 0 };
+      settings.chatStates[chatKey] ??= { currentKey: "", listIndex: 0, lastSig: "", defaultPlayedSig: "", prevKey: "" };
       settings.chatStates[chatKey].currentKey = bgm.fileKey;
 
       saveSettingsDebounced();
@@ -4172,6 +4447,7 @@ async function init() {
     listIndex: 0,
     lastSig: "",
     defaultPlayedSig: "",
+    prevKey: "",
   };
     
   const st = settings.chatStates[chatKey];
@@ -4206,6 +4482,7 @@ if (_engineLastPresetId && _engineLastPresetId !== String(preset.id)) {
 
   st.lastSig = "";
   st.defaultPlayedSig = "";
+  st.prevKey = "";
 
   _engineCurrentFileKey = "";  // Now Playing/엔진 상태도 초기화
 }
@@ -4464,7 +4741,7 @@ _bgmAudio.addEventListener("ended", () => {
 
   const ctx = getSTContextSafe();
   const chatKey = getChatKeyFromContext(ctx);
-  settings.chatStates[chatKey] ??= { currentKey: "", listIndex: 0, lastSig: "", defaultPlayedSig: "" };
+  settings.chatStates[chatKey] ??= { currentKey: "", listIndex: 0, lastSig: "", defaultPlayedSig: "", prevKey: "" };
   const st = settings.chatStates[chatKey];
 
   // (A) keywordMode + 1회 모드: 재생 끝나면 "현재 재생 없음"으로 정리
@@ -4494,6 +4771,7 @@ _bgmAudio.addEventListener("ended", () => {
   const mode = settings.playMode ?? "manual";
 
   if (mode === "loop_list") {
+    st.prevKey = String(st.currentKey || _engineCurrentFileKey || "");
     let idx = Number(st.listIndex ?? 0);
     idx = (idx + 1) % keys.length;
     st.listIndex = idx;
@@ -4506,13 +4784,14 @@ _bgmAudio.addEventListener("ended", () => {
   }
 
   if (mode === "random") {
+    st.prevKey = String(st.currentKey || _engineCurrentFileKey || "");
     const cur = String(st.currentKey ?? "");
     const pool = keys.filter((k) => k !== cur);
     const pickFrom = pool.length ? pool : keys;
     const next = pickFrom[Math.floor(Math.random() * pickFrom.length)];
 
     st.currentKey = next;
-    ensurePlayFile(next, getVol(next), false);
+    ensurePlayFile(next, getVol(next), false, preset.id);
     try { saveSettingsDebounced?.(); } catch {}
     return;
   }
@@ -4589,19 +4868,3 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
