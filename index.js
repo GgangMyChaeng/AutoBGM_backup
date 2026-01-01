@@ -1220,6 +1220,35 @@ function closeModal() {
 /** ========= Floating Now Playing (Glass) ========= */
 const NP_GLASS_OVERLAY_ID = "ABGM_NP_GLASS_OVERLAY";
 
+// NP Glass: play mode icons (image = direct link)
+// 기본은 data-uri SVG라서 바로 동작함... 나중에 PNG 직링으로 갈아끼우면 끝
+function abgmSvgData(svg) {
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
+const ABGM_NP_MODE_ICON = {
+  // ▶ (manual)
+  manual: abgmSvgData(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="9 7 19 12 9 17 9 7"/></svg>`
+  ),
+  // 🔂 (loop one)
+  loop_one: abgmSvgData(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/><path d="M12 10v6"/><path d="M14 12l-2-2-2 2"/></svg>`
+  ),
+  // 🔁 (loop list)
+  loop_list: abgmSvgData(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>`
+  ),
+  // 🔀 (random)
+  random: abgmSvgData(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20l6-6"/><path d="M4 4l6 6"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M15 9l6-6"/></svg>`
+  ),
+  // 💬 (keyword)
+  keyword: abgmSvgData(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/><path d="M8 8h8"/><path d="M8 12h5"/></svg>`
+  ),
+};
+
 function closeNowPlayingGlass() {
   const overlay = document.getElementById(NP_GLASS_OVERLAY_ID);
   if (overlay) overlay.remove();
@@ -1266,8 +1295,10 @@ function openNowPlayingGlass() {
           </button>
 
           <button class="abgm-np-pill" type="button" id="abgm_np_mode" title="Mode">
-            <span id="abgm_np_mode_text">Manual</span>
+            <img id="abgm_np_mode_icon" src="${ABGM_NP_MODE_ICON.manual}" class="abgm-np-icon abgm-np-icon-sm" alt="mode" />
+            <span id="abgm_np_mode_text" class="abgm-np-sr">Manual</span>
           </button>
+
         </div>
 
       </div>
@@ -1299,6 +1330,35 @@ function openNowPlayingGlass() {
   playBtn?.addEventListener("click", () => {
     togglePlayPause(); // ← 기존 NP 재생/일시정지 함수
   });
+
+  // Mode cycle (NP Glass) : manual → loop_one → loop_list → random → keyword → manual ...
+  const modeBtn = overlay.querySelector("#abgm_np_mode");
+  modeBtn?.addEventListener("click", () => {
+    const s = ensureSettings();
+    if (!s.enabled) return;
+
+    const next = (() => {
+      if (s.keywordMode) return "manual";
+      const cur = s.playMode || "manual";
+      if (cur === "manual") return "loop_one";
+      if (cur === "loop_one") return "loop_list";
+      if (cur === "loop_list") return "random";
+      if (cur === "random") return "keyword";
+      return "manual";
+    })();
+
+    if (next === "keyword") {
+      s.keywordMode = true;
+    } else {
+      s.keywordMode = false;
+      s.playMode = next;
+    }
+
+  saveSettingsDebounced();
+  try { engineTick(); } catch {}
+  updateNowPlayingUI();
+});
+  
   // 사이즈 맞추기(기존 유틸 재활용)
   try {
     fitModalToHost(overlay, host);
@@ -1322,10 +1382,25 @@ function openNowPlayingGlass() {
 function updateNowPlayingGlassUI(title, presetName, modeLabel) {
   const t = document.getElementById("abgm_np_title");
   const p = document.getElementById("abgm_np_preset");
-  const m = document.getElementById("abgm_np_mode_text");
+  const m = document.getElementById("abgm_np_mode_text"); // (숨김) 상태값 보관용
+  const icon = document.getElementById("abgm_np_mode_icon");
+  const btn = document.getElementById("abgm_np_mode");
+
   if (t) t.textContent = String(title ?? "(none)");
   if (p) p.textContent = String(presetName ?? "Preset");
-  if (m) m.textContent = String(modeLabel ?? "Manual");
+
+  const keyRaw = String(modeLabel ?? "manual");
+  const key = keyRaw.toLowerCase() === "keyword" ? "keyword" : keyRaw;
+
+  const nice =
+    key === "keyword" ? "Keyword" :
+    key === "loop_one" ? "Loop One" :
+    key === "loop_list" ? "Loop List" :
+    key === "random" ? "Random" : "Manual";
+
+  if (m) m.textContent = nice;
+  if (icon) icon.src = ABGM_NP_MODE_ICON[key] || ABGM_NP_MODE_ICON.manual;
+  if (btn) btn.title = `Mode: ${nice}`;
 }
 
 function onEscClose(e) {
@@ -4425,6 +4500,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
