@@ -744,6 +744,7 @@ function updateNowPlayingUI() {
     // drawer(확장메뉴)
     _abgmSetText("autobgm_now_title", title);
     _abgmSetText("autobgm_now_meta", meta);
+    updateNowPlayingGlassUI(title, presetName, modeLabel);
 
     const dbg = document.getElementById("autobgm_now_debug");
     if (dbg) {
@@ -1175,6 +1176,114 @@ function closeModal() {
   _abgmViewportHandler = null;
   }
     updateNowPlayingUI();
+}
+
+/** ========= Floating Now Playing (Glass) ========= */
+const NP_GLASS_OVERLAY_ID = "ABGM_NP_GLASS_OVERLAY";
+
+function closeNowPlayingGlass() {
+  const overlay = document.getElementById(NP_GLASS_OVERLAY_ID);
+  if (overlay) overlay.remove();
+  window.removeEventListener("keydown", onNpGlassEsc);
+}
+
+function onNpGlassEsc(e) {
+  if (e.key === "Escape") closeNowPlayingGlass();
+}
+
+function openNowPlayingGlass() {
+  if (document.getElementById(NP_GLASS_OVERLAY_ID)) return;
+
+  const overlay = document.createElement("div");
+  overlay.id = NP_GLASS_OVERLAY_ID;
+  overlay.className = "autobgm-overlay"; // 기존 overlay CSS 재활용
+  overlay.innerHTML = `
+    <div class="autobgm-modal abgm-np-glass">
+      <div class="abgm-np-glass-inner">
+
+        <div class="abgm-np-art" id="abgm_np_art">
+          <!-- 나중에 플로팅 NP 이미지 넣을 자리 -->
+        </div>
+
+        <div class="abgm-np-title" id="abgm_np_title">(none)</div>
+        <div class="abgm-np-sub" id="abgm_np_preset">Preset</div>
+
+        <input class="abgm-np-seek" type="range" min="0" max="100" value="30" disabled />
+
+        <div class="abgm-np-ctrl">
+          <button class="abgm-np-btn" type="button" id="abgm_np_prev" title="Prev" disabled>⏮</button>
+          <button class="abgm-np-btn abgm-np-btn-main" type="button" id="abgm_np_play" title="Play/Pause">⏯</button>
+          <button class="abgm-np-btn" type="button" id="abgm_np_next" title="Next" disabled>⏭</button>
+        </div>
+
+        <div class="abgm-np-bottom">
+          <button class="abgm-np-pill" type="button" id="abgm_np_list" title="Playlist">
+            <i class="fa-solid fa-list"></i>
+          </button>
+
+          <button class="abgm-np-pill abgm-np-back" type="button" id="abgm_np_back" title="Back">
+            <i class="fa-solid fa-arrow-left"></i>
+          </button>
+
+          <button class="abgm-np-pill" type="button" id="abgm_np_mode" title="Mode">
+            <span id="abgm_np_mode_text">Manual</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  `;
+
+  // 바깥 클릭 닫기
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) closeNowPlayingGlass();
+  });
+
+  const host = getModalHost();
+  const cs = getComputedStyle(host);
+  if (cs.position === "static") host.style.position = "relative";
+
+  // overlay 스타일(기존 모달 방식 맞춤)
+  const setO = (k, v) => overlay.style.setProperty(k, v, "important");
+  setO("position", "absolute");
+  setO("inset", "0");
+  setO("display", "block");
+  setO("overflow", "auto");
+  setO("-webkit-overflow-scrolling", "touch");
+  setO("background", "rgba(0,0,0,55)");
+  setO("z-index", "2147483647");
+  setO("padding", "0");
+
+  host.appendChild(overlay);
+
+  // 사이즈 맞추기(기존 유틸 재활용)
+  try {
+    fitModalToHost(overlay, host);
+    requestAnimationFrame(() => fitModalToHost(overlay, host));
+    setTimeout(() => fitModalToHost(overlay, host), 120);
+  } catch {}
+
+  window.addEventListener("keydown", onNpGlassEsc);
+
+  // 뒤로가기 버튼(지금은 그냥 닫기 = 홈 복귀)
+  overlay.querySelector("#abgm_np_back")?.addEventListener("click", () => {
+    closeNowPlayingGlass();
+    // 원하면 여기서 openFloatingMenu()로 홈 다시 띄워도 됨
+    // openFloatingMenu();
+  });
+
+  // 일단 표시만 업데이트(곡/프리셋명)
+  updateNowPlayingUI();
+}
+
+/** updateNowPlayingUI()에서 이 유리창도 같이 갱신 */
+function updateNowPlayingGlassUI(title, presetName, modeLabel) {
+  const t = document.getElementById("abgm_np_title");
+  const p = document.getElementById("abgm_np_preset");
+  const m = document.getElementById("abgm_np_mode_text");
+  if (t) t.textContent = String(title ?? "(none)");
+  if (p) p.textContent = String(presetName ?? "Preset");
+  if (m) m.textContent = String(modeLabel ?? "Manual");
 }
 
 function onEscClose(e) {
@@ -3588,8 +3697,8 @@ function createFloatingMenu() {
     const action = btn.dataset.action;
     
     if (action === "nowplaying") {
-      // Now Playing 섹션 열기 (나중에 구현)
-      console.log("[AutoBGM] Now Playing clicked");
+      openNowPlayingGlass();
+      closeFloatingMenu(); // NP 뜨면 플로팅 메뉴는 닫기
     } else if (action === "debug") {
       toggleDebugMode();
     } else if (action === "help") {
@@ -4270,6 +4379,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
