@@ -769,15 +769,20 @@ function updateNowPlayingUI() {
     }
 
     if (btnPlay) {
-      const icon = !fk ? "⏹️" : (_bgmAudio?.paused ? "⏸️" : "▶️");
-      btnPlay.textContent = icon;
-      btnPlay.title = icon === "▶️" ? "Pause" : (icon === "⏸️" ? "Play" : "Start");
-    }
+    const stopped = !settings.enabled || !fk;
+    const icon = stopped ? "⏹️" : (_bgmAudio?.paused ? "▶️" : "⏸️");
+
+    btnPlay.textContent = icon;
+    btnPlay.title =
+      icon === "▶️" ? "Play" :
+      icon === "⏸️" ? "Pause" :
+      "Start";
+        }
 
     // ===== NP Glass 아이콘 동기화 NP 아이콘 =====
     const glassIcon = document.querySelector("#abgm_np_play img");
     if (glassIcon) {
-      if (!fk) {
+      if (!settings.enabled || !fk) {
         glassIcon.src = "https://i.postimg.cc/VLy3x3qC/Stop.png";
       } else if (_bgmAudio?.paused) {
         glassIcon.src = "https://i.postimg.cc/SR9HXrhj/Play.png";
@@ -871,7 +876,29 @@ function stopRuntime() {
   _engineCurrentFileKey = "";
   _engineCurrentPresetId = "";
   updateNowPlayingUI();
+}
 
+async function togglePlayPause() {
+  const s = ensureSettings();
+  if (!s.enabled) return;
+
+  // 재생 중이면 pause
+  if (_engineCurrentFileKey && !_bgmAudio.paused) {
+    try { _bgmAudio.pause(); } catch {}
+    updateNowPlayingUI();
+    return;
+  }
+
+  // 일시정지면 resume
+  if (_engineCurrentFileKey && _bgmAudio.paused) {
+    try { await _bgmAudio.play(); } catch {}
+    updateNowPlayingUI();
+    return;
+  }
+
+  // stopped면 엔진 로직대로 시작
+  try { engineTick(); } catch {}
+  updateNowPlayingUI();
 }
 
 function getChatKeyFromContext(ctx) {
@@ -3558,7 +3585,11 @@ async function mount() {
       settings.enabled = !settings.enabled;
       saveSettingsDebounced();
       syncEnabledUI();
-      try { engineTick(); } catch {}
+      if (!settings.enabled) {
+          stopRuntime();          // OFF면 즉시 정리 + _engineCurrentFileKey 비움
+        } else {
+          try { engineTick(); } catch {}
+        }
       updateNowPlayingUI(); // 이거도 같이 해주는 게 깔끔
       syncDebugUI();
     });
@@ -4394,6 +4425,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
