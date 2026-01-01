@@ -1374,8 +1374,8 @@ body.autobgm-modal-open{ overflow:hidden; }
 /* ===== Floating Menu ===== */
 .abgm-floating-menu {
   position: fixed;
-  left: 50%;
-  top: 50%;
+  left: 50vw;
+  top: 50vh;
   transform: translate(-50%, -50%) scale(0.9);
   transform-origin: center;
   z-index: 999998;
