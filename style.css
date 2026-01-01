@@ -1376,18 +1376,24 @@ body.autobgm-modal-open{ overflow:hidden; }
   position: fixed;
   left: 50%;
   top: 50%;
-  /* 화면 높이 안 넘게 "진짜로" 제한 */
-  max-height: calc(100vh - 24px);
-  /* 높이 제한까지 고려해서 가로도 같이 줄이기 (4:3 유지) */
-  width: min(560px, 92vw, calc((100vh - 24px) * 4 / 3));
-  aspect-ratio: 4 / 3;
-  height: auto;
   transform: translate(-50%, -50%) scale(0.9);
   transform-origin: center;
   z-index: 999998;
   transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
   opacity: 0;
   pointer-events: none;
+  
+  /* 글래스모피즘 맛으로 */
+  width: min(420px, 88vw);
+  height: min(420px, 88vw);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 24px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .abgm-floating-menu.is-open {
@@ -1396,57 +1402,58 @@ body.autobgm-modal-open{ overflow:hidden; }
   pointer-events: auto;
 }
 
-/* 좁은 폭/낮은 높이에서는 "센터링"을 포기하고 위에 붙여서 가출 방지 */
+/* 모바일 대응 */
 @media (max-width: 480px), (max-height: 520px){
   .abgm-floating-menu{
-    top: 12px;
-    transform: translateX(-50%) scale(0.95);
+    top: 50%;
+    transform: translate(-50%, -50%) scale(0.95);
   }
   .abgm-floating-menu.is-open{
-    transform: translateX(-50%) scale(1);
+    transform: translate(-50%, -50%) scale(1);
   }
 }
 
+/* 기존 bg 제거 */
 .abgm-floating-menu-bg {
-  position: absolute;
-  inset: 0;
+  display: none;
 }
 
 .abgm-menu-body-img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  pointer-events: none;
+  display: none;
 }
 
+/* 버튼 그리드 - 창 안쪽으로 제대로 배치 */
 .abgm-floating-menu-buttons {
   position: absolute;
   inset: 0;
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr;
-  padding: clamp(44px, 12%, 84px);  /* 비율 기준으로 여백 */
-  gap: clamp(18px, 6.5%, 48px);     /* 버튼 간 간격도 비율로 */
+  padding: 32px;
+  gap: 24px;
 }
 
 .abgm-menu-btn {
-  background: transparent;
-  border: none;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
   padding: 0;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.15s ease;
-  aspect-ratio: 1 / 1;  /* 정사각형 비율 고정 */
-  max-width: 140px;
-  max-height: 140px;
+  transition: all 0.2s ease;
+  aspect-ratio: 1 / 1;
   width: 100%;
   height: 100%;
 }
 
 .abgm-menu-btn:hover {
-  transform: scale(1.08);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: scale(1.05);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .abgm-menu-btn:active {
@@ -1454,10 +1461,11 @@ body.autobgm-modal-open{ overflow:hidden; }
 }
 
 .abgm-menu-icon {
-  max-width: 60%;
-  max-height: 60%;
+  max-width: 55%;
+  max-height: 55%;
   object-fit: contain;
   pointer-events: none;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
 /* Now Playing 회전 애니메이션 */
@@ -1469,4 +1477,3 @@ body.autobgm-modal-open{ overflow:hidden; }
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
-
