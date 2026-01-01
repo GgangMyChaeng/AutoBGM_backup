@@ -1882,8 +1882,7 @@ function openNowPlayingGlass() {
   setO("position", "absolute");
   setO("inset", "0");
   setO("display", "block");
-  setO("overflow", "auto");
-  setO("-webkit-overflow-scrolling", "touch");
+  setO("overflow", "hidden");
   setO("background", "rgba(0,0,0,.55)");
   setO("z-index", "2147483647");
   setO("padding", "0");
@@ -5123,6 +5122,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
