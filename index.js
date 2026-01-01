@@ -836,12 +836,20 @@ function setNowControlsLocked(locked) {
 function bindNowPlayingEventsOnce() {
   if (_abgmNowPlayingBound) return;
   _abgmNowPlayingBound = true;
-
+  
   try {
     _bgmAudio.addEventListener("play", updateNowPlayingUI);
     _bgmAudio.addEventListener("pause", updateNowPlayingUI);
     _bgmAudio.addEventListener("ended", updateNowPlayingUI);
     _bgmAudio.addEventListener("error", updateNowPlayingUI);
+
+    // seek UI는 updateNowPlayingUI에 묶으면 너무 무거워서 분리
+    const kickSeek = () => scheduleNpSeekUpdate();
+    _bgmAudio.addEventListener("timeupdate", kickSeek);
+    _bgmAudio.addEventListener("loadedmetadata", kickSeek);
+    _bgmAudio.addEventListener("durationchange", kickSeek);
+    _bgmAudio.addEventListener("seeking", kickSeek);
+    _bgmAudio.addEventListener("seeked", kickSeek);
   } catch {}
 }
 
@@ -1220,6 +1228,65 @@ function closeModal() {
 /** ========= Floating Now Playing (Glass) ========= */
 const NP_GLASS_OVERLAY_ID = "ABGM_NP_GLASS_OVERLAY";
 
+// NP seek 상태
+let _abgmNpIsSeeking = false;
+let _abgmNpSeekRaf = 0;
+
+// seconds -> "m:ss" / "h:mm:ss"
+function abgmFmtTime(sec) {
+  const n = Math.max(0, Number(sec || 0));
+  const h = Math.floor(n / 3600);
+  const m = Math.floor((n % 3600) / 60);
+  const s = Math.floor(n % 60);
+  if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
+function scheduleNpSeekUpdate() {
+  if (_abgmNpSeekRaf) return;
+  _abgmNpSeekRaf = requestAnimationFrame(() => {
+    _abgmNpSeekRaf = 0;
+    updateNowPlayingGlassSeekUI();
+  });
+}
+
+function updateNowPlayingGlassSeekUI() {
+  const overlay = document.getElementById(NP_GLASS_OVERLAY_ID);
+  if (!overlay) return;
+
+  const seek = overlay.querySelector("#abgm_np_seek");
+  const curEl = overlay.querySelector("#abgm_np_time_cur");
+  const durEl = overlay.querySelector("#abgm_np_time_dur");
+  if (!seek) return;
+
+  const settings = ensureSettings?.() || {};
+  const enabled = !!settings.enabled;
+
+  const fk = String(_engineCurrentFileKey || "");
+  const dur = Number(_bgmAudio?.duration);
+  const cur = Number(_bgmAudio?.currentTime);
+
+  const ready = enabled && !!fk && Number.isFinite(dur) && dur > 0;
+
+  seek.disabled = !ready;
+
+  // range: ms 단위(더 부드럽게)
+  const max = ready ? Math.max(1, Math.floor(dur * 1000)) : 0;
+  if (String(seek.max) !== String(max)) seek.max = String(max);
+  if (seek.min !== "0") seek.min = "0";
+
+  // 드래그 중이면 값 덮어쓰기 금지
+  if (!_abgmNpIsSeeking && ready) {
+    const v = Math.min(max, Math.max(0, Math.floor((Number.isFinite(cur) ? cur : 0) * 1000)));
+    seek.value = String(v);
+  } else if (!ready) {
+    seek.value = "0";
+  }
+
+  if (curEl) curEl.textContent = ready ? abgmFmtTime(Number.isFinite(cur) ? cur : 0) : "0:00";
+  if (durEl) durEl.textContent = ready ? abgmFmtTime(dur) : "0:00";
+}
+
 // NP Glass: play mode icons (image = direct link)
 const ABGM_NP_MODE_ICON = {
   manual:   "https://i.postimg.cc/SR9HXrhj/Play.png",
@@ -1256,7 +1323,13 @@ function openNowPlayingGlass() {
         <div class="abgm-np-title" id="abgm_np_title">(none)</div>
         <div class="abgm-np-sub" id="abgm_np_preset">Preset</div>
 
-        <input class="abgm-np-seek" type="range" min="0" max="100" value="30" disabled />
+        <div class="abgm-np-seek-wrap">
+          <input id="abgm_np_seek" class="abgm-np-seek" type="range" min="0" max="0" value="0" />
+          <div class="abgm-np-time">
+            <span id="abgm_np_time_cur">0:00</span>
+            <span id="abgm_np_time_dur">0:00</span>
+          </div>
+        </div>
 
         <div class="abgm-np-ctrl">
           <button class="abgm-np-btn" type="button" id="abgm_np_prev" title="Prev" disabled>⏮</button>
@@ -1310,6 +1383,40 @@ function openNowPlayingGlass() {
   playBtn?.addEventListener("click", () => {
     togglePlayPause(); // ← 기존 NP 재생/일시정지 함수
   });
+
+  // ===== NP seek (currentTime slider) =====
+const seek = overlay.querySelector("#abgm_np_seek");
+if (seek) {
+  const preview = () => {
+    const curEl = document.getElementById("abgm_np_time_cur");
+    const durEl = document.getElementById("abgm_np_time_dur");
+    const v = Number(seek.value || 0) / 1000;
+    const dur = Number(_bgmAudio?.duration);
+    if (curEl) curEl.textContent = abgmFmtTime(v);
+    if (durEl) durEl.textContent = Number.isFinite(dur) && dur > 0 ? abgmFmtTime(dur) : "0:00";
+  };
+
+  seek.addEventListener("input", () => {
+    _abgmNpIsSeeking = true;
+    preview();
+  });
+
+  seek.addEventListener("change", () => {
+    const v = Number(seek.value || 0) / 1000;
+    if (Number.isFinite(v)) {
+      try { _bgmAudio.currentTime = Math.max(0, v); } catch {}
+    }
+    _abgmNpIsSeeking = false;
+    scheduleNpSeekUpdate();
+  });
+
+  const endSeek = () => {
+    _abgmNpIsSeeking = false;
+    scheduleNpSeekUpdate();
+  };
+  seek.addEventListener("pointerup", endSeek);
+  seek.addEventListener("pointercancel", endSeek);
+}
 
   // Mode cycle (NP Glass) : manual → loop_one → loop_list → random → keyword → manual ...
   const modeBtn = overlay.querySelector("#abgm_np_mode");
@@ -1381,6 +1488,8 @@ function updateNowPlayingGlassUI(title, presetName, modeLabel) {
   if (m) m.textContent = nice;
   if (icon) icon.src = ABGM_NP_MODE_ICON[key] || ABGM_NP_MODE_ICON.manual;
   if (btn) btn.title = `Mode: ${nice}`;
+  
+  scheduleNpSeekUpdate();
 }
 
 function onEscClose(e) {
@@ -4480,6 +4589,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
