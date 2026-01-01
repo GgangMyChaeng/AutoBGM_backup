@@ -1793,7 +1793,8 @@ function openNowPlayingGlass() {
       width: min(360px, 75vw);
       height: min(480px, 80vh);
       aspect-ratio: 3/4;
-      background: rgba(255,255,255,.95) !important;
+      background: rgba(255,255,255,.95);
+      color: rgba(0,0,0,.88);
     ">
       <div class="abgm-np-glass-inner">
 
@@ -5127,5 +5128,6 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
