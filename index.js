@@ -120,30 +120,39 @@ function fitModalToHost(overlay, host) {
   const vw = vv?.width || window.innerWidth;
   const vh = vv?.height || window.innerHeight;
 
-  // PC만 여백/최대폭 제한
   const isPc = vw >= 900;
-  const pad = isPc ? 18 : 12;          // PC는 살짝 더 여유
-  const maxWDesktop = 860;              // <-- 여기 숫자 줄이면 더 콤팩트
+  const pad = isPc ? 18 : 12;
+  const maxWDesktop = 860;
 
-  const wRaw = Math.max(280, Math.floor(vw - pad * 2));
-  const w = isPc ? Math.min(maxWDesktop, wRaw) : wRaw;
+  // "창이 좁아지면 모달이 화면 밖으로 나가버림" 원인: Math.max(280, ...) 강제 최소폭
+  // -> viewport보다 커지지 않게 clamp
+  const maxW = Math.max(0, Math.floor(vw - pad * 2));
+  const w = isPc ? Math.min(maxWDesktop, maxW) : maxW;
+  const minW = Math.min(280, w);
 
-  const h = Math.max(240, Math.floor(vh - pad * 2));
+  const maxH = Math.max(0, Math.floor(vh - pad * 2));
+  const minHBase = 240;
+  const minH = Math.min(minHBase, maxH);
 
   const setI = (k, v) => modal.style.setProperty(k, v, "important");
+
+  const isNpGlass = overlay?.id === NP_GLASS_OVERLAY_ID;
 
   setI("box-sizing", "border-box");
   setI("display", "block");
   setI("position", "relative");
+
   setI("width", `${w}px`);
   setI("max-width", `${w}px`);
-  setI("min-width", "0");
+  setI("min-width", `${minW}px`);
   setI("margin", `${pad}px auto`);
 
-  setI("min-height", "240px");
-  setI("height", `${h}px`);
-  setI("max-height", `${h}px`);
-  setI("overflow", "auto");
+  setI("height", `${maxH}px`);
+  setI("max-height", `${maxH}px`);
+  setI("min-height", `${minH}px`);
+
+  // NP는 모달 자체 스크롤 금지(리스트만 스크롤)
+  setI("overflow", isNpGlass ? "hidden" : "auto");
 
   setI("visibility", "visible");
   setI("opacity", "1");
@@ -1312,6 +1321,7 @@ const ABGM_NP_CTRL_ICON = {
 function closeNowPlayingGlass() {
   const overlay = document.getElementById(NP_GLASS_OVERLAY_ID);
   if (overlay) overlay.remove();
+  document.body.classList.remove("abgm-np-open");
   window.removeEventListener("keydown", onNpGlassEsc);
 }
 
@@ -1873,25 +1883,22 @@ function openNowPlayingGlass() {
     if (e.target === overlay) closeNowPlayingGlass();
   });
 
-  const host = getModalHost();
-  const cs = getComputedStyle(host);
-  if (cs.position === "static") host.style.position = "relative";
+  // NP 오버레이는 host 말고 body에 박아야 레이아웃/transform에 안 잘림
+  const host = document.body;
 
-  // overlay 스타일(기존 모달 방식 맞춤)
+  // overlay 스타일
   const setO = (k, v) => overlay.style.setProperty(k, v, "important");
 
-  // 스크롤은 리스트에서만, 오버레이는 고정
-  setO("position", "fixed");          // ← absolute 말고 fixed
+  setO("position", "fixed");
   setO("inset", "0");
   setO("display", "block");
-  setO("overflow", "hidden");         // ← auto 금지 (이게 상/하단 같이 움직이던 원인)
-  setO("background", "rgba(0,0,0,.55)"); // ← 기존 값 rgba(0,0,0,55) 는 이상함
+  setO("overflow", "hidden");
+  setO("background", "rgba(0,0,0,.55)"); // alpha는 0~1
   setO("z-index", "2147483647");
   setO("padding", "0");
 
-  // 뒤 배경(채팅창) 스크롤도 막기
   document.body.classList.add("abgm-np-open");
-  host.appendChild(overlay);
+  document.body.appendChild(overlay);
 
   // ===== NP(Home) events =====
   const playBtn = overlay.querySelector("#abgm_np_play");
@@ -5126,6 +5133,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
