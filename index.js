@@ -3535,7 +3535,7 @@ btn.innerHTML = `
   btn.addEventListener("mousedown", onDragStart);
   btn.addEventListener("touchstart", onDragStart, { passive: false });
 
-  document.body.appendChild(btn);
+  document.documentElement.appendChild(btn);
   _floatingBtn = btn;
   return btn;
 }
@@ -3601,7 +3601,7 @@ function createFloatingMenu() {
     }
   });
 
-  document.body.appendChild(menu);
+  document.documentElement.appendChild(menu);
   _floatingMenu = menu;
   return menu;
 }
@@ -3609,6 +3609,11 @@ function createFloatingMenu() {
 function openFloatingMenu() {
   if (_floatingMenuOpen) return;
   const menu = createFloatingMenu();
+  
+  // viewport 기준으로 고정 (폭 줄 때 상단으로 튀는 거 방지)
+  menu.style.left = "50vw";
+  menu.style.top = "50vh";
+  
   menu.classList.add("is-open");
   _floatingMenuOpen = true;
   updateMenuDebugIcon();
@@ -4265,6 +4270,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
