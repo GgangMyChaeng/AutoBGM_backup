@@ -3613,12 +3613,27 @@ function openFloatingMenu() {
   _floatingMenuOpen = true;
   updateMenuDebugIcon();
   updateMenuNPAnimation();
+  
+  // 메뉴 바깥 클릭 감지
+  setTimeout(() => {
+    document.addEventListener("click", onMenuOutsideClick, true);
+  }, 100);
 }
 
 function closeFloatingMenu() {
   if (!_floatingMenu) return;
   _floatingMenu.classList.remove("is-open");
   _floatingMenuOpen = false;
+  document.removeEventListener("click", onMenuOutsideClick, true);
+}
+
+function onMenuOutsideClick(e) {
+  if (!_floatingMenu || !_floatingMenuOpen) return;
+  
+  // 메뉴 영역 밖 클릭이면 닫기
+  if (!_floatingMenu.contains(e.target) && e.target !== _floatingBtn) {
+    closeFloatingMenu();
+  }
 }
 
 function removeFloatingMenu() {
@@ -4250,6 +4265,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
