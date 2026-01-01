@@ -1793,6 +1793,7 @@ function openNowPlayingGlass() {
       width: min(360px, 75vw);
       height: min(480px, 80vh);
       aspect-ratio: 3/4;
+      background: rgba(255,255,255,.95) !important;
     ">
       <div class="abgm-np-glass-inner">
 
@@ -1843,30 +1844,30 @@ function openNowPlayingGlass() {
 
         </div>
 
-        <!-- ===== Page: Playlist ===== -->
-        <div data-abgm-page="pl" style="display:none;">
-          <div class="abgm-pl-card">
+<!-- ===== Page: Playlist ===== -->
+<div data-abgm-page="pl" style="display:none; height:100%;">
+  <div class="abgm-pl-card">
 
-            <div class="abgm-pl-header">
-              <button type="button" class="menu_button abgm-pl-topbtn" id="abgm_pl_to_np" title="Back to NP">←</button>
-              <div class="abgm-pl-title">Playlist</div>
-              <button type="button" class="menu_button abgm-pl-topbtn" id="abgm_pl_sort" title="Sort">⋯</button>
-            </div>
+    <div class="abgm-pl-header">
+      <button type="button" class="menu_button abgm-pl-topbtn" id="abgm_pl_to_np" title="Back to NP">←</button>
+      <div class="abgm-pl-title">Playlist</div>
+      <button type="button" class="menu_button abgm-pl-topbtn" id="abgm_pl_sort" title="Sort">⋯</button>
+    </div>
 
-            <div class="abgm-pl-presetbar">
-              <select id="abgm_pl_preset" class="abgm-pl-select"></select>
-            </div>
+    <div class="abgm-pl-presetbar">
+      <select id="abgm_pl_preset" class="abgm-pl-select"></select>
+    </div>
 
-            <div id="abgm_pl_list" class="abgm-pl-list"></div>
+    <div id="abgm_pl_list" class="abgm-pl-list"></div>
 
-            <div class="abgm-pl-footer">
-              <button type="button" class="menu_button abgm-pl-home" id="abgm_pl_home" title="Back to Floating Menu">
-                <i class="fa-solid fa-arrow-left"></i>
-              </button>
-            </div>
+    <div class="abgm-pl-footer">
+      <button type="button" class="menu_button abgm-pl-home" id="abgm_pl_home" title="Back to Floating Menu">
+        <i class="fa-solid fa-arrow-left"></i>
+      </button>
+    </div>
 
-          </div>
-        </div>
+  </div>
+</div>
 
       </div>
     </div>
@@ -5126,4 +5127,5 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
