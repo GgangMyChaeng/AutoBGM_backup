@@ -1799,3 +1799,74 @@ body.autobgm-modal-open{ overflow:hidden; }
   border: 1px solid rgba(0,0,0,.10);
   background: rgba(0,0,0,.03);
 }
+
+/* =========================
+   AutoBGM Surface Theme (Light default)
+   - 나중에 다크모드는 body에 .abgm-theme-dark 붙이면 됨
+   ========================= */
+
+:root{
+  --abgm-surface: #ffffff;
+  --abgm-surface-2: #f6f7f9;
+  --abgm-text: #111111;
+  --abgm-muted: rgba(17,17,17,.72);
+  --abgm-border: rgba(0,0,0,.12);
+  --abgm-border-2: rgba(0,0,0,.08);
+  --abgm-shadow: 0 18px 40px rgba(0,0,0,.18);
+}
+
+body.abgm-theme-dark{
+  --abgm-surface: rgba(18,18,18,.92);
+  --abgm-surface-2: rgba(255,255,255,.06);
+  --abgm-text: rgba(255,255,255,.92);
+  --abgm-muted: rgba(255,255,255,.70);
+  --abgm-border: rgba(255,255,255,.14);
+  --abgm-border-2: rgba(255,255,255,.10);
+  --abgm-shadow: 0 18px 40px rgba(0,0,0,.55);
+}
+
+/* 흰 배경 “몸체”로 만들 대상(여기서부터가 핵심)
+   너네 코드에 정확한 클래스명이 뭔지 몰라서,
+   abgm-surface 클래스 붙이면 무조건 먹게 해둠 */
+.abgm-surface{
+  background: var(--abgm-surface) !important;
+  color: var(--abgm-text) !important;
+  border: 1px solid var(--abgm-border) !important;
+  box-shadow: var(--abgm-shadow) !important;
+}
+
+/* 텍스트 컬러가 기존 CSS에 눌리는 경우가 많아서 강하게 */
+.abgm-surface,
+.abgm-surface *{
+  color: var(--abgm-text);
+}
+
+/* 보조 텍스트용(원하면 class="abgm-muted" 주면 됨) */
+.abgm-surface .abgm-muted{
+  color: var(--abgm-muted) !important;
+}
+
+/* 입력/셀렉트/텍스트영역 */
+.abgm-surface input,
+.abgm-surface select,
+.abgm-surface textarea{
+  background: var(--abgm-surface-2) !important;
+  color: var(--abgm-text) !important;
+  border: 1px solid var(--abgm-border-2) !important;
+}
+
+/* 버튼 기본 */
+.abgm-surface button,
+.abgm-surface .abgm-btn{
+  background: var(--abgm-surface-2) !important;
+  color: var(--abgm-text) !important;
+  border: 1px solid var(--abgm-border-2) !important;
+}
+
+/* “NP홈 안쪽만 흰색인데 바깥이 어두운” 현상 방지용
+   (안쪽 패널 배경을 투명으로 만들어서 바깥 흰색이 보이게) */
+.abgm-surface .abgm-panel,
+.abgm-surface .abgm-card,
+.abgm-surface .abgm-section{
+  background: transparent !important;
+}
