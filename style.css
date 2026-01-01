@@ -1826,7 +1826,6 @@ body.abgm-theme-dark{
 }
 
 /* 흰 배경 “몸체”로 만들 대상(여기서부터가 핵심)
-   너네 코드에 정확한 클래스명이 뭔지 몰라서,
    abgm-surface 클래스 붙이면 무조건 먹게 해둠 */
 .abgm-surface{
   background: var(--abgm-surface) !important;
