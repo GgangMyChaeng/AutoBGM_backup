@@ -1300,12 +1300,12 @@ const ABGM_NP_MODE_ICON = {
 
 // NP Glass: control icons (inline svg data uri, replace with your direct image links if you want)
 const ABGM_NP_CTRL_ICON = {
-  prev:        'data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27white%27%3E%3Cpath%20d%3D%27M11%2019L4%2012l7-7v14zm9%200l-7-7%207-7v14z%27%2F%3E%3C%2Fsvg%3E',
-  next:        'data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27white%27%3E%3Cpath%20d%3D%27M13%205l7%207-7%207V5zM4%205l7%207-7%207V5z%27%2F%3E%3C%2Fsvg%3E',
-  useDefaultOn:'data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27white%27%3E%3Cpath%20d%3D%27M12%2017.27L18.18%2021l-1.64-7.03L22%209.24l-7.19-.61L12%202%209.19%208.63%202%209.24l5.46%204.73L5.82%2021z%27%2F%3E%3C%2Fsvg%3E',
-  useDefaultOff:'data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27white%27%20stroke-width%3D%272%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M12%2017.27L18.18%2021l-1.64-7.03L22%209.24l-7.19-.61L12%202%209.19%208.63%202%209.24l5.46%204.73L5.82%2021z%27%2F%3E%3C%2Fsvg%3E',
-  kwHold:      'data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27white%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M18.178%208.822a4%204%200%200%200-5.656%200L12%209.343l-.522-.521a4%204%200%201%200%200%205.656L12%2014.657l.522.521a4%204%200%201%200%205.656-5.656L12%2014.657%27%2F%3E%3C%2Fsvg%3E',
-  kwOnce:      'data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27white%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M8%207h2v10H8z%27%2F%3E%3Cpath%20d%3D%27M14%209h4%27%2F%3E%3Cpath%20d%3D%27M14%2015h4%27%2F%3E%3C%2Fsvg%3E',
+  prev:        "https://i.postimg.cc/1XTpkT5K/Previous.png",
+  next:        "https://i.postimg.cc/4ND6wrSP/Next.png",
+  useDefaultOn:"https://i.postimg.cc/PrkPPTpg/Default_On.png",
+  useDefaultOff:"https://i.postimg.cc/VLy3x3qC/Stop.png",
+  kwHold:      "https://i.postimg.cc/jdQkGCqp/Loop_List.png",
+  kwOnce:      "https://i.postimg.cc/SR9HXrhj/Play.png",
 };
 
 function closeNowPlayingGlass() {
@@ -4868,3 +4868,4 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
