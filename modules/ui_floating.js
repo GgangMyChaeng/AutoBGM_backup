@@ -49,6 +49,140 @@ btn.innerHTML = `
   return btn;
 }
 
+// 플로팅 버튼 작동 로직
+function onDragStart(e) {
+  e.preventDefault();
+  _floatingDragging = true;
+
+  const rect = _floatingBtn.getBoundingClientRect();
+  const clientX = e.type.startsWith("touch") ? e.touches[0].clientX : e.clientX;
+  const clientY = e.type.startsWith("touch") ? e.touches[0].clientY : e.clientY;
+
+  _floatingDragOffset.x = clientX - rect.left;
+  _floatingDragOffset.y = clientY - rect.top;
+
+  _floatingBtn.classList.add("dragging");
+
+  document.addEventListener("mousemove", onDragMove);
+  document.addEventListener("touchmove", onDragMove, { passive: false });
+  document.addEventListener("mouseup", onDragEnd);
+  document.addEventListener("touchend", onDragEnd);
+}
+
+function onDragMove(e) {
+  if (!_floatingDragging) return;
+  e.preventDefault();
+
+  const clientX = e.type.startsWith("touch") ? e.touches[0].clientX : e.clientX;
+  const clientY = e.type.startsWith("touch") ? e.touches[0].clientY : e.clientY;
+
+  let x = clientX - _floatingDragOffset.x;
+  let y = clientY - _floatingDragOffset.y;
+
+  // 화면 밖 방지
+  const w = _floatingBtn.offsetWidth;
+  const h = _floatingBtn.offsetHeight;
+  x = Math.max(-w / 2, Math.min(window.innerWidth - w / 2, x));
+  y = Math.max(0, Math.min(window.innerHeight - h, y));
+
+  _floatingBtn.style.left = `${x}px`;
+  _floatingBtn.style.top = `${y}px`;
+}
+
+function onDragEnd(e) {
+  if (!_floatingDragging) return;
+  _floatingDragging = false;
+  _floatingBtn.classList.remove("dragging");
+
+  document.removeEventListener("mousemove", onDragMove);
+  document.removeEventListener("touchmove", onDragMove);
+  document.removeEventListener("mouseup", onDragEnd);
+  document.removeEventListener("touchend", onDragEnd);
+
+  const rect = _floatingBtn.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+  
+  // SillyTavern 영역 기준
+  const appEl = document.querySelector("#app") || document.querySelector("main") || document.body;
+  const appRect = appEl.getBoundingClientRect();
+  
+  const screenW = appRect.width;
+  const screenH = appRect.height;
+  
+  // 상단 중앙 영역 (화면 가로 중앙 ±25%, 세로 상단 20% 이내)
+  const topCenterLeft = appRect.left + screenW * 0.25;
+  const topCenterRight = appRect.left + screenW * 0.75;
+  const topThreshold = appRect.top + screenH * 0.2;
+  
+  // 하단 중앙 영역 (화면 가로 중앙 ±25%, 세로 하단 20% 이내)
+  const bottomCenterLeft = appRect.left + screenW * 0.35;
+  const bottomCenterRight = appRect.left + screenW * 0.85;
+  const bottomThreshold = appRect.top + screenH * 0.8;
+
+  // 상단 중앙에 놓으면 → 비활성화
+  if (centerY < topThreshold && centerX > topCenterLeft && centerX < topCenterRight) {
+    const s = ensureSettings();
+    s.floating.enabled = false;
+    saveSettingsDebounced();
+    removeFloatingButton();
+    removeFloatingMenu();
+
+    const toggle = document.querySelector("#autobgm_floating_toggle");
+    if (toggle) {
+      const stateEl = toggle.querySelector(".autobgm-menu-state");
+      if (stateEl) stateEl.textContent = "Off";
+    }
+    return;
+  }
+
+  // 하단 중앙에 놓으면 → 메뉴 열기
+  if (centerY > bottomThreshold && centerX > bottomCenterLeft && centerX < bottomCenterRight) {
+    snapToEdge();
+    openFloatingMenu();
+    
+    const s = ensureSettings();
+    const rect2 = _floatingBtn.getBoundingClientRect();
+    s.floating.x = rect2.left;
+    s.floating.y = rect2.top;
+    saveSettingsDebounced();
+    return;
+  }
+
+  // 그 외: 벽에 스냅만
+  snapToEdge();
+
+  const s = ensureSettings();
+  const rect3 = _floatingBtn.getBoundingClientRect();
+  s.floating.x = rect3.left;
+  s.floating.y = rect3.top;
+  saveSettingsDebounced();
+}
+
+function snapToEdge() {
+  const rect = _floatingBtn.getBoundingClientRect();
+  const w = rect.width;
+  const centerX = rect.left + w / 2;
+
+  let targetX = rect.left;
+
+  // 좌/우 중 가까운 쪽으로
+  if (centerX < window.innerWidth / 2) {
+    // 좌측 벽에 반쯤 걸치게
+    targetX = -w / 2;
+  } else {
+    // 우측 벽에 반쯤 걸치게
+    targetX = window.innerWidth - w / 2;
+  }
+
+  _floatingBtn.style.transition = "left 0.2s ease-out";
+  _floatingBtn.style.left = `${targetX}px`;
+
+  setTimeout(() => {
+    _floatingBtn.style.transition = "";
+  }, 200);
+}
+
 function removeFloatingButton() {
   if (_floatingBtn) {
     _floatingBtn.remove();
