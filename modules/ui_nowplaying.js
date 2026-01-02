@@ -33,6 +33,10 @@ const NP = {
 
   getDebugMode: () => false,
   getDebugLine: () => "",
+
+  getSTContextSafe: () => null,
+  getChatKeyFromContext: () => "",
+  ensureEngineFields: () => {},
 };
 
 /** ========= Floating Now Playing (Glass) ========= */
@@ -82,6 +86,23 @@ function abgmGetNpOverlay() {
 function _abgmSetText(id, text) {
   const el = document.getElementById(id);
   if (el) el.textContent = String(text ?? "");
+}
+
+function abgmNpShowPage(page /* 'np' | 'pl' */) {
+  const overlay = abgmGetNpOverlay();
+  if (!overlay) return;
+
+  const np = overlay.querySelector('[data-abgm-page="np"]');
+  const pl = overlay.querySelector('[data-abgm-page="pl"]');
+
+  overlay.dataset.abgmPage = page;
+
+  if (np) np.style.display = (page === "np") ? "" : "none";
+  if (pl) pl.style.display = (page === "pl") ? "" : "none";
+
+  if (page === "pl") {
+    try { abgmRenderPlaylistPage(overlay); } catch {}
+  }
 }
 
 function setNowControlsLocked(locked) {
@@ -247,7 +268,7 @@ function updateNowPlayingGlassSeekUI() {
   const settings = ensureSettings?.() || {};
   const enabled = !!settings.enabled;
 
-  const fk = String(NP._engineCurrentFileKey() || "");
+  const fk = String(NP.getEngineCurrentFileKey() || "");
   const dur = Number(a?.duration);
   const cur = Number(a?.currentTime);
 
@@ -461,7 +482,7 @@ export function openNowPlayingGlass() {
   // 뒤로가기(플로팅 메뉴 홈)
   overlay.querySelector("#abgm_np_back")?.addEventListener("click", () => {
     closeNowPlayingGlass();
-    NP.openFloatingMenu();
+    openFloatingMenu();
   });
 
   // ===== Playlist page events =====
@@ -475,7 +496,7 @@ export function openNowPlayingGlass() {
 
   overlay.querySelector("#abgm_pl_home")?.addEventListener("click", () => {
     closeNowPlayingGlass();
-    NP.openFloatingMenu();
+    openFloatingMenu();
   });
 
   // 사이즈 맞추기
@@ -576,7 +597,7 @@ function updateNowPlayingGlassNavUI(settings, preset) {
   }
 
   const mode = settings.playMode || 'manual';
-  const cur = String(NP._engineCurrentFileKey() || st.currentKey || '');
+  const cur = String(NP.getEngineCurrentFileKey() || st.currentKey || '');
   let idx = cur ? keys.indexOf(cur) : -1;
   if (idx < 0) idx = Math.max(0, Math.min(Number(st.listIndex || 0), keys.length - 1));
 
@@ -611,7 +632,7 @@ function updateNowPlayingGlassPlaylistUI(settings) {
   if (!overlay) return;
   if (String(overlay.dataset.abgmPage || "np") !== "pl") return;
 
-  const fk = String(NP._engineCurrentFileKey() || "");
+  const fk = String(NP.getEngineCurrentFileKey() || "");
   const isPlaying = !!settings?.enabled && !!fk && !a?.paused;
 
   overlay.querySelectorAll(".abgm-pl-item")?.forEach?.((row) => {
@@ -796,7 +817,7 @@ function abgmRenderPlaylistPage(overlay) {
     return;
   }
 
-  const curKey = String(NP._engineCurrentFileKey() || "");
+  const curKey = String(NP.getEngineCurrentFileKey() || "");
   const isPlaying = !!settings.enabled && !!curKey && !a?.paused;
 
   for (const b of bgms) {
