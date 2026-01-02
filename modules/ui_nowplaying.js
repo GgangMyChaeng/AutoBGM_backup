@@ -4,8 +4,6 @@ import { openFloatingMenu } from "./ui_floating.js";
 
 let _abgmNowPlayingBound = false;
 
-const NP_GLASS_OVERLAY_ID = "ABGM_NP_GLASS_OVERLAY";
-
 const NP = {
   // state getters
   getBgmAudio: () => null,
@@ -75,6 +73,10 @@ const ABGM_NP_MODE_ICON = {
 
 export function abgmBindNowPlayingDeps(partial = {}) {
   Object.assign(NP, partial || {});
+}
+
+function abgmGetNpOverlay() {
+  return document.getElementById(NP_GLASS_OVERLAY_ID);
 }
 
 function setNowControlsLocked(locked) {
