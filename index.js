@@ -2000,7 +2000,7 @@ function openNowPlayingGlass() {
   // 뒤로가기(플로팅 메뉴 홈)
   overlay.querySelector("#abgm_np_back")?.addEventListener("click", () => {
     closeNowPlayingGlass();
-    openFloatingMenu();
+    FloatingUI.openFloatingMenu();
   });
 
   // ===== Playlist page events =====
@@ -2014,7 +2014,7 @@ function openNowPlayingGlass() {
 
   overlay.querySelector("#abgm_pl_home")?.addEventListener("click", () => {
     closeNowPlayingGlass();
-    openFloatingMenu();
+    FloatingUI.openFloatingMenu();
   });
 
   // 사이즈 맞추기
@@ -4169,9 +4169,9 @@ async function mount() {
       syncFloatingUI();
 
       if (s.floating.enabled) {
-        createFloatingButton();
+        FloatingUI.createFloatingButton();
       } else {
-        removeFloatingButton();
+        FloatingUI.removeFloatingButton();
       }
     });
     
@@ -4224,7 +4224,7 @@ async function init() {
   // 플로팅 버튼 초기화
   const settings = ensureSettings();
   if (settings.floating.enabled) {
-    createFloatingButton();
+    FloatingUI.createFloatingButton();
   }
   
   const obs = new MutationObserver(() => mount());
@@ -4674,6 +4674,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
