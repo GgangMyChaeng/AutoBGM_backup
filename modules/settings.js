@@ -12,7 +12,7 @@ function ensureAssetList(settings) {
 }
 
 // 1) ensureEngineFields에서 chatStates 보정까지 같이 & 재생모드
-function ensureEngineFields(settings) {
+export function ensureEngineFields(settings) {
   settings.playMode ??= "manual";
   settings.chatStates ??= {};     // { [chatKey]: { currentKey, listIndex } }
   settings.presetBindings ??= {}; // (나중에 캐릭-프리셋 매칭용)
