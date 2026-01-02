@@ -3,10 +3,94 @@
   - Dynamic dependency resolver so it works in both layouts:
     /scripts/extensions/<ext>/...
     /scripts/extensions/third-party/<ext>/...
-  모듈화 작업 중...
-  - state는 “읽기/쓰기 창구”를 한 곳으로 (state.js)
-  - engine은 “재생/선곡/런타임”만 (DOM 만지지 말기)
-  - ui는 “DOM + 이벤트 + 렌더”만 (오디오 재생 직접 만지지 말기 → engine 호출만)
+  ==============================
+  모듈화 규칙 (반드시 지키기)
+
+  [0] 최우선 목표
+  - "리팩토링"이 아니라 "분리"다
+  - 동작(로직/UX/타이밍/상태변화/버그 포함) 절대 바꾸지 말 것
+    (플로팅 버튼 반응, NP 글라스, 모달, 프리소스, 키워드 선곡, 저장 타이밍 등)
+
+  [1] 금지사항
+  - 기능을 너무 잘게 쪼개지 말 것
+    * 파일 20~30줄짜리 모듈 난사 금지
+    * 1파일 최소 200~400줄 목표(최대 제한 없음)
+  - “한 기능” 코드가 여러 파일에 흩어지는 구조 금지
+    * 예) 플로팅 메뉴 수정하는데 ui_floating.js / ui_modal.js / engine.js 다 건드리게 만들지 말기
+  - 모듈 간 순환 의존(서로 import) 금지
+
+  [2] 모듈 소유권(Ownership) — "어디를 고치면 되는가"를 고정
+  - modules/engine.js
+    * 오디오 런타임(재생/정지/틱/선곡/키워드 판정)만
+    * DOM 절대 만지지 않기 (querySelector 금지)
+  - modules/state.js
+    * 공유 상태 단 1곳(읽기/쓰기 창구)
+    * 전역 변수/플래그/캐시도 여기로 이주
+  - modules/settings.js
+    * ensure/load/save/schema/migration
+    * extension_settings 접근은 여기(or deps.js)에서만
+  - modules/storage.js
+    * IndexedDB / blob url / assets 목록 관리
+  - modules/deps.js
+    * ST 의존성 resolve (extension_settings, saveSettingsDebounced, getContext 등)
+  - modules/utils.js
+    * 공용 유틸(순수함수 위주 + DOM 보조는 “아주 얇게”)
+  - modules/tags.js
+    * 태그 정규화/정렬/표시 (이미 분리됨)
+
+  - modules/ui_floating.js
+    * 플로팅 버튼/홈/드래그/스냅/리사이즈 + 그 UI 이벤트/렌더 전담
+  - modules/ui_nowplaying.js
+    * Now Playing(UI) 업데이트/글라스/seek/아이콘 동기화 등 “NP 화면 전담”
+  - modules/ui_modal.js
+    * 설정 모달(open/close/fit/탭 전환/공통 modal 유틸)
+  - modules/ui_playlist.js
+    * 플리 렌더/정렬/검색/선택/버튼 핸들러(플리 화면 전담)
+  - modules/ui_freesources.js
+    * 프리소스 모달/탭/태그/추가/동기화 (templates/freesources.html 사용)
+
+  [3] 의존성 방향(Dependency Direction) — 단방향만 허용
+  - ui_*  -> (engine, settings, storage, state, utils, tags, deps) 호출 가능
+  - engine -> (state, settings, storage, utils, tags)만 사용 가능 / ui_* 호출 금지
+  - settings/storage/state/utils/tags/deps 는 서로 최소한으로만 (특히 ui_* import 금지)
+
+  [4] "통신 방식" 규칙
+  - UI가 엔진을 직접 조작해야 하면: engine의 공개 API 함수 호출로만
+  - UI 갱신 트리거:
+    * 엔진 상태 변화 시: engine이 콜백/이벤트를 emit -> ui_nowplaying 등에서 구독
+    * (당장 어렵다면) 최소한 index.js가 허브 역할로 연결만 하고,
+      기존 호출 순서/타이밍은 그대로 유지
+  - settings 저장은 saveSettingsDebounced 타이밍을 기존과 동일하게 유지
+
+  [5] 퍼블릭 API 규칙(노출 최소화)
+  - 각 모듈은 “큰 덩어리 함수” 중심으로 export
+    * 세부 helper는 파일 내부에 숨기기(외부 export 금지)
+  - 모듈 간 공유해야 하는 값은 state를 통해서만(전역 변수 늘리지 말기)
+
+  [6] 마이그레이션 규칙(안전 이관)
+  - 1회 작업 단위:
+    * "한 섹션(주제)" 통째로 옮기고
+    * import/export만 맞춘 다음
+    * 기능 테스트 후 다음 섹션으로 이동
+  - 섹션 예시:
+    1) deps + settings 부팅
+    2) storage(idb) + asset
+    3) engine 런타임
+    4) NP UI (drawer + glass)
+    5) floating menu
+    6) modal
+    7) freesources
+
+  [7] 파일 분리 기준(이 프로젝트의 핵심)
+  - "수정하려는 기능"의 진입점이 한 파일에 모이게 만들 것
+    * 플로팅 메뉴 고치려면 ui_floating.js만 보면 되게
+    * NP 글라스 고치려면 ui_nowplaying.js만 보면 되게
+    * 프리소스 고치려면 ui_freesources.js만 보면 되게
+
+  ※ 결론: 모듈화는 기능 동일 유지 + 파일만 이동일 뿐, 로직을 예쁘게 바꾸는 시간이 아니다
+    - 편의성/가독성/리팩토링 목적의 코드 자체 로직 수정 금지
+    * 허용: import/export 정리, 파일 분리, 함수/상수 이동, 이름만 바꾸기(외부 API 동일할 때), 주석 추가
+    * 금지: 조건문/타이밍/이벤트 흐름/상태 구조 변경, UX 동작 변경, “더 깔끔한 방식”으로 재설계
 */
 
 import { abgmNormTags, abgmNormTag, tagVal, tagPretty, tagCat, sortTags } from "./modules/tags.js";
@@ -4943,6 +5027,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
