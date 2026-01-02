@@ -785,13 +785,13 @@ function abgmRenderPlaylistPage(overlay) {
     sortBtn.__abgmBound = true;
 
     sortBtn.addEventListener("click", () => {
-      const next = abgmCycleBgmSort(settings);
+      const next = NP.abgmCycleBgmSort(settings);
       saveSettingsDebounced();
-      sortBtn.title = `Sort: ${abgmSortNice(next)}`;
+      sortBtn.title = `Sort: ${NP.abgmSortNice(next)}`;
       try { abgmRenderPlaylistPage(overlay); } catch {}
     });
   }
-  if (sortBtn) sortBtn.title = `Sort: ${abgmSortNice(getBgmSort(settings))}`;
+  if (sortBtn) sortBtn.title = `Sort: ${NP.abgmSortNice(NP.getBgmSort(settings))}`;
 
   // --- list render ---
   const list = overlay.querySelector("#abgm_pl_list");
@@ -808,7 +808,7 @@ function abgmRenderPlaylistPage(overlay) {
     });
   }
 
-  const bgms = getSortedBgms(preset, getBgmSort(settings))
+  const bgms = NP.getSortedBgms(preset, NP.getBgmSort(settings))
     .filter(b => String(b?.fileKey ?? "").trim());
 
   list.innerHTML = "";
@@ -868,11 +868,14 @@ function abgmPlayFromPlaylist(fileKey) {
   settings.keywordMode = false;
   settings.playMode = "manual";
 
-  const preset = getActivePreset(settings);
-  const b = findBgmByKey(preset, fk);
-  const vol01 = clamp01((settings.globalVolume ?? 0.7) * (b?.volume ?? 1));
+  const preset = NP.getActivePreset(settings);
+  // findBgmByKey 대신(주입 안 돼있을 수도 있어서) 그냥 똑같이 찾기
+  const b = (preset?.bgms ?? []).find(x => String(x?.fileKey ?? "").trim() === fk) || null;
+  const gv = Number(settings.globalVolume ?? 0.7);
+  const bv = Number(b?.volume ?? 1);
+  const vol01 = Math.max(0, Math.min(1, gv * bv));
 
   saveSettingsDebounced();
-  ensurePlayFile(fk, vol01, false, preset?.id || "");
+  NP.ensurePlayFile(fk, vol01, false, preset?.id || "");
   updateNowPlayingUI();
 }
