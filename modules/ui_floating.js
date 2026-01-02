@@ -253,6 +253,16 @@ function createFloatingMenu() {
   return menu;
 }
 
+function updateMenuDebugIcon() {
+  if (!_floatingMenu) return;
+  const s = ensureSettings();
+  const on = !!s.debugMode;
+  const icon = _floatingMenu.querySelector(".abgm-menu-icon-debug");
+  if (icon) {
+    icon.src = on ? "https://i.postimg.cc/N0hGgTJ7/Debug_on.png" : "https://i.postimg.cc/sDNDNb5c/Debug_off.png";
+  }
+}
+
 function openFloatingMenu() {
   if (_floatingMenuOpen) return;
   const menu = createFloatingMenu();
