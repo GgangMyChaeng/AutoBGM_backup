@@ -746,7 +746,7 @@ export function bindSideMenuNowPlayingControls(root) {
 
 function abgmRenderPlaylistPage(overlay) {
   const settings = ensureSettings();
-  const preset = getActivePreset(settings);
+  const preset = NP.getActivePreset(settings);
 
   // --- preset select ---
   const sel = overlay.querySelector("#abgm_pl_preset");
