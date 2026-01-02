@@ -4012,16 +4012,6 @@ function toggleDebugMode() {
   updateNowPlayingUI();
 }
 
-function updateMenuDebugIcon() {
-  if (!_floatingMenu) return;
-  const s = ensureSettings();
-  const on = !!s.debugMode;
-  const icon = _floatingMenu.querySelector(".abgm-menu-icon-debug");
-  if (icon) {
-    icon.src = on ? "https://i.postimg.cc/N0hGgTJ7/Debug_on.png" : "https://i.postimg.cc/sDNDNb5c/Debug_off.png";
-  }
-}
-
 function updateMenuNPAnimation() {
   const menu = abgmGetFloatingMenuEl();
   if (!menu) return;
@@ -4472,6 +4462,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
