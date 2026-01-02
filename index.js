@@ -3213,6 +3213,8 @@ async function init() {
     // 엔진/액션
     engineTick: () => engineTick(),
     togglePlayPause: () => togglePlayPause(),
+    npPrevAction: () => abgmNpPrevAction(),
+    npNextAction: () => abgmNpNextAction(),
 
     // 모달/호스트
     getModalHost: () => getModalHost(),
@@ -3672,6 +3674,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
