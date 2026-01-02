@@ -3226,6 +3226,7 @@ async function init() {
     getActivePreset: (settings) => getActivePreset(settings),
     getEntryName: (b) => getEntryName(b),
     getSortedBgms: (preset, sortKey) => getSortedBgms(preset, sortKey),
+    getSortedKeys: (preset, sortKey) => getSortedKeys(preset, sortKey),
     getBgmSort: (settings) => getBgmSort(settings),
     abgmCycleBgmSort: (settings) => abgmCycleBgmSort(settings),
     abgmSortNice: (k) => abgmSortNice(k),
@@ -3671,6 +3672,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
