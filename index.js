@@ -97,7 +97,7 @@ import { abgmNormTags, abgmNormTag, tagVal, tagPretty, tagCat, sortTags } from "
 import { extension_settings, saveSettingsDebounced, __abgmResolveDeps, getSTContextSafe, getBoundPresetIdFromContext, EXT_BIND_KEY } from "./modules/deps.js";
 import { openDb, idbPut, idbGet, idbDel, ensureAssetList } from "./modules/storage.js";
 import { ensureSettings, migrateLegacyDataUrlsToIDB, ensureEngineFields } from "./modules/settings.js";
-import { abgmBindFloatingActions, createFloatingButton, removeFloatingButton, removeFloatingMenu, openFloatingMenu, closeFloatingMenu, updateFloatingButtonPosition, abgmGetFloatingMenuEl } from "./modules/ui_floating.js";
+import { abgmBindFloatingActions, createFloatingButton, removeFloatingButton, removeFloatingMenu, openFloatingMenu, closeFloatingMenu, updateFloatingButtonPosition, abgmGetFloatingMenuEl, updateMenuDebugIcon } from "./modules/ui_floating.js";
 
 let __abgmDebugLine = ""; // 키워드 모드 디버깅
 let __abgmDebugMode = false;
@@ -4028,7 +4028,7 @@ async function init() {
   // 중복 로드/실행 방지 (메뉴 2개 뜨는 거 방지)
   if (window.__AUTOBGM_BOOTED__) return;
   window.__AUTOBGM_BOOTED__ = true;
-  abgmBindFloatingActions({ openModal, openNowPlayingGlass, toggleDebugMode });
+  abgmBindFloatingActions({ openModal, openNowPlayingGlass, toggleDebugMode, updateMenuNPAnimation });
   await bootFreeSourcesSync();
   mount();
   startEngine();
@@ -4462,6 +4462,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
