@@ -95,6 +95,7 @@
 
 import { abgmNormTags, abgmNormTag, tagVal, tagPretty, tagCat, sortTags } from "./modules/tags.js";
 import { extension_settings, saveSettingsDebounced, __abgmResolveDeps, getSTContextSafe, getBoundPresetIdFromContext, EXT_BIND_KEY, } from "./modules/deps.js";
+import { openDb, idbPut, idbGet, idbDel, ensureAssetList } from "./modules/storage.js";
 
 let __abgmDebugLine = ""; // 키워드 모드 디버깅
 let __abgmDebugMode = false;
@@ -402,62 +403,6 @@ function abgmPickPreset(containerOrDoc, settings, {
     container.appendChild(wrap);
     setTimeout(() => { try { sel?.focus(); } catch {} }, 0);
   });
-}
-
-/** ========= IndexedDB Assets =========
- * key: fileKey (예: "neutral_01.mp3")
- * value: Blob(File)
- */
-const DB_NAME = "autobgm_db";
-const DB_VER = 1;
-const STORE_ASSETS = "assets";
-
-function openDb() {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, DB_VER);
-    req.onupgradeneeded = () => {
-      const db = req.result;
-      if (!db.objectStoreNames.contains(STORE_ASSETS)) db.createObjectStore(STORE_ASSETS);
-    };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-async function idbPut(key, blob) {
-  const db = await openDb();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_ASSETS, "readwrite");
-    tx.objectStore(STORE_ASSETS).put(blob, key);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
-
-async function idbGet(key) {
-  const db = await openDb();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_ASSETS, "readonly");
-    const req = tx.objectStore(STORE_ASSETS).get(key);
-    req.onsuccess = () => resolve(req.result || null);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-async function idbDel(key) {
-  const db = await openDb();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_ASSETS, "readwrite");
-    tx.objectStore(STORE_ASSETS).delete(key);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
-
-/** settings.assets = { [fileKey]: { fileKey, label } } */
-function ensureAssetList(settings) {
-  settings.assets ??= {};
-  return settings.assets;
 }
 
 /** ========= Template loader ========= */
@@ -4972,6 +4917,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
