@@ -158,6 +158,30 @@ function removeFloatingMenu() {
   }
 }
 
+// 창 크기 변경 시 플로팅 버튼 위치 조정
+function updateFloatingButtonPosition() {
+  if (!_floatingBtn) return;
+  
+  const rect = _floatingBtn.getBoundingClientRect();
+  const w = rect.width;
+  const h = rect.height;
+  const centerX = rect.left + w / 2;
+
+  // 어느 쪽 벽에 붙어있었는지 판별
+  const isLeft = centerX < window.innerWidth / 2;
+
+  let targetX = isLeft ? (-w / 2) : (window.innerWidth - w / 2);
+  let targetY = Math.max(0, Math.min(window.innerHeight - h, rect.top));
+
+  _floatingBtn.style.left = `${targetX}px`;
+  _floatingBtn.style.top = `${targetY}px`;
+
+  const s = ensureSettings();
+  s.floating.x = targetX;
+  s.floating.y = targetY;
+  saveSettingsDebounced();
+}
+
 // 마지막에 필요한 것만 export로 열어주기
 export {
   createFloatingButton,
