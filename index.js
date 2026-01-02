@@ -12,7 +12,7 @@
 import { abgmNormTags, abgmNormTag, tagVal, tagPretty, tagCat, sortTags } from "./modules/tags.js";
 import { initFloatingUI } from "./modules/ui_floating.js";
 
-
+let FloatingUI = null;
 let extension_settings;
 let saveSettingsDebounced;
 let __abgmDebugLine = ""; // 키워드 모드 디버깅
@@ -838,7 +838,7 @@ function updateNowPlayingUI() {
     }
 
     setNowControlsLocked(!settings.enabled);
-    updateMenuNPAnimation();
+    FloatingUI?.syncIcons?.();
   } catch (e) {
     console.error("[AutoBGM] updateNowPlayingUI failed:", e);
   }
@@ -4208,23 +4208,40 @@ function toggleDebugMode() {
 
 /** ========= init 이닛 ========= */
 async function init() {
-  // 중복 로드/실행 방지 (메뉴 2개 뜨는 거 방지)
   if (window.__AUTOBGM_BOOTED__) return;
   window.__AUTOBGM_BOOTED__ = true;
 
   await bootFreeSourcesSync();
   mount();
   startEngine();
-  
-  // 플로팅 버튼 초기화
-  const settings = ensureSettings();
-  if (settings.floating.enabled) {
+
+  // FloatingUI 먼저 생성
+  FloatingUI = initFloatingUI({
+    ensureSettings,
+    saveSettingsDebounced,
+    openModal,
+    openNowPlayingGlass,
+    toggleDebugMode,
+    getIsPlaying: () => !!_engineIsPlaying,
+    getDebugOn: () => !!__abgmDebugMode,
+  });
+
+  // 설정 가드 + 기본값
+  const s = ensureSettings();
+  s.floating ??= {};
+  s.floating.enabled ??= true;
+
+  // enabled면 버튼 생성
+  if (s.floating.enabled) {
     FloatingUI.createFloatingButton();
+  } else {
+    FloatingUI.removeFloatingButton?.();
+    FloatingUI.removeFloatingMenu?.();
   }
-  
+
   const obs = new MutationObserver(() => mount());
   obs.observe(document.body, { childList: true, subtree: true });
-  // 창 크기 변경 리스너
+
   window.addEventListener("resize", updateFloatingButtonPosition);
   window.addEventListener("orientationchange", updateFloatingButtonPosition);
 }
@@ -4669,6 +4686,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
