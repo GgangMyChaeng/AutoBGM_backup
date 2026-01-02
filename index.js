@@ -923,79 +923,6 @@ function closeModal() {
     updateNowPlayingUI();
 }
 
-/** ========= Floating Now Playing (Glass) ========= */
-const NP_GLASS_OVERLAY_ID = "ABGM_NP_GLASS_OVERLAY";
-
-// NP seek 상태
-let _abgmNpIsSeeking = false;
-let _abgmNpSeekRaf = 0;
-
-// seconds -> "m:ss" / "h:mm:ss"
-function abgmFmtTime(sec) {
-  const n = Math.max(0, Number(sec || 0));
-  const h = Math.floor(n / 3600);
-  const m = Math.floor((n % 3600) / 60);
-  const s = Math.floor(n % 60);
-  if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-  return `${m}:${String(s).padStart(2, "0")}`;
-}
-
-// NP Glass: play mode icons (image = direct link)
-const ABGM_NP_MODE_ICON = {
-  manual:   "https://i.postimg.cc/SR9HXrhj/Play.png",
-  loop_one: "https://i.postimg.cc/L4PW3NcK/Loop_One.png",
-  loop_list:"https://i.postimg.cc/jdQkGCqp/Loop_List.png",
-  random:   "https://i.postimg.cc/L8xQ87PM/Random.png",
-  keyword:  "https://i.postimg.cc/8CsKJHdc/Keyword.png",
-};
-
-// NP Glass: control icons (inline svg data uri, replace with your direct image links if you want)
-const ABGM_NP_CTRL_ICON = {
-  prev:        "https://i.postimg.cc/1XTpkT5K/Previous.png",
-  next:        "https://i.postimg.cc/4ND6wrSP/Next.png",
-  useDefaultOn:"https://i.postimg.cc/PrkPPTpg/Default_On.png",
-  useDefaultOff:"https://i.postimg.cc/VLy3x3qC/Stop.png",
-  kwHold:      "https://i.postimg.cc/jdQkGCqp/Loop_List.png",
-  kwOnce:      "https://i.postimg.cc/SR9HXrhj/Play.png",
-};
-
-function abgmGetNavCtx() {
-  try {
-    const settings = ensureSettings();
-    ensureEngineFields(settings);
-
-    const ctx = getSTContextSafe();
-    const chatKey = getChatKeyFromContext(ctx);
-
-    settings.chatStates[chatKey] ??= {
-      currentKey: "",
-      listIndex: 0,
-      lastSig: "",
-      defaultPlayedSig: "",
-      prevKey: "",
-    };
-
-    const st = settings.chatStates[chatKey];
-
-    let preset = settings.presets?.[settings.activePresetId];
-    if (!preset) preset = Object.values(settings.presets ?? {})[0];
-    if (!preset) return null;
-
-    const sort = getBgmSort(settings);
-    const keys = getSortedKeys(preset, sort);
-    const defKey = String(preset.defaultBgmKey ?? "");
-
-    const getVol = (fk) => {
-      const b = findBgmByKey(preset, fk);
-      return clamp01((settings.globalVolume ?? 0.7) * (b?.volume ?? 1));
-    };
-
-    return { settings, ctx, chatKey, st, preset, keys, defKey, getVol };
-  } catch {
-    return null;
-  }
-}
-
 function abgmNpPrevAction() {
   const info = abgmGetNavCtx();
   if (!info) return;
@@ -3728,4 +3655,5 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
