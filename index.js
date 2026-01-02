@@ -94,69 +94,14 @@
 */
 
 import { abgmNormTags, abgmNormTag, tagVal, tagPretty, tagCat, sortTags } from "./modules/tags.js";
+import { extension_settings, saveSettingsDebounced, __abgmResolveDeps, getSTContextSafe, getBoundPresetIdFromContext, EXT_BIND_KEY, } from "./modules/deps.js";
 
-let extension_settings;
-let saveSettingsDebounced;
 let __abgmDebugLine = ""; // 키워드 모드 디버깅
 let __abgmDebugMode = false;
 let _engineLastPresetId = "";
 
-async function __abgmResolveDeps() {
-  const base = import.meta.url;
-
-  const tryImport = async (rel) => {
-    try {
-      return await import(new URL(rel, base));
-    } catch (e) {
-      return null;
-    }
-  };
-
-  const extMod =
-    (await tryImport("../../../extensions.js")) ||
-    (await tryImport("../../extensions.js"));
-
-  if (!extMod?.extension_settings) {
-    throw new Error("[AutoBGM] Failed to import extension_settings (extensions.js path mismatch)");
-  }
-  extension_settings = extMod.extension_settings;
-
-  const scriptMod =
-    (await tryImport("../../../../script.js")) ||
-    (await tryImport("../../../script.js"));
-
-  if (!scriptMod?.saveSettingsDebounced) {
-    throw new Error("[AutoBGM] Failed to import saveSettingsDebounced (script.js path mismatch)");
-  }
-  saveSettingsDebounced = scriptMod.saveSettingsDebounced;
-}
-
 const SETTINGS_KEY = "autobgm";
 const MODAL_OVERLAY_ID = "abgm_modal_overlay";
-const EXT_BIND_KEY = "autobgm_binding";
-
-function getSTContextSafe() {
-  try {
-    if (window.SillyTavern?.getContext) return window.SillyTavern.getContext();
-  } catch {}
-  try {
-    if (typeof getContext === "function") return getContext();
-  } catch {}
-  return null;
-}
-
-function getBoundPresetIdFromContext(ctx) {
-  try {
-    const cid = ctx?.characterId;
-    const chars = ctx?.characters;
-    if (cid === undefined || cid === null) return "";
-    const ch = chars?.[cid];
-    const pid = ch?.data?.extensions?.[EXT_BIND_KEY]?.presetId;
-    return pid ? String(pid) : "";
-  } catch {
-    return "";
-  }
-}
 
 let _abgmViewportHandler = null;
 
@@ -5027,6 +4972,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
