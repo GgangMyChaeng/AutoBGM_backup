@@ -6,6 +6,10 @@ let openModal = () => {};
 let openNowPlayingGlass = () => {};
 let toggleDebugMode = () => {};
 
+export function abgmGetFloatingMenuEl() {
+  return _floatingMenu;
+}
+
 export function abgmBindFloatingActions(actions = {}) {
   if (typeof actions.openModal === "function") openModal = actions.openModal;
   if (typeof actions.openNowPlayingGlass === "function") openNowPlayingGlass = actions.openNowPlayingGlass;
