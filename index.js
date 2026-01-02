@@ -97,7 +97,7 @@ import { abgmNormTags, abgmNormTag, tagVal, tagPretty, tagCat, sortTags } from "
 import { extension_settings, saveSettingsDebounced, __abgmResolveDeps, getSTContextSafe, getBoundPresetIdFromContext, EXT_BIND_KEY } from "./modules/deps.js";
 import { openDb, idbPut, idbGet, idbDel, ensureAssetList } from "./modules/storage.js";
 import { ensureSettings, migrateLegacyDataUrlsToIDB, ensureEngineFields } from "./modules/settings.js";
-import { abgmBindFloatingActions, createFloatingButton, removeFloatingButton, removeFloatingMenu, openFloatingMenu, closeFloatingMenu, updateFloatingButtonPosition } from "./modules/ui_floating.js";
+import { abgmBindFloatingActions, createFloatingButton, removeFloatingButton, removeFloatingMenu, openFloatingMenu, closeFloatingMenu, updateFloatingButtonPosition, abgmGetFloatingMenuEl } from "./modules/ui_floating.js";
 
 let __abgmDebugLine = ""; // 키워드 모드 디버깅
 let __abgmDebugMode = false;
@@ -4023,8 +4023,10 @@ function updateMenuDebugIcon() {
 }
 
 function updateMenuNPAnimation() {
-  if (!_floatingMenu) return;
-  const icon = _floatingMenu.querySelector(".abgm-menu-icon-np");
+  const menu = abgmGetFloatingMenuEl();
+  if (!menu) return;
+
+  const icon = menu.querySelector(".abgm-menu-icon-np");
   if (!icon) return;
 
   const isPlaying = !!_engineCurrentFileKey && !_bgmAudio.paused;
@@ -4470,6 +4472,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
