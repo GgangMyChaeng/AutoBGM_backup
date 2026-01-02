@@ -1,6 +1,8 @@
 import { ensureSettings } from "./settings.js";
 import { saveSettingsDebounced } from "./deps.js";
 
+// console.log("[AutoBGM] ui_floating loaded"); 에러 나면 활성화해서 확인
+
 // index.js에 있던 다른 기능(모달/NP/디버그 토글) 콜백만 연결해줌
 let openModal = () => {};
 let openNowPlayingGlass = () => {};
