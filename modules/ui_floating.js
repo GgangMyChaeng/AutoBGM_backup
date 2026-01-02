@@ -15,8 +15,6 @@ export function abgmBindFloatingActions(actions = {}) {
   if (typeof actions.openModal === "function") openModal = actions.openModal;
   if (typeof actions.openNowPlayingGlass === "function") openNowPlayingGlass = actions.openNowPlayingGlass;
   if (typeof actions.toggleDebugMode === "function") toggleDebugMode = actions.toggleDebugMode;
-}
-
   if (typeof actions.updateMenuNPAnimation === "function") {
     updateMenuNPAnimation = actions.updateMenuNPAnimation;
   }
