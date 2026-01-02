@@ -422,6 +422,7 @@ export function openNowPlayingGlass() {
   const seek = overlay.querySelector("#abgm_np_seek");
   if (seek) {
     const preview = () => {
+      const a = NP.getBgmAudio();
       const curEl = document.getElementById("abgm_np_time_cur");
       const durEl = document.getElementById("abgm_np_time_dur");
       const v = Number(seek.value || 0) / 1000;
@@ -436,6 +437,7 @@ export function openNowPlayingGlass() {
     });
 
     seek.addEventListener("change", () => {
+      const a = NP.getBgmAudio();
       const v = Number(seek.value || 0) / 1000;
       if (Number.isFinite(v)) {
         try { a.currentTime = Math.max(0, v); } catch {}
@@ -632,7 +634,8 @@ function updateNowPlayingGlassPlaylistUI(settings) {
   const overlay = abgmGetNpOverlay();
   if (!overlay) return;
   if (String(overlay.dataset.abgmPage || "np") !== "pl") return;
-
+  
+  const a = NP.getBgmAudio();
   const fk = String(NP.getEngineCurrentFileKey() || "");
   const isPlaying = !!settings?.enabled && !!fk && !a?.paused;
 
@@ -819,6 +822,7 @@ function abgmRenderPlaylistPage(overlay) {
   }
 
   const curKey = String(NP.getEngineCurrentFileKey() || "");
+  const a = NP.getBgmAudio();
   const isPlaying = !!settings.enabled && !!curKey && !a?.paused;
 
   for (const b of bgms) {
