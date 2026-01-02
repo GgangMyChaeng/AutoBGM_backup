@@ -79,6 +79,11 @@ function abgmGetNpOverlay() {
   return document.getElementById(NP_GLASS_OVERLAY_ID);
 }
 
+function _abgmSetText(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = String(text ?? "");
+}
+
 function setNowControlsLocked(locked) {
   const root = document.getElementById("autobgm-root");
   if (!root) return;
