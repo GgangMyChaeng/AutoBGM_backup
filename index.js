@@ -11,42 +11,15 @@
 
 import { isProbablyUrl, nameFromSource, getEntryName, ensureBgmNames, dropboxToRaw } from "./modules/utils_name.js";
 import { abgmNormTags, abgmNormTag, tagVal, tagPretty, tagCat, sortTags } from "./modules/tags.js";
+import { resolveDeps } from "./modules/deps.js";
+import { openDb, idbPut, idbGet, idbDel, ensureAssetList } from "./modules/storage_idb.js";
+
 
 let extension_settings;
 let saveSettingsDebounced;
 let __abgmDebugLine = ""; // 키워드 모드 디버깅
 let __abgmDebugMode = false;
 let _engineLastPresetId = "";
-
-async function __abgmResolveDeps() {
-  const base = import.meta.url;
-
-  const tryImport = async (rel) => {
-    try {
-      return await import(new URL(rel, base));
-    } catch (e) {
-      return null;
-    }
-  };
-
-  const extMod =
-    (await tryImport("../../../extensions.js")) ||
-    (await tryImport("../../extensions.js"));
-
-  if (!extMod?.extension_settings) {
-    throw new Error("[AutoBGM] Failed to import extension_settings (extensions.js path mismatch)");
-  }
-  extension_settings = extMod.extension_settings;
-
-  const scriptMod =
-    (await tryImport("../../../../script.js")) ||
-    (await tryImport("../../../script.js"));
-
-  if (!scriptMod?.saveSettingsDebounced) {
-    throw new Error("[AutoBGM] Failed to import saveSettingsDebounced (script.js path mismatch)");
-  }
-  saveSettingsDebounced = scriptMod.saveSettingsDebounced;
-}
 
 const SETTINGS_KEY = "autobgm";
 const MODAL_OVERLAY_ID = "abgm_modal_overlay";
@@ -374,62 +347,6 @@ function abgmPickPreset(containerOrDoc, settings, {
     container.appendChild(wrap);
     setTimeout(() => { try { sel?.focus(); } catch {} }, 0);
   });
-}
-
-/** ========= IndexedDB Assets =========
- * key: fileKey (예: "neutral_01.mp3")
- * value: Blob(File)
- */
-const DB_NAME = "autobgm_db";
-const DB_VER = 1;
-const STORE_ASSETS = "assets";
-
-function openDb() {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, DB_VER);
-    req.onupgradeneeded = () => {
-      const db = req.result;
-      if (!db.objectStoreNames.contains(STORE_ASSETS)) db.createObjectStore(STORE_ASSETS);
-    };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-async function idbPut(key, blob) {
-  const db = await openDb();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_ASSETS, "readwrite");
-    tx.objectStore(STORE_ASSETS).put(blob, key);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
-
-async function idbGet(key) {
-  const db = await openDb();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_ASSETS, "readonly");
-    const req = tx.objectStore(STORE_ASSETS).get(key);
-    req.onsuccess = () => resolve(req.result || null);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-async function idbDel(key) {
-  const db = await openDb();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_ASSETS, "readwrite");
-    tx.objectStore(STORE_ASSETS).delete(key);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
-
-/** settings.assets = { [fileKey]: { fileKey, label } } */
-function ensureAssetList(settings) {
-  settings.assets ??= {};
-  return settings.assets;
 }
 
 /** ========= Template loader ========= */
@@ -4848,7 +4765,10 @@ function startEngine() {
 
 (async () => {
   try {
-    await __abgmResolveDeps();
+    const deps = await resolveDeps();
+    extension_settings = deps.extension_settings;
+    saveSettingsDebounced = deps.saveSettingsDebounced;
+
     console.log("[AutoBGM] index.js loaded", import.meta.url);
 
     const onReady = () => init();
@@ -4887,6 +4807,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
