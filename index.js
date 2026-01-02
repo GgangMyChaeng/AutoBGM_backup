@@ -8,11 +8,6 @@
   - engine은 “재생/선곡/런타임”만 (DOM 만지지 말기)
   - ui는 “DOM + 이벤트 + 렌더”만 (오디오 재생 직접 만지지 말기 → engine 호출만)
 */
-
-import { abgmNormTags, abgmNormTag, tagVal, tagPretty, tagCat, sortTags } from "./modules/tags.js";
-import { initFloatingUI } from "./modules/ui_floating.js";
-
-let FloatingUI = null;
 let extension_settings;
 let saveSettingsDebounced;
 let __abgmDebugLine = ""; // 키워드 모드 디버깅
@@ -706,28 +701,6 @@ let _engineLastChatKey = "";
 let _engineCurrentFileKey = "";
 let _engineCurrentPresetId = "";
 
-// ===== Module Bridge (다른 모듈에서 엔진 상태 접근용) =====
-window.__ABGM__ ??= {};
-const __ABGM__ = window.__ABGM__;
-
-// 중복 설치 방지
-if (!__ABGM__.__bridgeInstalled) {
-  __ABGM__.__bridgeInstalled = true;
-
-  Object.defineProperties(__ABGM__, {
-    // 함수는 그대로 참조로 노출 (ensureSettings는 값이 아니라 "함수"라 박제 문제 없음)
-    ensureSettings: {
-      value: ensureSettings,
-      writable: false,
-      enumerable: false,
-    },
-
-    // 아래는 최신값이 필요해서 getter로
-    bgmAudio: { get: () => _bgmAudio, enumerable: false },
-    engineCurrentFileKey: { get: () => _engineCurrentFileKey, enumerable: false },
-    engineCurrentPresetId: { get: () => _engineCurrentPresetId, enumerable: false },
-  });
-}
 
 // ===== Now Playing UI =====
 let _abgmNowPlayingBound = false;
@@ -838,7 +811,7 @@ function updateNowPlayingUI() {
     }
 
     setNowControlsLocked(!settings.enabled);
-    FloatingUI?.syncIcons?.();
+    updateMenuNPAnimation();
   } catch (e) {
     console.error("[AutoBGM] updateNowPlayingUI failed:", e);
   }
@@ -2000,7 +1973,7 @@ function openNowPlayingGlass() {
   // 뒤로가기(플로팅 메뉴 홈)
   overlay.querySelector("#abgm_np_back")?.addEventListener("click", () => {
     closeNowPlayingGlass();
-    FloatingUI.openFloatingMenu();
+    openFloatingMenu();
   });
 
   // ===== Playlist page events =====
@@ -2014,7 +1987,7 @@ function openNowPlayingGlass() {
 
   overlay.querySelector("#abgm_pl_home")?.addEventListener("click", () => {
     closeNowPlayingGlass();
-    FloatingUI.openFloatingMenu();
+    openFloatingMenu();
   });
 
   // 사이즈 맞추기
@@ -2173,6 +2146,136 @@ function bpmToTempoTag(bpm){
   return "tempo:prestissimo";
 }
 
+/* =========================
+   Tag auto categorizer
+   ========================= */
+
+// 단어(1토큰) 별칭 (주로 기호/표기 통일)
+const TAG_ALIASES = new Map([
+  ["hip-hop", "hiphop"],
+  ["hip hop", "hiphop"],
+  ["r&b", "rnb"],
+  ["rnb", "rnb"],
+  ["lofi", "lo-fi"], // 취향
+]);
+
+// “문구(여러 단어)”를 통째로 확정 매핑 (제일 정확함)
+const PHRASE_ALIASES = new Map([
+  ["alternative r&b", ["mood:alternative", "genre:rnb"]],
+  ["acoustic pop", ["inst:acoustic", "genre:pop"]],
+  ["neo soul", ["genre:neo_soul"]],
+  ["bossa nova", ["genre:bossa_nova"]],
+  ["lo-fi hip hop", ["mood:lofi", "genre:hiphop"]],
+  ["glitch hop", ["genre:glitch_hop"]],
+  ["jazz hop", ["genre:jazz_hop"]],
+  ["industrial techno", ["genre:industrial", "genre:techno"]],
+  ["electronic/edm", ["genre:electronic", "genre:edm"]],
+  ["darksynth", ["genre:darksynth", "mood:dark", "inst:synth"]],
+  ["french glitch", ["genre:french", "genre:glitch"]],
+  ["808 bassline", ["inst:808_bass"]],
+  ["industrial horror", ["mood:industrial", "mood:horror"]],
+  ["mechanical groove", ["mood:mechanical", "mood:groove"]],
+  ["night vibes", ["mood:night_vibes"]],
+  ["tension", ["mood:tense"]],
+  ["high-energy j-rock", ["mood:high-energy", "genre:j-rock"]],
+]);
+
+const GENRE_WORDS = new Set([
+  "blues","jazz","rock","pop","country","classical","folk","funk","soul","reggae","metal","ambient",
+  "electronic","edm","hiphop","rap","rnb","drill","idm","techno","glitch","j-rock"
+]);
+
+const MOOD_WORDS = new Set([
+  "calm","dark","sad","happy","tense","chill","cozy","epic","mysterious",
+  "alternative","chaotic","cinematic","cold","cyberpunk","tension","night","tight","lofi",
+  "east asian influence","exploration","high-energy","hopeless","horizon","military",
+  "underscore","mundane","soft"
+]);
+
+const INST_WORDS = new Set([
+  "piano","guitar","strings","synth","bass","drums","orchestra",
+  "acoustic","808","turntable","scratch","808_bass"
+]);
+
+const LYRIC_WORDS = new Set([
+  "lyric","lyrics","no lyric","instrumental","vocal","male","female"
+]);
+
+function abgmCanonRawTag(raw) {
+  let s = String(raw || "").trim().toLowerCase();
+  if (!s) return "";
+
+  // 공백 정리
+  s = s.replace(/\s+/g, " ");
+
+  // 숫자만 있으면 bpm
+  if (/^\d{2,3}$/.test(s)) {
+    const bpm = Number(s);
+    if (bpm >= 40 && bpm <= 260) return `bpm:${bpm}`;
+  }
+
+  // 통째 문구 별칭 먼저
+  if (PHRASE_ALIASES.has(s)) return s;
+
+  // 일반 별칭 적용 (예: "r&b" → "rnb")
+  if (TAG_ALIASES.has(s)) s = TAG_ALIASES.get(s);
+
+  return s;
+}
+
+// ✅ “하나 입력”을 “여러 태그”로 확장
+function abgmNormTags(raw) {
+  const s0 = abgmCanonRawTag(raw);
+  if (!s0) return [];
+
+  // bpm:xxx 같은 건 그대로 단일 반환
+  if (s0.startsWith("bpm:")) return [s0];
+
+  // 이미 cat:tag 형태면 그대로
+  if (s0.includes(":") && !PHRASE_ALIASES.has(s0)) return [s0];
+
+  // 문구 확정 매핑
+  if (PHRASE_ALIASES.has(s0)) return PHRASE_ALIASES.get(s0).slice();
+
+  // "/" 같은 구분자 들어오면 나눠서 재귀 처리
+  if (s0.includes("/")) {
+    return s0.split("/").flatMap(part => abgmNormTags(part));
+  }
+
+  // 여러 단어면 “마지막 단어=장르” 휴리스틱 (대충 알터네이티브 알앤비 같은 거)
+  const toks = s0.split(" ").filter(Boolean);
+  if (toks.length >= 2) {
+    const lastRaw = toks[toks.length - 1];
+    const last = TAG_ALIASES.get(lastRaw) || lastRaw;
+
+    // 마지막이 장르면: genre:last + 앞 단어들은 mood/inst로 분류 시도
+    if (GENRE_WORDS.has(last)) {
+      const out = [`genre:${last}`];
+      for (const w0 of toks.slice(0, -1)) {
+        const w = TAG_ALIASES.get(w0) || w0;
+        if (INST_WORDS.has(w)) out.push(`inst:${w}`);
+        else if (MOOD_WORDS.has(w)) out.push(`mood:${w}`);
+        else out.push(w); // 모르면 기존처럼 etc(콜론 없는 태그)로 둠
+      }
+      return out;
+    }
+  }
+
+  // 한 단어면 단어사전으로 분류
+  if (GENRE_WORDS.has(s0)) return [`genre:${s0}`];
+  if (MOOD_WORDS.has(s0))  return [`mood:${s0}`];
+  if (INST_WORDS.has(s0))  return [`inst:${s0}`];
+  if (LYRIC_WORDS.has(s0)) return [`lyric:${s0}`];
+
+  // 모르면 그대로 (etc)
+  return [s0];
+}
+
+// 기존 코드 호환용: “단일 문자열”만 필요한 곳에서 쓰기
+function abgmNormTag(raw) {
+  return abgmNormTags(raw)[0] || "";
+}
+
 function matchTagsAND(itemTags = [], selectedSet) {
   if (!selectedSet || selectedSet.size === 0) return true;
   const set = new Set((itemTags || []).flatMap(abgmNormTags).filter(Boolean));
@@ -2220,6 +2323,68 @@ function fsSetPreviewLock(settings, locked) {
   const tab = String(settings?.fsUi?.tab || "free");
   if (tab === "my") settings.fsUi.previewVolLockMy = !!locked;
   else settings.fsUi.previewVolLockFree = !!locked;
+}
+
+// ===== tag display helper (tagCat 근처에 추가 추천) =====
+function tagVal(t){
+  const s = abgmNormTag(t);
+  const i = s.indexOf(":");
+  return i > 0 ? s.slice(i + 1) : s;
+}
+
+const TAG_PRETTY_MAP = new Map([
+  ["rnb", "R&B"],
+  ["hiphop", "hip-hop"],
+  ["lofi", "lo-fi"],
+  ["idm", "IDM"],
+  ["edm", "EDM"],
+]);
+
+function tagPretty(t){
+  const s = abgmNormTag(t);
+  const cat = tagCat(s);
+  let v = tagVal(s).replace(/[_]+/g, " ").trim(); // neo_soul -> neo soul
+
+  // 약간만 보기 좋게
+  if (TAG_PRETTY_MAP.has(v)) v = TAG_PRETTY_MAP.get(v);
+
+  // bpm은 표시만 예쁘게
+  if (cat === "bpm") return `${v} BPM`;
+
+  return v;
+}
+
+// 카테고리별 태그 수집
+function tagCat(t) {
+  const s = String(t || "").trim().toLowerCase();
+  const i = s.indexOf(":");
+  if (i <= 0) return "etc";
+  return s.slice(0, i);
+}
+
+const TAG_CAT_ORDER = ["genre","mood","inst","lyric","bpm","tempo","etc"];
+
+function tagSortKey(t){
+  const s = abgmNormTag(t);
+  const cat = tagCat(s);
+  const ci = TAG_CAT_ORDER.indexOf(cat);
+  const catRank = ci === -1 ? 999 : ci;
+
+  // bpm은 숫자 정렬
+  if (cat === "bpm") {
+    const n = Number(s.split(":")[1] ?? 0);
+    return [catRank, n, s];
+  }
+  return [catRank, 0, s];
+}
+
+function sortTags(arr){
+  return [...arr].sort((a,b)=>{
+    const A = tagSortKey(a), B = tagSortKey(b);
+    if (A[0] !== B[0]) return A[0]-B[0];
+    if (A[1] !== B[1]) return A[1]-B[1];
+    return String(A[2]).localeCompare(String(B[2]), undefined, {numeric:true, sensitivity:"base"});
+  });
 }
 
 function collectAllTagsForTabAndCat(settings) {
@@ -4164,9 +4329,9 @@ async function mount() {
       syncFloatingUI();
 
       if (s.floating.enabled) {
-        FloatingUI.createFloatingButton();
+        createFloatingButton();
       } else {
-        FloatingUI.removeFloatingButton();
+        removeFloatingButton();
       }
     });
     
@@ -4196,6 +4361,152 @@ async function bootstrapDataOnce() {
   await mergeBundledFreeSourcesIntoSettings(settings);
 }
 
+/** ========= Floating Button ========= */
+let _floatingBtn = null;
+let _floatingMenu = null;
+let _floatingMenuOpen = false;
+let _floatingDragging = false;
+let _floatingDragOffset = { x: 0, y: 0 };
+
+function createFloatingButton() {
+  if (_floatingBtn) return _floatingBtn;
+
+  const settings = ensureSettings();
+  
+  const btn = document.createElement("div");
+  btn.id = "abgm_floating_btn";
+  btn.className = "abgm-floating-btn";
+btn.innerHTML = `
+  <div class="abgm-floating-icon">
+    <img src="https://i.postimg.cc/P5Dxmj6T/Floating.png" style="width:100%; height:100%; border-radius:50%; object-fit:cover;" 
+         alt="AutoBGM">
+  </div>
+`;
+
+  // 초기 위치
+  const x = settings.floating.x ?? window.innerWidth - 40;
+  const y = settings.floating.y ?? window.innerHeight - 100;
+  btn.style.left = `${x}px`;
+  btn.style.top = `${y}px`;
+
+  // 드래그 시작
+  btn.addEventListener("mousedown", onDragStart);
+  btn.addEventListener("touchstart", onDragStart, { passive: false });
+
+  document.documentElement.appendChild(btn);
+  _floatingBtn = btn;
+  return btn;
+}
+
+function removeFloatingButton() {
+  if (_floatingBtn) {
+    _floatingBtn.remove();
+    _floatingBtn = null;
+  }
+}
+
+// 플로팅 메뉴 생성
+function createFloatingMenu() {
+  if (_floatingMenu) return _floatingMenu;
+
+  const menu = document.createElement("div");
+  menu.id = "abgm_floating_menu";
+  menu.className = "abgm-floating-menu";
+  menu.innerHTML = `
+    <div class="abgm-floating-menu-bg">
+      <img src="https://i.postimg.cc/6p5Tk9G0/Home.png" class="abgm-menu-body-img" alt="Menu">
+    </div>
+    <div class="abgm-floating-menu-buttons">
+      <button type="button" class="abgm-menu-btn abgm-menu-np" data-action="nowplaying" title="Now Playing">
+        <img src="https://i.postimg.cc/3R8x5D3T/Now_Playing.png" class="abgm-menu-icon abgm-menu-icon-np" alt="NP">
+      </button>
+      <button type="button" class="abgm-menu-btn abgm-menu-debug" data-action="debug" title="Debug">
+        <img src="https://i.postimg.cc/sDNDNb5c/Debug_off.png" class="abgm-menu-icon abgm-menu-icon-debug" alt="Debug">
+      </button>
+      <button type="button" class="abgm-menu-btn abgm-menu-help" data-action="help" title="Help">
+        <img src="https://i.postimg.cc/NGPfSMVZ/Help.png" class="abgm-menu-icon" alt="Help">
+      </button>
+      <button type="button" class="abgm-menu-btn abgm-menu-settings" data-action="settings" title="Settings">
+        <img src="https://i.postimg.cc/j5cRQ1sC/Settings.png" class="abgm-menu-icon" alt="Settings">
+      </button>
+    </div>
+  `;
+
+// 버튼 클릭 이벤트
+  menu.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-action]");
+    if (!btn) {
+      // 버튼이 아닌 메뉴 바깥(배경) 클릭 시 닫기
+      if (e.target === menu) {
+        closeFloatingMenu();
+      }
+      return;
+    }
+
+    const action = btn.dataset.action;
+    
+    if (action === "nowplaying") {
+      openNowPlayingGlass();
+      closeFloatingMenu(); // NP 뜨면 플로팅 메뉴는 닫기
+    } else if (action === "debug") {
+      toggleDebugMode();
+    } else if (action === "help") {
+      // Help 섹션 열기 (나중에 구현)
+      console.log("[AutoBGM] Help clicked");
+    } else if (action === "settings") {
+      openModal();
+      closeFloatingMenu();
+    }
+  });
+
+  document.documentElement.appendChild(menu);
+  _floatingMenu = menu;
+  return menu;
+}
+
+function openFloatingMenu() {
+  if (_floatingMenuOpen) return;
+  const menu = createFloatingMenu();
+  
+  // viewport 기준으로 고정 (폭 줄 때 상단으로 튀는 거 방지)
+  menu.style.left = "50vw";
+  menu.style.top = "50vh";
+  
+  menu.classList.add("is-open");
+  _floatingMenuOpen = true;
+  updateMenuDebugIcon();
+  updateMenuNPAnimation();
+  
+  // 메뉴 바깥 클릭 감지
+  setTimeout(() => {
+    document.addEventListener("click", onMenuOutsideClick, true);
+  }, 100);
+}
+
+function closeFloatingMenu() {
+  if (!_floatingMenu) return;
+  _floatingMenu.classList.remove("is-open");
+  _floatingMenuOpen = false;
+  document.removeEventListener("click", onMenuOutsideClick, true);
+}
+
+function onMenuOutsideClick(e) {
+  if (!_floatingMenu || !_floatingMenuOpen) return;
+  
+  // 메뉴 영역 밖 클릭이면 닫기
+  if (!_floatingMenu.contains(e.target) && e.target !== _floatingBtn) {
+    closeFloatingMenu();
+  }
+}
+
+function removeFloatingMenu() {
+  if (_floatingMenu) {
+    _floatingMenu.remove();
+    _floatingMenu = null;
+    _floatingMenuOpen = false;
+  }
+}
+
 function toggleDebugMode() {
   const s = ensureSettings();
   s.debugMode = !s.debugMode;
@@ -4206,42 +4517,177 @@ function toggleDebugMode() {
   updateNowPlayingUI();
 }
 
+function updateMenuDebugIcon() {
+  if (!_floatingMenu) return;
+  const s = ensureSettings();
+  const on = !!s.debugMode;
+  const icon = _floatingMenu.querySelector(".abgm-menu-icon-debug");
+  if (icon) {
+    icon.src = on ? "https://i.postimg.cc/N0hGgTJ7/Debug_on.png" : "https://i.postimg.cc/sDNDNb5c/Debug_off.png";
+  }
+}
+
+function updateMenuNPAnimation() {
+  if (!_floatingMenu) return;
+  const icon = _floatingMenu.querySelector(".abgm-menu-icon-np");
+  if (!icon) return;
+
+  const isPlaying = !!_engineCurrentFileKey && !_bgmAudio.paused;
+  icon.classList.toggle("is-playing", isPlaying);
+}
+
+function onDragStart(e) {
+  e.preventDefault();
+  _floatingDragging = true;
+
+  const rect = _floatingBtn.getBoundingClientRect();
+  const clientX = e.type.startsWith("touch") ? e.touches[0].clientX : e.clientX;
+  const clientY = e.type.startsWith("touch") ? e.touches[0].clientY : e.clientY;
+
+  _floatingDragOffset.x = clientX - rect.left;
+  _floatingDragOffset.y = clientY - rect.top;
+
+  _floatingBtn.classList.add("dragging");
+
+  document.addEventListener("mousemove", onDragMove);
+  document.addEventListener("touchmove", onDragMove, { passive: false });
+  document.addEventListener("mouseup", onDragEnd);
+  document.addEventListener("touchend", onDragEnd);
+}
+
+function onDragMove(e) {
+  if (!_floatingDragging) return;
+  e.preventDefault();
+
+  const clientX = e.type.startsWith("touch") ? e.touches[0].clientX : e.clientX;
+  const clientY = e.type.startsWith("touch") ? e.touches[0].clientY : e.clientY;
+
+  let x = clientX - _floatingDragOffset.x;
+  let y = clientY - _floatingDragOffset.y;
+
+  // 화면 밖 방지
+  const w = _floatingBtn.offsetWidth;
+  const h = _floatingBtn.offsetHeight;
+  x = Math.max(-w / 2, Math.min(window.innerWidth - w / 2, x));
+  y = Math.max(0, Math.min(window.innerHeight - h, y));
+
+  _floatingBtn.style.left = `${x}px`;
+  _floatingBtn.style.top = `${y}px`;
+}
+
+function onDragEnd(e) {
+  if (!_floatingDragging) return;
+  _floatingDragging = false;
+  _floatingBtn.classList.remove("dragging");
+
+  document.removeEventListener("mousemove", onDragMove);
+  document.removeEventListener("touchmove", onDragMove);
+  document.removeEventListener("mouseup", onDragEnd);
+  document.removeEventListener("touchend", onDragEnd);
+
+  const rect = _floatingBtn.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+  
+  // SillyTavern 영역 기준
+  const appEl = document.querySelector("#app") || document.querySelector("main") || document.body;
+  const appRect = appEl.getBoundingClientRect();
+  
+  const screenW = appRect.width;
+  const screenH = appRect.height;
+  
+  // 상단 중앙 영역 (화면 가로 중앙 ±25%, 세로 상단 20% 이내)
+  const topCenterLeft = appRect.left + screenW * 0.25;
+  const topCenterRight = appRect.left + screenW * 0.75;
+  const topThreshold = appRect.top + screenH * 0.2;
+  
+  // 하단 중앙 영역 (화면 가로 중앙 ±25%, 세로 하단 20% 이내)
+  const bottomCenterLeft = appRect.left + screenW * 0.35;
+  const bottomCenterRight = appRect.left + screenW * 0.85;
+  const bottomThreshold = appRect.top + screenH * 0.8;
+
+  // 상단 중앙에 놓으면 → 비활성화
+  if (centerY < topThreshold && centerX > topCenterLeft && centerX < topCenterRight) {
+    const s = ensureSettings();
+    s.floating.enabled = false;
+    saveSettingsDebounced();
+    removeFloatingButton();
+    removeFloatingMenu();
+
+    const toggle = document.querySelector("#autobgm_floating_toggle");
+    if (toggle) {
+      const stateEl = toggle.querySelector(".autobgm-menu-state");
+      if (stateEl) stateEl.textContent = "Off";
+    }
+    return;
+  }
+
+  // 하단 중앙에 놓으면 → 메뉴 열기
+  if (centerY > bottomThreshold && centerX > bottomCenterLeft && centerX < bottomCenterRight) {
+    snapToEdge();
+    openFloatingMenu();
+    
+    const s = ensureSettings();
+    const rect2 = _floatingBtn.getBoundingClientRect();
+    s.floating.x = rect2.left;
+    s.floating.y = rect2.top;
+    saveSettingsDebounced();
+    return;
+  }
+
+  // 그 외: 벽에 스냅만
+  snapToEdge();
+
+  const s = ensureSettings();
+  const rect3 = _floatingBtn.getBoundingClientRect();
+  s.floating.x = rect3.left;
+  s.floating.y = rect3.top;
+  saveSettingsDebounced();
+}
+
+function snapToEdge() {
+  const rect = _floatingBtn.getBoundingClientRect();
+  const w = rect.width;
+  const centerX = rect.left + w / 2;
+
+  let targetX = rect.left;
+
+  // 좌/우 중 가까운 쪽으로
+  if (centerX < window.innerWidth / 2) {
+    // 좌측 벽에 반쯤 걸치게
+    targetX = -w / 2;
+  } else {
+    // 우측 벽에 반쯤 걸치게
+    targetX = window.innerWidth - w / 2;
+  }
+
+  _floatingBtn.style.transition = "left 0.2s ease-out";
+  _floatingBtn.style.left = `${targetX}px`;
+
+  setTimeout(() => {
+    _floatingBtn.style.transition = "";
+  }, 200);
+}
+
 /** ========= init 이닛 ========= */
 async function init() {
+  // 중복 로드/실행 방지 (메뉴 2개 뜨는 거 방지)
   if (window.__AUTOBGM_BOOTED__) return;
   window.__AUTOBGM_BOOTED__ = true;
 
   await bootFreeSourcesSync();
   mount();
   startEngine();
-
-  // FloatingUI 먼저 생성
-  FloatingUI = initFloatingUI({
-    ensureSettings,
-    saveSettingsDebounced,
-    openModal,
-    openNowPlayingGlass,
-    toggleDebugMode,
-    getIsPlaying: () => !!_engineIsPlaying,
-    getDebugOn: () => !!__abgmDebugMode,
-  });
-
-  // 설정 가드 + 기본값
-  const s = ensureSettings();
-  s.floating ??= {};
-  s.floating.enabled ??= true;
-
-  // enabled면 버튼 생성
-  if (s.floating.enabled) {
-    FloatingUI.createFloatingButton();
-  } else {
-    FloatingUI.removeFloatingButton?.();
-    FloatingUI.removeFloatingMenu?.();
+  
+  // 플로팅 버튼 초기화
+  const settings = ensureSettings();
+  if (settings.floating.enabled) {
+    createFloatingButton();
   }
-
+  
   const obs = new MutationObserver(() => mount());
   obs.observe(document.body, { childList: true, subtree: true });
-
+  // 창 크기 변경 리스너
   window.addEventListener("resize", updateFloatingButtonPosition);
   window.addEventListener("orientationchange", updateFloatingButtonPosition);
 }
@@ -4686,9 +5132,5 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
-
-
-
-
 
 
