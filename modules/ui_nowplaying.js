@@ -2,6 +2,8 @@ import { ensureSettings } from "./settings.js";
 import { saveSettingsDebounced } from "./deps.js";
 import { openFloatingMenu } from "./ui_floating.js";
 
+let _abgmNowPlayingBound = false;
+
 const NP_GLASS_OVERLAY_ID = "ABGM_NP_GLASS_OVERLAY";
 
 const NP = {
@@ -30,6 +32,45 @@ const NP = {
   abgmCycleBgmSort: () => "manual",
   abgmSortNice: (k) => String(k ?? "manual"),
   ensurePlayFile: () => {},
+
+  getDebugMode: () => false,
+  getDebugLine: () => "",
+};
+
+/** ========= Floating Now Playing (Glass) ========= */
+const NP_GLASS_OVERLAY_ID = "ABGM_NP_GLASS_OVERLAY";
+
+// NP Glass: control icons (image = direct link)
+const ABGM_NP_CTRL_ICON = {
+  prev:         "https://i.postimg.cc/1XTpkT5K/Previous.png",
+  next:         "https://i.postimg.cc/4ND6wrSP/Next.png",
+  useDefaultOn: "https://i.postimg.cc/PrkPPTpg/Default_On.png",
+  useDefaultOff:"https://i.postimg.cc/VLy3x3qC/Stop.png",
+  kwHold:       "https://i.postimg.cc/jdQkGCqp/Loop_List.png",
+  kwOnce:       "https://i.postimg.cc/SR9HXrhj/Play.png",
+};
+
+// NP seek 상태
+let _abgmNpIsSeeking = false;
+let _abgmNpSeekRaf = 0;
+
+// seconds -> "m:ss" / "h:mm:ss"
+function abgmFmtTime(sec) {
+  const n = Math.max(0, Number(sec || 0));
+  const h = Math.floor(n / 3600);
+  const m = Math.floor((n % 3600) / 60);
+  const s = Math.floor(n % 60);
+  if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
+// NP Glass: play mode icons (image = direct link)
+const ABGM_NP_MODE_ICON = {
+  manual:   "https://i.postimg.cc/SR9HXrhj/Play.png",
+  loop_one: "https://i.postimg.cc/L4PW3NcK/Loop_One.png",
+  loop_list:"https://i.postimg.cc/jdQkGCqp/Loop_List.png",
+  random:   "https://i.postimg.cc/L8xQ87PM/Random.png",
+  keyword:  "https://i.postimg.cc/8CsKJHdc/Keyword.png",
 };
 
 export function abgmBindNowPlayingDeps(partial = {}) {
@@ -76,7 +117,7 @@ export function updateNowPlayingUI() {
     const presetName = preset?.name || "Preset";
     const modeLabel = settings?.keywordMode ? "Keyword" : (settings?.playMode || "manual");
     const meta = `${modeLabel} · ${presetName}`;
-    const debugLine = (__abgmDebugMode && __abgmDebugLine) ? String(__abgmDebugLine) : "";
+    const debugLine = (NP.getDebugMode?.() && NP.getDebugLine?.()) ? String(NP.getDebugLine()) : "";
 
     // ===== modal license area =====
     const licWrap = document.getElementById("abgm_np_license_wrap");
