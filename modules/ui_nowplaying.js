@@ -73,43 +73,6 @@ const ABGM_NP_MODE_ICON = {
   keyword:  "https://i.postimg.cc/8CsKJHdc/Keyword.png",
 };
 
-function abgmGetNavCtx() {
-  try {
-    const settings = ensureSettings();
-    ensureEngineFields(settings);
-
-    const ctx = getSTContextSafe();
-    const chatKey = getChatKeyFromContext(ctx);
-
-    settings.chatStates[chatKey] ??= {
-      currentKey: "",
-      listIndex: 0,
-      lastSig: "",
-      defaultPlayedSig: "",
-      prevKey: "",
-    };
-
-    const st = settings.chatStates[chatKey];
-
-    let preset = settings.presets?.[settings.activePresetId];
-    if (!preset) preset = Object.values(settings.presets ?? {})[0];
-    if (!preset) return null;
-
-    const sort = getBgmSort(settings);
-    const keys = getSortedKeys(preset, sort);
-    const defKey = String(preset.defaultBgmKey ?? "");
-
-    const getVol = (fk) => {
-      const b = findBgmByKey(preset, fk);
-      return clamp01((settings.globalVolume ?? 0.7) * (b?.volume ?? 1));
-    };
-
-    return { settings, ctx, chatKey, st, preset, keys, defKey, getVol };
-  } catch {
-    return null;
-  }
-}
-
 export function abgmBindNowPlayingDeps(partial = {}) {
   Object.assign(NP, partial || {});
 }
