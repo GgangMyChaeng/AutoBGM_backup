@@ -96,7 +96,7 @@
 import { abgmNormTags, abgmNormTag, tagVal, tagPretty, tagCat, sortTags } from "./modules/tags.js";
 import { extension_settings, saveSettingsDebounced, __abgmResolveDeps, getSTContextSafe, getBoundPresetIdFromContext, EXT_BIND_KEY, } from "./modules/deps.js";
 import { openDb, idbPut, idbGet, idbDel, ensureAssetList } from "./modules/storage.js";
-import { ensureSettings, migrateLegacyDataUrlsToIDB } from "./modules/settings.js";
+import { ensureSettings, migrateLegacyDataUrlsToIDB, ensureEngineFields } from "./modules/settings.js";
 
 let __abgmDebugLine = ""; // 키워드 모드 디버깅
 let __abgmDebugMode = false;
@@ -4772,6 +4772,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
