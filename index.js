@@ -4025,6 +4025,7 @@ function updateMenuNPAnimation() {
 
 /** ========= init 이닛 ========= */
 async function init() {
+  console.log("[AutoBGM] init entered");
   // 중복 로드/실행 방지 (메뉴 2개 뜨는 거 방지)
   if (window.__AUTOBGM_BOOTED__) return;
   window.__AUTOBGM_BOOTED__ = true;
@@ -4462,6 +4463,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
