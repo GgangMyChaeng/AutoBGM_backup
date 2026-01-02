@@ -26,6 +26,7 @@ const NP = {
   getActivePreset: () => ({}),
   getEntryName: (b) => String(b?.name ?? b?.fileKey ?? ""),
   getSortedBgms: (preset, sortKey) => (preset?.bgms ?? []),
+  getSortedKeys: () => [],
   getBgmSort: () => "manual",
   abgmCycleBgmSort: () => "manual",
   abgmSortNice: (k) => String(k ?? "manual"),
@@ -267,7 +268,7 @@ function updateNowPlayingGlassSeekUI() {
 
   const settings = ensureSettings?.() || {};
   const enabled = !!settings.enabled;
-
+  const a = NP.getBgmAudio();
   const fk = String(NP.getEngineCurrentFileKey() || "");
   const dur = Number(a?.duration);
   const cur = Number(a?.currentTime);
