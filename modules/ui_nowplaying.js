@@ -38,6 +38,10 @@ const NP = {
   getSTContextSafe: () => null,
   getChatKeyFromContext: () => "",
   ensureEngineFields: () => {},
+
+  // nav actions (index.js 쪽 로직 호출)
+  npPrevAction: () => {},
+  npNextAction: () => {},
 };
 
 /** ========= Floating Now Playing (Glass) ========= */
@@ -415,8 +419,14 @@ export function openNowPlayingGlass() {
     NP.togglePlayPause();
   });
 
-  overlay.querySelector("#abgm_np_prev")?.addEventListener("click", (e) => { e.stopPropagation?.(); abgmNpPrevAction(); });
-  overlay.querySelector("#abgm_np_next")?.addEventListener("click", (e) => { e.stopPropagation?.(); abgmNpNextAction(); });
+  overlay.querySelector("#abgm_np_prev")?.addEventListener("click", (e) => {
+  e.stopPropagation?.();
+  try { NP.npPrevAction?.(); } catch {}
+});
+overlay.querySelector("#abgm_np_next")?.addEventListener("click", (e) => {
+  e.stopPropagation?.();
+  try { NP.npNextAction?.(); } catch {}
+});
 
   // NP seek
   const seek = overlay.querySelector("#abgm_np_seek");
@@ -746,7 +756,19 @@ export function bindSideMenuNowPlayingControls(root) {
 
 function abgmRenderPlaylistPage(overlay) {
   const settings = ensureSettings();
-  const preset = NP.getActivePreset(settings);
+
+  // activePresetId가 꼬여도 플리 렌더는 되게 fallback
+  const pid = String(NP.getEngineCurrentPresetId?.() || settings?.activePresetId || "");
+  let preset =
+    (pid && settings?.presets?.[pid]) ||
+    settings?.presets?.[settings?.activePresetId] ||
+    Object.values(settings?.presets || {})[0] ||
+    null;
+
+  // activePresetId가 실제로 없는 값이면 UI/렌더 일치시키기
+  if (!settings?.presets?.[settings?.activePresetId] && preset?.id) {
+    settings.activePresetId = String(preset.id);
+  }
 
   // --- preset select ---
   const sel = overlay.querySelector("#abgm_pl_preset");
@@ -808,7 +830,7 @@ function abgmRenderPlaylistPage(overlay) {
     });
   }
 
-  const bgms = NP.getSortedBgms(preset, NP.getBgmSort(settings))
+  const bgms = NP.getSortedBgms(preset || {}, NP.getBgmSort(settings))
     .filter(b => String(b?.fileKey ?? "").trim());
 
   list.innerHTML = "";
