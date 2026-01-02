@@ -1134,10 +1134,6 @@ function abgmCycleBgmSort(settings) {
   return next;
 }
 
-function abgmGetNpOverlay() {
-  return document.getElementById(NP_GLASS_OVERLAY_ID);
-}
-
 function abgmNpShowPage(page /* 'np' | 'pl' */) {
   const overlay = abgmGetNpOverlay();
   if (!overlay) return;
@@ -3692,6 +3688,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
