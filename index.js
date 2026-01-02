@@ -9,17 +9,43 @@
   - ui는 “DOM + 이벤트 + 렌더”만 (오디오 재생 직접 만지지 말기 → engine 호출만)
 */
 
-import { isProbablyUrl, nameFromSource, getEntryName, ensureBgmNames, dropboxToRaw } from "./modules/utils_name.js";
 import { abgmNormTags, abgmNormTag, tagVal, tagPretty, tagCat, sortTags } from "./modules/tags.js";
-import { resolveDeps } from "./modules/deps.js";
-import { openDb, idbPut, idbGet, idbDel, ensureAssetList } from "./modules/storage_idb.js";
-
 
 let extension_settings;
 let saveSettingsDebounced;
 let __abgmDebugLine = ""; // 키워드 모드 디버깅
 let __abgmDebugMode = false;
 let _engineLastPresetId = "";
+
+async function __abgmResolveDeps() {
+  const base = import.meta.url;
+
+  const tryImport = async (rel) => {
+    try {
+      return await import(new URL(rel, base));
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const extMod =
+    (await tryImport("../../../extensions.js")) ||
+    (await tryImport("../../extensions.js"));
+
+  if (!extMod?.extension_settings) {
+    throw new Error("[AutoBGM] Failed to import extension_settings (extensions.js path mismatch)");
+  }
+  extension_settings = extMod.extension_settings;
+
+  const scriptMod =
+    (await tryImport("../../../../script.js")) ||
+    (await tryImport("../../../script.js"));
+
+  if (!scriptMod?.saveSettingsDebounced) {
+    throw new Error("[AutoBGM] Failed to import saveSettingsDebounced (script.js path mismatch)");
+  }
+  saveSettingsDebounced = scriptMod.saveSettingsDebounced;
+}
 
 const SETTINGS_KEY = "autobgm";
 const MODAL_OVERLAY_ID = "abgm_modal_overlay";
@@ -347,6 +373,62 @@ function abgmPickPreset(containerOrDoc, settings, {
     container.appendChild(wrap);
     setTimeout(() => { try { sel?.focus(); } catch {} }, 0);
   });
+}
+
+/** ========= IndexedDB Assets =========
+ * key: fileKey (예: "neutral_01.mp3")
+ * value: Blob(File)
+ */
+const DB_NAME = "autobgm_db";
+const DB_VER = 1;
+const STORE_ASSETS = "assets";
+
+function openDb() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VER);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(STORE_ASSETS)) db.createObjectStore(STORE_ASSETS);
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function idbPut(key, blob) {
+  const db = await openDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_ASSETS, "readwrite");
+    tx.objectStore(STORE_ASSETS).put(blob, key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function idbGet(key) {
+  const db = await openDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_ASSETS, "readonly");
+    const req = tx.objectStore(STORE_ASSETS).get(key);
+    req.onsuccess = () => resolve(req.result || null);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function idbDel(key) {
+  const db = await openDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_ASSETS, "readwrite");
+    tx.objectStore(STORE_ASSETS).delete(key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+/** settings.assets = { [fileKey]: { fileKey, label } } */
+function ensureAssetList(settings) {
+  settings.assets ??= {};
+  return settings.assets;
 }
 
 /** ========= Template loader ========= */
@@ -1028,6 +1110,63 @@ async function ensurePlayFile(fileKey, vol01, loop, presetId = "") {
   if (presetId) _engineCurrentPresetId = String(presetId);
   updateNowPlayingUI();
   return true;
+}
+
+// ===== Entry Name helpers =====
+function nameFromSource(src = "") {
+  const s = String(src || "").trim();
+  if (!s) return "";
+
+  // URL이면 path 마지막 조각 or hostname
+  if (isProbablyUrl(s)) {
+    try {
+      const u = new URL(s);
+      const last = (u.pathname.split("/").pop() || "").trim();
+      const cleanLast = last.replace(/\.[^/.]+$/, ""); // 확장자 제거
+      return cleanLast || u.hostname || "URL";
+    } catch {
+      return "URL";
+    }
+  }
+
+  // 파일이면 기존대로
+  const base = s.split("/").pop() || s;
+  return base.replace(/\.[^/.]+$/, "");
+}
+
+function getEntryName(bgm) {
+  const n = String(bgm?.name ?? "").trim();
+  return n ? n : nameFromSource(bgm?.fileKey ?? "");
+}
+
+function ensureBgmNames(preset) {
+  for (const b of preset?.bgms ?? []) {
+    if (!String(b?.name ?? "").trim()) {
+      b.name = nameFromSource(b.fileKey);
+    }
+  }
+}
+
+/** ========= url 판별 함수 ========= */
+function isProbablyUrl(s) {
+  const v = String(s ?? "").trim();
+  return /^https?:\/\//i.test(v);
+}
+
+// ===== Dropbox URL normalize (audio용) =====
+function dropboxToRaw(u) {
+  try {
+    const url = new URL(String(u || "").trim());
+    if (!/dropbox\.com$/i.test(url.hostname)) return String(u || "").trim();
+
+    // 미리보기 파라미터 제거 + raw=1 강제
+    url.searchParams.delete("dl");
+    url.searchParams.set("raw", "1");
+
+    return url.toString();
+  } catch {
+    return String(u || "").trim();
+  }
 }
 
 /** ========= ZIP (JSZip 필요) ========= */
@@ -2008,6 +2147,11 @@ function bpmToTempoTag(bpm){
   if (n < 176) return "tempo:vivace";
   if (n < 200) return "tempo:presto";
   return "tempo:prestissimo";
+}
+
+// 기존 코드 호환용: “단일 문자열”만 필요한 곳에서 쓰기
+function abgmNormTag(raw) {
+  return abgmNormTags(raw)[0] || "";
 }
 
 function matchTagsAND(itemTags = [], selectedSet) {
@@ -4765,10 +4909,7 @@ function startEngine() {
 
 (async () => {
   try {
-    const deps = await resolveDeps();
-    extension_settings = deps.extension_settings;
-    saveSettingsDebounced = deps.saveSettingsDebounced;
-
+    await __abgmResolveDeps();
     console.log("[AutoBGM] index.js loaded", import.meta.url);
 
     const onReady = () => init();
@@ -4807,8 +4948,5 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
-
-
-
 
 
