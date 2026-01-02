@@ -98,6 +98,7 @@ import { extension_settings, saveSettingsDebounced, __abgmResolveDeps, getSTCont
 import { openDb, idbPut, idbGet, idbDel, ensureAssetList } from "./modules/storage.js";
 import { ensureSettings, migrateLegacyDataUrlsToIDB, ensureEngineFields } from "./modules/settings.js";
 import { abgmBindFloatingActions, createFloatingButton, removeFloatingButton, removeFloatingMenu, openFloatingMenu, closeFloatingMenu, updateFloatingButtonPosition, abgmGetFloatingMenuEl, updateMenuDebugIcon } from "./modules/ui_floating.js";
+import { abgmBindNowPlayingDeps, bindSideMenuNowPlayingControls, updateNowPlayingUI, bindNowPlayingEventsOnce, openNowPlayingGlass, closeNowPlayingGlass } from "./modules/ui_nowplaying.js";
 
 let __abgmDebugLine = ""; // 키워드 모드 디버깅
 let __abgmDebugMode = false;
@@ -564,107 +565,6 @@ function updateModalNowPlayingSimple(title) {
 function _abgmSetText(id, text) {
   const el = document.getElementById(id);
   if (el) el.textContent = String(text ?? "");
-}
-
-function updateNowPlayingUI() {
-  try {
-    const fk = String(_engineCurrentFileKey || "");
-    const settings = ensureSettings?.() || {};
-
-    const pid = String(_engineCurrentPresetId || settings?.activePresetId || "");
-    const preset =
-      (pid && settings?.presets?.[pid]) ||
-      settings?.presets?.[settings?.activePresetId] ||
-      Object.values(settings?.presets || {})[0] ||
-      {};
-
-    const bgm = (preset.bgms ?? []).find((b) => String(b?.fileKey ?? "") === fk) || null;
-    const title = bgm ? getEntryName(bgm) : (fk || "(none)");
-
-    const presetName = preset?.name || "Preset";
-    const modeLabel = settings?.keywordMode ? "Keyword" : (settings?.playMode || "manual");
-    const meta = `${modeLabel} · ${presetName}`;
-    const debugLine = (__abgmDebugMode && __abgmDebugLine) ? String(__abgmDebugLine) : "";
-
-    // ===== modal license area =====
-    const licWrap = document.getElementById("abgm_np_license_wrap");
-    const licText = document.getElementById("abgm_np_license_text");
-    if (licWrap && licText) {
-      const lic = bgm ? String(bgm.license ?? "").trim() : "";
-      if (lic) { licWrap.style.display = ""; licText.textContent = lic; }
-      else { licWrap.style.display = "none"; licText.textContent = ""; }
-    }
-
-    // drawer(확장메뉴)
-    _abgmSetText("autobgm_now_title", title);
-    _abgmSetText("autobgm_now_meta", meta);
-    updateNowPlayingGlassUI(title, presetName, modeLabel);
-    updateNowPlayingGlassNavUI(settings, preset);
-    try { updateNowPlayingGlassPlaylistUI(settings); } catch {}
-
-    const dbg = document.getElementById("autobgm_now_debug");
-    if (dbg) {
-      dbg.style.display = debugLine ? "" : "none";
-      dbg.textContent = debugLine;
-    }
-
-    // 모달(simple)
-    updateModalNowPlayingSimple(title);
-
-    // 버튼들 처리(너 기존 그대로)
-    const btnDef = document.getElementById("autobgm_now_btn_default");
-    const btnPlay = document.getElementById("autobgm_now_btn_play");
-    const btnMode = document.getElementById("autobgm_now_btn_mode");
-
-    if (btnDef) {
-      const leftWrap = btnDef.closest(".np-left");
-      if (leftWrap) leftWrap.classList.toggle("is-hidden", !settings?.keywordMode);
-
-      btnDef.textContent = settings?.useDefault ? "⭐" : "☆";
-      btnDef.title = settings?.useDefault ? "Use Default: ON" : "Use Default: OFF";
-    }
-
-    if (btnPlay) {
-    const stopped = !settings.enabled || !fk;
-    const icon = stopped ? "⏹️" : (_bgmAudio?.paused ? "▶️" : "⏸️");
-
-    btnPlay.textContent = icon;
-    btnPlay.title =
-      icon === "▶️" ? "Play" :
-      icon === "⏸️" ? "Pause" :
-      "Start";
-        }
-
-    // ===== NP Glass 아이콘 동기화 NP 아이콘 =====
-    const glassIcon = document.querySelector("#abgm_np_play img");
-    if (glassIcon) {
-      if (!settings.enabled || !fk) {
-        glassIcon.src = "https://i.postimg.cc/VLy3x3qC/Stop.png";
-      } else if (_bgmAudio?.paused) {
-        glassIcon.src = "https://i.postimg.cc/SR9HXrhj/Play.png";
-      } else {
-        glassIcon.src = "https://i.postimg.cc/v8xJSQVQ/Pause.png";
-      }
-    }
-
-    if (btnMode) {
-      const modeIcon =
-        settings?.keywordMode ? "💬" :
-        (settings?.playMode === "loop_one" ? "🔂" :
-         settings?.playMode === "loop_list" ? "🔁" :
-         settings?.playMode === "random" ? "🔀" : "▶️");
-
-      btnMode.textContent = modeIcon;
-      btnMode.title =
-        settings?.keywordMode ? "Mode: Keyword" :
-        `Mode: ${settings?.playMode || "manual"}`;
-    }
-
-    setNowControlsLocked(!settings.enabled);
-    updateMenuNPAnimation();
-  } catch (e) {
-    console.error("[AutoBGM] updateNowPlayingUI failed:", e);
-  }
 }
 
 function setNowControlsLocked(locked) {
@@ -3792,98 +3692,7 @@ async function mount() {
     root.innerHTML = html;
     host.appendChild(root);
 
-    // ===== side-menu Now Playing controls bind =====
-    const btnDef = root.querySelector("#autobgm_now_btn_default");
-    const btnPlay = root.querySelector("#autobgm_now_btn_play");
-    const btnMode = root.querySelector("#autobgm_now_btn_mode");
-    const btnOnce = root.querySelector("#autobgm_now_btn_kwonce");
-
-    const syncKeywordOnceUI = () => {
-      const s = ensureSettings();
-      if (!btnOnce) return;
-
-      // 키워드 모드 아닐 땐 숨김
-      btnOnce.style.display = s.keywordMode ? "" : "none";
-
-      btnOnce.textContent = s.keywordOnce ? "1️⃣" : "🔁";
-      btnOnce.title = s.keywordOnce ? "Keyword: Once" : "Keyword: Loop";
-    };
-
-    btnOnce?.addEventListener("click", () => {
-      const s = ensureSettings();
-      if (!s.enabled) return;
-
-      s.keywordOnce = !s.keywordOnce;
-      saveSettingsDebounced();
-      syncKeywordOnceUI();
-      try { engineTick(); } catch {}
-      updateNowPlayingUI();
-    });
-
-    // 처음 한번 UI 맞추기
-    syncKeywordOnceUI();
-
-    // Use Default 토글 (keywordMode일 때만 의미 있음)
-    btnDef?.addEventListener("click", () => {
-      const s = ensureSettings();
-      s.useDefault = !s.useDefault;
-      saveSettingsDebounced();
-      try { engineTick(); } catch {}
-      updateNowPlayingUI();
-    });
-
-    // Play/Pause/Start
-    btnPlay?.addEventListener("click", async () => {
-      const s = ensureSettings();
-      if (!s.enabled) return;
-
-      // 현재 재생중이면 pause
-      if (_engineCurrentFileKey && !_bgmAudio.paused) {
-        try { _bgmAudio.pause(); } catch {}
-        updateNowPlayingUI();
-        return;
-      }
-
-      // paused면 resume
-      if (_engineCurrentFileKey && _bgmAudio.paused) {
-        try { await _bgmAudio.play(); } catch {}
-        updateNowPlayingUI();
-        return;
-      }
-
-      // stopped면 엔진 로직대로 “알아서” 시작
-      try { engineTick(); } catch {}
-      updateNowPlayingUI();
-    });
-
-    // Mode cycle: manual → loop_one → loop_list → random → keyword → manual ...
-    btnMode?.addEventListener("click", () => {
-      const s = ensureSettings();
-      if (!s.enabled) return;
-
-      const next = (() => {
-        if (s.keywordMode) return "manual";
-        const cur = s.playMode || "manual";
-        if (cur === "manual") return "loop_one";
-        if (cur === "loop_one") return "loop_list";
-        if (cur === "loop_list") return "random";
-        if (cur === "random") return "keyword";
-        return "manual";
-      })();
-
-      if (next === "keyword") {
-        s.keywordMode = true;
-        // keywordMode면 playMode는 의미 적지만 혹시 모르니 남겨둠
-      } else {
-        s.keywordMode = false;
-        s.playMode = next; // manual/loop_one/loop_list/random
-      }
-
-      saveSettingsDebounced();
-      try { engineTick(); } catch {}
-      updateNowPlayingUI();
-      syncKeywordOnceUI();
-    });
+    bindSideMenuNowPlayingControls(root);
 
     const helpBtn = root.querySelector("#autobgm_help_toggle");
     const helpText = root.querySelector("#autobgm_help_text");
@@ -4030,6 +3839,33 @@ async function init() {
   if (window.__AUTOBGM_BOOTED__) return;
   window.__AUTOBGM_BOOTED__ = true;
   abgmBindFloatingActions({ openModal, openNowPlayingGlass, toggleDebugMode, updateMenuNPAnimation });
+  abgmBindNowPlayingDeps({
+    // 상태 읽기
+    getBgmAudio: () => _bgmAudio,
+    getEngineCurrentFileKey: () => _engineCurrentFileKey,
+    getEngineCurrentPresetId: () => _engineCurrentPresetId,
+
+    // 엔진/액션
+    engineTick: () => engineTick(),
+    togglePlayPause: () => togglePlayPause(),
+
+    // 모달/호스트
+    getModalHost: () => getModalHost(),
+    fitModalToHost: (overlay, host) => fitModalToHost(overlay, host),
+
+    // UI 훅
+    updateMenuNPAnimation: () => updateMenuNPAnimation(),
+    updateModalNowPlayingSimple: (title) => updateModalNowPlayingSimple(title),
+
+    // 플리/정렬/표시 헬퍼들 (ui_nowplaying에서 쓰는 것만 연결)
+    getActivePreset: (settings) => getActivePreset(settings),
+    getEntryName: (b) => getEntryName(b),
+    getSortedBgms: (preset, sortKey) => getSortedBgms(preset, sortKey),
+    getBgmSort: (settings) => getBgmSort(settings),
+    abgmCycleBgmSort: (settings) => abgmCycleBgmSort(settings),
+    abgmSortNice: (k) => abgmSortNice(k),
+    ensurePlayFile: (fk, vol01, autoplay, presetId) => ensurePlayFile(fk, vol01, autoplay, presetId),
+  });
   await bootFreeSourcesSync();
   mount();
   startEngine();
@@ -4463,6 +4299,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
