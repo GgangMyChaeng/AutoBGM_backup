@@ -562,11 +562,6 @@ function updateModalNowPlayingSimple(title) {
   el.textContent = String(title ?? "(none)");
 }
 
-function _abgmSetText(id, text) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = String(text ?? "");
-}
-
 function clamp01(x) {
   x = Number(x);
   if (!Number.isFinite(x)) return 0;
@@ -3688,6 +3683,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
