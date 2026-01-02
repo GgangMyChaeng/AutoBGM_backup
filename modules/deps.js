@@ -16,9 +16,13 @@ export async function __abgmResolveDeps() {
     }
   };
 
-  const extMod =
-    (await tryImport("../../../extensions.js")) ||
-    (await tryImport("../../extensions.js"));
+const extMod =
+  // third-party 레이아웃: /scripts/extensions/third-party/<ext>/modules/deps.js
+  (await tryImport("../../../../extensions.js")) ||
+  // 일반 레이아웃: /scripts/extensions/<ext>/modules/deps.js
+  (await tryImport("../../../extensions.js")) ||
+  // (구버전/예외 fallback)
+  (await tryImport("../../extensions.js"));
 
   if (!extMod?.extension_settings) {
     throw new Error("[AutoBGM] Failed to import extension_settings (extensions.js path mismatch)");
@@ -26,7 +30,11 @@ export async function __abgmResolveDeps() {
   extension_settings = extMod.extension_settings;
 
   const scriptMod =
+    // third-party 레이아웃이면 deps.js 기준 5단계 위
+    (await tryImport("../../../../../script.js")) ||
+    // 일반 레이아웃이면 deps.js 기준 4단계 위
     (await tryImport("../../../../script.js")) ||
+    // (구버전/예외 fallback)
     (await tryImport("../../../script.js"));
 
   if (!scriptMod?.saveSettingsDebounced) {
