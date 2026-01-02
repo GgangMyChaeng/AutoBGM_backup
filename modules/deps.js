@@ -1,4 +1,4 @@
-// AutoBGM/modules/deps.js
+// 의존성 로더
 
 export async function resolveDeps() {
   const base = import.meta.url;
