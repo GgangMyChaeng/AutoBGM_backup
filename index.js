@@ -3292,6 +3292,8 @@ async function init() {
     abgmCycleBgmSort: (settings) => abgmCycleBgmSort(settings),
     abgmSortNice: (k) => abgmSortNice(k),
     ensurePlayFile: (fk, vol01, autoplay, presetId) => ensurePlayFile(fk, vol01, autoplay, presetId),
+    getDebugMode: () => __abgmDebugMode,
+    getDebugLine: () => __abgmDebugLine,
   });
   await bootFreeSourcesSync();
   mount();
@@ -3726,3 +3728,4 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
