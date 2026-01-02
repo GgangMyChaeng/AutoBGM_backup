@@ -1129,23 +1129,6 @@ function abgmCycleBgmSort(settings) {
   return next;
 }
 
-function abgmNpShowPage(page /* 'np' | 'pl' */) {
-  const overlay = abgmGetNpOverlay();
-  if (!overlay) return;
-
-  const np = overlay.querySelector('[data-abgm-page="np"]');
-  const pl = overlay.querySelector('[data-abgm-page="pl"]');
-
-  overlay.dataset.abgmPage = page;
-
-  if (np) np.style.display = (page === "np") ? "" : "none";
-  if (pl) pl.style.display = (page === "pl") ? "" : "none";
-
-  if (page === "pl") {
-    try { abgmRenderPlaylistPage(overlay); } catch {}
-  }
-}
-
 function onEscClose(e) {
   if (e.key === "Escape") closeModal();
 }
@@ -3247,8 +3230,13 @@ async function init() {
     abgmCycleBgmSort: (settings) => abgmCycleBgmSort(settings),
     abgmSortNice: (k) => abgmSortNice(k),
     ensurePlayFile: (fk, vol01, autoplay, presetId) => ensurePlayFile(fk, vol01, autoplay, presetId),
+ 
     getDebugMode: () => __abgmDebugMode,
     getDebugLine: () => __abgmDebugLine,
+
+    getSTContextSafe: () => getSTContextSafe(),
+    getChatKeyFromContext: (ctx) => getChatKeyFromContext(ctx),
+    ensureEngineFields: (settings) => ensureEngineFields(settings),
   });
   await bootFreeSourcesSync();
   mount();
@@ -3683,6 +3671,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
