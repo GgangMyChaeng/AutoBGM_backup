@@ -2173,11 +2173,6 @@ function bpmToTempoTag(bpm){
   return "tempo:prestissimo";
 }
 
-// 기존 코드 호환용: “단일 문자열”만 필요한 곳에서 쓰기
-function abgmNormTag(raw) {
-  return abgmNormTags(raw)[0] || "";
-}
-
 function matchTagsAND(itemTags = [], selectedSet) {
   if (!selectedSet || selectedSet.size === 0) return true;
   const set = new Set((itemTags || []).flatMap(abgmNormTags).filter(Boolean));
@@ -4674,6 +4669,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
