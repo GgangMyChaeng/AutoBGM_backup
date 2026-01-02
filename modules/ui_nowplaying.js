@@ -2,6 +2,8 @@ import { ensureSettings } from "./settings.js";
 import { saveSettingsDebounced } from "./deps.js";
 import { openFloatingMenu } from "./ui_floating.js";
 
+const NP_GLASS_OVERLAY_ID = "ABGM_NP_GLASS_OVERLAY";
+
 const NP = {
   // state getters
   getBgmAudio: () => null,
@@ -69,7 +71,7 @@ export function updateNowPlayingUI() {
       {};
 
     const bgm = (preset.bgms ?? []).find((b) => String(b?.fileKey ?? "") === fk) || null;
-    const title = bgm ? getEntryName(bgm) : (fk || "(none)");
+    const title = bgm ? NP.getEntryName(bgm) : (fk || "(none)");
 
     const presetName = preset?.name || "Preset";
     const modeLabel = settings?.keywordMode ? "Keyword" : (settings?.playMode || "manual");
@@ -197,9 +199,9 @@ function updateNowPlayingGlassSeekUI() {
   const settings = ensureSettings?.() || {};
   const enabled = !!settings.enabled;
 
-  const fk = String(_engineCurrentFileKey || "");
-  const dur = Number(_bgmAudio?.duration);
-  const cur = Number(_bgmAudio?.currentTime);
+  const fk = String(NP._engineCurrentFileKey() || "");
+  const dur = Number(a?.duration);
+  const cur = Number(a?.currentTime);
 
   const ready = enabled && !!fk && Number.isFinite(dur) && dur > 0;
 
@@ -353,7 +355,7 @@ export function openNowPlayingGlass() {
       const curEl = document.getElementById("abgm_np_time_cur");
       const durEl = document.getElementById("abgm_np_time_dur");
       const v = Number(seek.value || 0) / 1000;
-      const dur = Number(_bgmAudio?.duration);
+      const dur = Number(a?.duration);
       if (curEl) curEl.textContent = abgmFmtTime(v);
       if (durEl) durEl.textContent = Number.isFinite(dur) && dur > 0 ? abgmFmtTime(dur) : "0:00";
     };
@@ -366,7 +368,7 @@ export function openNowPlayingGlass() {
     seek.addEventListener("change", () => {
       const v = Number(seek.value || 0) / 1000;
       if (Number.isFinite(v)) {
-        try { _bgmAudio.currentTime = Math.max(0, v); } catch {}
+        try { a.currentTime = Math.max(0, v); } catch {}
       }
       _abgmNpIsSeeking = false;
       scheduleNpSeekUpdate();
@@ -411,7 +413,7 @@ export function openNowPlayingGlass() {
   // 뒤로가기(플로팅 메뉴 홈)
   overlay.querySelector("#abgm_np_back")?.addEventListener("click", () => {
     closeNowPlayingGlass();
-    openFloatingMenu();
+    NP.openFloatingMenu();
   });
 
   // ===== Playlist page events =====
@@ -425,7 +427,7 @@ export function openNowPlayingGlass() {
 
   overlay.querySelector("#abgm_pl_home")?.addEventListener("click", () => {
     closeNowPlayingGlass();
-    openFloatingMenu();
+    NP.openFloatingMenu();
   });
 
   // 사이즈 맞추기
@@ -509,15 +511,15 @@ function updateNowPlayingGlassNavUI(settings, preset) {
     return;
   }
 
-  const ctx = getSTContextSafe();
-  const chatKey = getChatKeyFromContext(ctx);
+  const ctx = NP.getSTContextSafe();
+  const chatKey = NP.getChatKeyFromContext(ctx);
   settings.chatStates ??= {};
   settings.chatStates[chatKey] ??= { currentKey: '', listIndex: 0, lastSig: '', defaultPlayedSig: '', prevKey: '' };
-  ensureEngineFields(settings);
+  NP.ensureEngineFields(settings);
 
   const st = settings.chatStates[chatKey];
-  const sort = getBgmSort(settings);
-  const keys = getSortedKeys(preset, sort);
+  const sort = NP.getBgmSort(settings);
+  const keys = NP.getSortedKeys(preset, sort);
 
   if (!keys.length) {
     prevBtn.disabled = true;
@@ -526,7 +528,7 @@ function updateNowPlayingGlassNavUI(settings, preset) {
   }
 
   const mode = settings.playMode || 'manual';
-  const cur = String(_engineCurrentFileKey || st.currentKey || '');
+  const cur = String(NP._engineCurrentFileKey() || st.currentKey || '');
   let idx = cur ? keys.indexOf(cur) : -1;
   if (idx < 0) idx = Math.max(0, Math.min(Number(st.listIndex || 0), keys.length - 1));
 
@@ -561,8 +563,8 @@ function updateNowPlayingGlassPlaylistUI(settings) {
   if (!overlay) return;
   if (String(overlay.dataset.abgmPage || "np") !== "pl") return;
 
-  const fk = String(_engineCurrentFileKey || "");
-  const isPlaying = !!settings?.enabled && !!fk && !_bgmAudio?.paused;
+  const fk = String(NP._engineCurrentFileKey() || "");
+  const isPlaying = !!settings?.enabled && !!fk && !a?.paused;
 
   overlay.querySelectorAll(".abgm-pl-item")?.forEach?.((row) => {
     const key = String(row.dataset.filekey || "");
@@ -746,12 +748,12 @@ function abgmRenderPlaylistPage(overlay) {
     return;
   }
 
-  const curKey = String(_engineCurrentFileKey || "");
-  const isPlaying = !!settings.enabled && !!curKey && !_bgmAudio?.paused;
+  const curKey = String(NP._engineCurrentFileKey() || "");
+  const isPlaying = !!settings.enabled && !!curKey && !a?.paused;
 
   for (const b of bgms) {
     const fk = String(b.fileKey || "");
-    const name = getEntryName(b);
+    const name = NP.getEntryName(b);
     const dur = Number(b.durationSec ?? 0);
     const durText = (Number.isFinite(dur) && dur > 0) ? abgmFmtTime(dur) : "";
 
