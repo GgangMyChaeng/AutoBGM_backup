@@ -47,6 +47,7 @@ let _ensureAssetList = (settings) => (settings?.assets ? Object.keys(settings.as
 
 let _fitModalToHost = () => {};
 let _getModalHost = () => document.body;
+let _EXT_BIND_KEY = "autobgm_binding";
 
 export function abgmBindSettingsModalDeps(deps = {}) {
   if (typeof deps.getBgmSort === "function") _getBgmSort = deps.getBgmSort;
@@ -89,6 +90,7 @@ export function abgmBindSettingsModalDeps(deps = {}) {
 
   if (typeof deps.fitModalToHost === "function") _fitModalToHost = deps.fitModalToHost;
   if (typeof deps.getModalHost === "function") _getModalHost = deps.getModalHost;
+  if (typeof deps.EXT_BIND_KEY === "string") _EXT_BIND_KEY = deps.EXT_BIND_KEY;
 }
 
 /** ========= Modal logic ========= */
@@ -481,7 +483,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
       const name =
         String(ch.name ?? ch?.data?.name ?? ch?.data?.first_mes ?? `Character #${i}`).trim() || `Character #${i}`;
 
-      const boundId = String(ch?.data?.extensions?.[EXT_BIND_KEY]?.presetId ?? "");
+      const boundId = String(ch?.data?.extensions?.[_EXT_BIND_KEY]?.presetId ?? "");
       const boundName = boundId && settingsNow.presets?.[boundId] ? String(settingsNow.presets[boundId].name ?? boundId) : (boundId || "");
 
       const row = document.createElement("div");
@@ -505,7 +507,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
 
       mainBtn.addEventListener("click", async () => {
         try {
-          await writeExtensionField(i, EXT_BIND_KEY, { presetId, presetName, at: Date.now() });
+          await writeExtensionField(i, _EXT_BIND_KEY, { presetId, presetName, at: Date.now() });
         } catch (e) {
           console.error("[AutoBGM] bind failed", e);
         }
@@ -524,9 +526,9 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
       clearBtn.addEventListener("click", async (ev) => {
         ev.stopPropagation();
         try {
-          await writeExtensionField(i, EXT_BIND_KEY, null);
+          await writeExtensionField(i, _EXT_BIND_KEY, null);
         } catch {
-          try { await writeExtensionField(i, EXT_BIND_KEY, {}); } catch {}
+          try { await writeExtensionField(i, _EXT_BIND_KEY, {}); } catch {}
         }
         await renderBindOverlay();
         try { _engineTick(); } catch {}
