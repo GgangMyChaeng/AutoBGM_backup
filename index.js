@@ -1610,6 +1610,13 @@ async function init() {
     getChatKeyFromContext: (ctx) => getChatKeyFromContext(ctx),
     ensureEngineFields: (settings) => ensureEngineFields(settings),
   });
+  abgmBindFreeSourcesDeps({
+    loadHtml,
+    ensureSettings,
+    saveSettingsDebounced,
+    syncFreeSourcesFromJson,
+    syncBundledFreeSourcesIntoSettings,
+  });
   await bootFreeSourcesSync();
   mount();
   startEngine();
@@ -2045,3 +2052,4 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
