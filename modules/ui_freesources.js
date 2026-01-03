@@ -1,3 +1,28 @@
+import { abgmNormTag, abgmNormTags, tagCat, sortTags, tagPretty } from "./tags.js";
+import { getModalHost } from "./ui_modal.js";
+
+function escapeHtml(s) {
+  return String(s ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+// 프리뷰 재생(지금 playAsset/_testAudio undefined라서 최소 구현)
+let _testAudio = null;
+function playAsset(src, vol01 = 0.6) {
+  try {
+    if (!_testAudio) _testAudio = new Audio();
+    _testAudio.pause();
+    _testAudio.src = String(src || "");
+    _testAudio.volume = Math.max(0, Math.min(1, Number(vol01 ?? 0.6)));
+    _testAudio.currentTime = 0;
+    _testAudio.play().catch(() => {});
+  } catch {}
+}
+
 let _loadHtml = async () => "";
 let _ensureSettings = () => ({});
 let _saveSettingsDebounced = () => {};
@@ -8,6 +33,9 @@ let _closeModal = () => {};
 let _ensurePlayFile = async () => {};
 let _stopRuntime = () => {};
 
+let _syncFreeSourcesFromJson = async () => {};
+let _syncBundledFreeSourcesIntoSettings = async () => {};
+
 export function abgmBindFreeSourcesDeps(deps = {}) {
   if (typeof deps.loadHtml === "function") _loadHtml = deps.loadHtml;
   if (typeof deps.ensureSettings === "function") _ensureSettings = deps.ensureSettings;
@@ -17,6 +45,9 @@ export function abgmBindFreeSourcesDeps(deps = {}) {
 
   if (typeof deps.ensurePlayFile === "function") _ensurePlayFile = deps.ensurePlayFile;
   if (typeof deps.stopRuntime === "function") _stopRuntime = deps.stopRuntime;
+
+  if (typeof deps.syncFreeSourcesFromJson === "function") _syncFreeSourcesFromJson = deps.syncFreeSourcesFromJson;
+  if (typeof deps.syncBundledFreeSourcesIntoSettings === "function") _syncBundledFreeSourcesIntoSettings = deps.syncBundledFreeSourcesIntoSettings;
 }
 
 // 여기 아래에 index.js에서 잘라낸 FreeSources 코드 덩어리 그대로 붙여넣기
@@ -295,7 +326,7 @@ function renderFsPreviewVol(root, settings) {
 }
 
 // open/close
-function closeFreeSourcesModal() {
+export function closeFreeSourcesModal() {
   const overlay = document.getElementById(FS_OVERLAY_ID);
   if (overlay) overlay.remove();
   window.removeEventListener("keydown", abgmFsOnEsc);
@@ -306,13 +337,13 @@ function abgmFsOnEsc(e) {
 }
 
 // main
-async function openFreeSourcesModal() {
-  await syncFreeSourcesFromJson({ force: true, save: true });
+export async function openFreeSourcesModal() {
+  await _syncFreeSourcesFromJson({ force: true, save: true });
   if (document.getElementById(FS_OVERLAY_ID)) return;
 
   let html = "";
   try {
-    html = await loadHtml("templates/freesources.html");
+    html = await _loadHtml("templates/freesources.html");
   } catch (e) {
     console.error("[AutoBGM] freesources.html load failed", e);
     return;
@@ -351,7 +382,7 @@ async function openFreeSourcesModal() {
 }
 
 async function initFreeSourcesModal(overlay) {
-  const settings = ensureSettings();
+  const settings = _ensureSettings();
   await syncBundledFreeSourcesIntoSettings(settings, { force: true, save: true });
 
   const root = overlay;
@@ -374,7 +405,7 @@ async function initFreeSourcesModal(overlay) {
       const picker = root.querySelector("#abgm_fs_tag_picker");
       if (picker) picker.style.display = "none";
 
-      saveSettingsDebounced();
+      _saveSettingsDebounced();
       renderFsAll(root, settings);
     });
   });
@@ -394,7 +425,7 @@ async function initFreeSourcesModal(overlay) {
       // 같은 카테고리 다시 누르면 닫기 / 아니면 열기
       picker.style.display = (sameCat && isOpen) ? "none" : "block";
 
-      saveSettingsDebounced();
+      _saveSettingsDebounced();
       renderFsAll(root, settings);
     });
   });
@@ -403,7 +434,7 @@ async function initFreeSourcesModal(overlay) {
   const search = root.querySelector("#abgm_fs_search");
   search?.addEventListener("input", (e) => {
     settings.fsUi.search = e.target.value || "";
-    saveSettingsDebounced();
+    _saveSettingsDebounced();
     renderFsList(root, settings);
   });
 
@@ -412,7 +443,7 @@ async function initFreeSourcesModal(overlay) {
   prevRange?.addEventListener("input", (e) => {
     if (fsGetPreviewLock(settings)) return;
     fsSetPreviewVol100(settings, e.target.value);
-    saveSettingsDebounced();
+    _saveSettingsDebounced();
     renderFsPreviewVol(root, settings);
     try {
     const v = fsGetPreviewVol100(settings) / 100;
@@ -427,7 +458,7 @@ async function initFreeSourcesModal(overlay) {
     settings.fsUi.cat = "all";
     const picker = root.querySelector("#abgm_fs_tag_picker");
     if (picker) picker.style.display = "none";
-    saveSettingsDebounced();
+    _saveSettingsDebounced();
     renderFsAll(root, settings);
   });
 
@@ -441,7 +472,7 @@ async function initFreeSourcesModal(overlay) {
       if (set.has(t)) set.delete(t);
       else set.add(t);
       settings.fsUi.selectedTags = Array.from(set);
-      saveSettingsDebounced();
+      _saveSettingsDebounced();
       renderFsList(root, settings);
       renderFsTagPicker(root, settings); // 표시만 갱신
       return;
@@ -460,7 +491,7 @@ async function initFreeSourcesModal(overlay) {
     const prevLockBtn = e.target.closest("#abgm_fs_prevvol_lock");
     if (prevLockBtn) {
       fsSetPreviewLock(settings, !fsGetPreviewLock(settings));
-      saveSettingsDebounced();
+      _saveSettingsDebounced();
       renderFsPreviewVol(root, settings);
       return;
     }
@@ -491,7 +522,7 @@ async function initFreeSourcesModal(overlay) {
       const set = new Set((settings.fsUi.selectedTags ?? []).map(abgmNormTag).filter(Boolean));
       set.add(t);
       settings.fsUi.selectedTags = Array.from(set);
-      saveSettingsDebounced();
+      _saveSettingsDebounced();
       renderFsList(root, settings);
       return;
     }
