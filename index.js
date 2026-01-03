@@ -1648,6 +1648,7 @@ async function init() {
     ensureAssetList,
     fitModalToHost,
     getModalHost,
+    EXT_BIND_KEY,
     
     rerenderAll,
     renderDefaultSelect,
@@ -2094,6 +2095,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
