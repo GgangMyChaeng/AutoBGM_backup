@@ -855,8 +855,16 @@ if (sel && !sel.__abgmBound) {
     list.addEventListener("click", (e) => {
       const play = e.target.closest(".abgm-pl-play");
       if (!play) return;
+
       const fk = String(play.dataset.filekey || "").trim();
-      abgmPlayFromPlaylist(fk);
+
+      // 지금 플리에서 선택된 프리셋 id
+      const pid = String(
+        overlay?.querySelector("#abgm_pl_preset")?.value ||
+        ensureSettings()?.activePresetId ||
+        ""
+      );
+      abgmPlayFromPlaylist(fk, pid);
     });
   }
 
@@ -916,18 +924,45 @@ function abgmPlayFromPlaylist(fileKey) {
   const settings = ensureSettings();
   if (!settings.enabled) return;
 
-  // "리스트에서 골라 재생"이면 일단 수동 모드로 확정 (원하면 나중에 정책 바꿔도 됨)
+  // "리스트에서 골라 재생"이면 일단 수동 모드로 확정 (원본 정책 유지)
   settings.keywordMode = false;
   settings.playMode = "manual";
 
+  // 엔진틱이 참고하는 currentKey를 갱신해서 튕김 방지
+  try { NP.ensureEngineFields?.(settings); } catch {}
+  const ctx = NP.getSTContextSafe?.();
+  const chatKey = NP.getChatKeyFromContext?.(ctx) || "global";
+
+  settings.chatStates ??= {};
+  settings.chatStates[chatKey] ??= {
+    currentKey: "",
+    listIndex: 0,
+    lastSig: "",
+    defaultPlayedSig: "",
+    prevKey: "",
+  };
+
   const preset = NP.getActivePreset(settings);
-  // findBgmByKey 대신(주입 안 돼있을 수도 있어서) 그냥 똑같이 찾기
+
+  // listIndex도 같이 맞춰두면 다음/이전(리스트 기반)에서 덜 꼬임
+  try {
+    const sort = NP.getBgmSort(settings);
+    const keys = NP.getSortedKeys(preset || {}, sort) || [];
+    const idx = keys.indexOf(fk);
+
+    const st = settings.chatStates[chatKey];
+    if (st.currentKey && st.currentKey !== fk) st.prevKey = st.currentKey;
+    st.currentKey = fk;
+    if (idx >= 0) st.listIndex = idx;
+  } catch {}
+
   const b = (preset?.bgms ?? []).find(x => String(x?.fileKey ?? "").trim() === fk) || null;
   const gv = Number(settings.globalVolume ?? 0.7);
   const bv = Number(b?.volume ?? 1);
   const vol01 = Math.max(0, Math.min(1, gv * bv));
 
-  saveSettingsDebounced();
+  try { saveSettingsDebounced?.(); } catch {}
   NP.ensurePlayFile(fk, vol01, false, preset?.id || "");
-  updateNowPlayingUI();
+  try { updateNowPlayingUI(); } catch {}
 }
+
