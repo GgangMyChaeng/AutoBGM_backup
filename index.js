@@ -494,7 +494,6 @@ window.abgmStopOtherAudio = function(kind) {
       const token = a.__abgmFadeToken;
 
       const v0 = Number(a.volume ?? 1);
-      a.__abgmLastVol = v0; // 나중에 play 때 복구용
       if (!Number.isFinite(v0) || v0 <= 0 || a.paused || ms <= 0) {
         hardStop(a);
         return;
@@ -529,23 +528,9 @@ window.abgmStopOtherAudio = function(kind) {
 // 메인 오디오 등록
 window.__ABGM_AUDIO_BUS__.engine = _bgmAudio;
 
-// 메인 같은 곡 재생 시작하면 프리소스 끄기
+// 메인 재생 시작하면 프리소스 끄기
 try {
-  _bgmAudio.addEventListener("play", () => {
-    // 그 경우 내(메인) 오디오에 걸려있던 페이드가 있으면 취소
-    try {
-      _bgmAudio.__abgmFadeToken = (_bgmAudio.__abgmFadeToken || 0) + 1;
-      if (_bgmAudio.__abgmFadeRAF) cancelAnimationFrame(_bgmAudio.__abgmFadeRAF);
-      _bgmAudio.__abgmFadeRAF = null;
-
-      if (typeof _bgmAudio.__abgmLastVol === "number") {
-        _bgmAudio.volume = _bgmAudio.__abgmLastVol;
-      }
-    } catch {}
-
-    // 프리소스 끄기
-    window.abgmStopOtherAudio?.("engine");
-  });
+  _bgmAudio.addEventListener("play", () => window.abgmStopOtherAudio?.("engine"));
 } catch {}
 
 // ===== Now Playing UI =====
@@ -2177,14 +2162,3 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
-
-
-
-
-
-
-
-
-
-
-
