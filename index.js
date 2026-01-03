@@ -3247,6 +3247,8 @@ async function init() {
   
   // 플로팅 버튼 초기화
   const settings = ensureSettings();
+  // 디버그: 콘솔에서 설정 확인용
+  window.__ABGM_DBG__ = { getSettings: () => ensureSettings() };
   if (settings.floating.enabled) {
     createFloatingButton();
   }
@@ -3674,6 +3676,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
