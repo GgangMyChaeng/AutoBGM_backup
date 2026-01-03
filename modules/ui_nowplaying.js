@@ -412,6 +412,8 @@ export function openNowPlayingGlass() {
   setO("padding", "0");
 
   host.appendChild(overlay);
+  // 플리 UI는 페이지 전환 전에 미리 한번 렌더해두기(프리셋 옵션/리스트 초기화)
+  try { abgmRenderPlaylistPage(overlay); } catch {}
 
   // ===== NP(Home) events =====
   const playBtn = overlay.querySelector("#abgm_np_play");
@@ -499,15 +501,18 @@ overlay.querySelector("#abgm_np_next")?.addEventListener("click", (e) => {
   });
 
   // ===== Playlist page events =====
-  overlay.querySelector("#abgm_np_list")?.addEventListener("click", () => {
+  overlay.querySelector("#abgm_np_list")?.addEventListener("click", (e) => {
+    e?.stopPropagation?.();
     abgmNpShowPage("pl");
   });
 
-  overlay.querySelector("#abgm_pl_to_np")?.addEventListener("click", () => {
+  overlay.querySelector("#abgm_pl_to_np")?.addEventListener("click", (e) => {
+    e?.stopPropagation?.();
     abgmNpShowPage("np");
   });
 
-  overlay.querySelector("#abgm_pl_home")?.addEventListener("click", () => {
+  overlay.querySelector("#abgm_pl_home")?.addEventListener("click", (e) => {
+    e?.stopPropagation?.();
     closeNowPlayingGlass();
     openFloatingMenu();
   });
