@@ -71,6 +71,15 @@ function abgmFmtTime(sec) {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
+function escapeHtml(s) {
+  return String(s ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 // NP Glass: play mode icons (image = direct link)
 const ABGM_NP_MODE_ICON = {
   manual:   "https://i.postimg.cc/SR9HXrhj/Play.png",
@@ -783,7 +792,8 @@ function abgmRenderPlaylistPage(overlay) {
     sel.addEventListener("change", (e) => {
       settings.activePresetId = String(e.target.value || settings.activePresetId || "");
       saveSettingsDebounced();
-      try { abgmRenderPlaylistPage(overlay); } catch {}
+      try { abgmRenderPlaylistPage(overlay); }
+        catch (e) { console.error("[AutoBGM] render playlist failed", e); }
       try { updateNowPlayingUI(); } catch {}
     });
   }
