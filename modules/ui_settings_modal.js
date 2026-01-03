@@ -1,3 +1,5 @@
+import { openFreeSourcesModal } from "./ui_freesources.js";
+
 /** ========= Modal logic ========= */
 export function initModal(overlay) {
   const settings = ensureSettings();
