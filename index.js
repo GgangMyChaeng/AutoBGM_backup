@@ -133,6 +133,28 @@ function getActivePreset(settings) {
   return settings.presets[settings.activePresetId];
 }
 
+// ===== ABGM audio exclusivity bus =====
+window.__ABGM_AUDIO_BUS__ ??= { engine: null, freesrc: null };
+
+function abgmStopOtherAudio(kind) {
+  const bus = window.__ABGM_AUDIO_BUS__;
+  if (!bus) return;
+
+  const stopAudio = (a) => {
+    try {
+      if (!a) return;
+      a.pause?.();
+      // "자연스레 꺼짐" 느낌이면 currentTime 안 건드려도 되는데
+      // 완전 꺼짐 원하면 아래 두 줄 유지
+      a.currentTime = 0;
+      a.srcObject = null;
+    } catch {}
+  };
+
+  if (kind !== "engine") stopAudio(bus.engine);
+  if (kind !== "freesrc") stopAudio(bus.freesrc);
+}
+
 /** ========= 삭제 확인 및 취소 ========= */
 function abgmConfirm(containerOrDoc, message, {
   title = "Confirm",
@@ -458,7 +480,7 @@ async function playAsset(fileKey, volume01) {
   _testAudio.play().catch(() => {});
 }
 
-  /** ========= Runtime Audio Engine ========= */
+/** ========= Runtime Audio Engine ========= */
 const _bgmAudio = new Audio();
 let _bgmUrl = "";
 let _engineTimer = null;
@@ -466,6 +488,20 @@ let _engineLastChatKey = "";
 let _engineCurrentFileKey = "";
 let _engineCurrentPresetId = "";
 
+// ===== Audio exclusivity (engine vs test/preview) =====
+function __abgmStopAudio(a) {
+  try {
+    if (!a) return;
+    a.pause?.();
+    // 완전히 "꺼짐" 원하면 리셋
+    a.currentTime = 0;
+  } catch {}
+}
+
+try {
+  _bgmAudio.addEventListener("play", () => __abgmStopAudio(_testAudio));
+  _testAudio.addEventListener("play", () => __abgmStopAudio(_bgmAudio));
+} catch {}
 
 // ===== Now Playing UI =====
 let _abgmNowPlayingBound = false;
@@ -670,6 +706,7 @@ function findBgmByKey(preset, fileKey) {
 
 // presetId 인자 추가 버전
 async function ensurePlayFile(fileKey, vol01, loop, presetId = "") {
+  abgmStopOtherAudio("engine");
   const fk = String(fileKey ?? "").trim();
   if (!fk) return false;
 
@@ -2095,6 +2132,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
