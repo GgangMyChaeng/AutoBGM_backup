@@ -1,3 +1,4 @@
+import { ensureSettings } from "./settings.js";
 import { openFreeSourcesModal } from "./ui_freesources.js";
 
 /** ========= Modal logic ========= */
