@@ -1361,13 +1361,11 @@ function rekeyPreset(preset) {
     p.defaultBgmKey = p.bgms[0].fileKey;
   }
 
-// defaultBgmKey가 bgms에 실제로 존재하는지 보정
-if (p.defaultBgmKey && !p.bgms.some(b => b.fileKey === p.defaultBgmKey)) {
-  p.defaultBgmKey = p.bgms[0]?.fileKey ?? "";
-}
-
-  return p;
-  
+  // defaultBgmKey가 bgms에 실제로 존재하는지 보정
+  if (p.defaultBgmKey && !p.bgms.some(b => b.fileKey === p.defaultBgmKey)) {
+    p.defaultBgmKey = p.bgms[0]?.fileKey ?? "";
+  }
+    return p;
 }
 function pickPresetFromImportData(data) {
   if (data?.type === "autobgm_preset" && data?.preset) return data.preset;
@@ -1626,6 +1624,13 @@ async function init() {
     getActivePreset,
     setPlayButtonsLocked,
     saveSettingsDebounced,
+    updateNowPlayingUI,
+    engineTick: () => engineTick(),
+    setDebugMode: (on) => {
+      __abgmDebugMode = !!on;
+      if (!__abgmDebugMode) __abgmDebugLine = "";
+      window.__abgmDebugMode = __abgmDebugMode;
+    }
   });
   await bootFreeSourcesSync();
   mount();
@@ -2062,6 +2067,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
