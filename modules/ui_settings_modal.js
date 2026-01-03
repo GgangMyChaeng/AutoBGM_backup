@@ -49,6 +49,13 @@ let _fitModalToHost = () => {};
 let _getModalHost = () => document.body;
 let _EXT_BIND_KEY = "autobgm_binding";
 
+function abgmEntryLabel(bgm) {
+  const n = String(bgm?.name ?? "").trim();
+  if (n) return n;
+  const fk = String(bgm?.fileKey ?? "").trim();
+  return fk || "(unknown)";
+}
+
 export function abgmBindSettingsModalDeps(deps = {}) {
   if (typeof deps.getBgmSort === "function") _getBgmSort = deps.getBgmSort;
   if (typeof deps.getSortedBgms === "function") _getSortedBgms = deps.getSortedBgms;
@@ -268,7 +275,7 @@ export function initModal(overlay) {
     const names = [];
     for (const id of selected) {
       const bgm = preset.bgms.find((x) => x.id === id);
-      if (bgm?.fileKey) names.push(bgm.fileKey);
+      names.push(abgmEntryLabel(bgm));
     }
 
     const preview = names.slice(0, 6).map((x) => `- ${x}`).join("\n");
@@ -852,8 +859,8 @@ if (e.target.closest(".abgm_move")) {
 
     // delete
     if (e.target.closest(".abgm_del")) {
-      const fk = bgm.fileKey || "(unknown)";
-      const ok = await _abgmConfirm(root, `"${fk}" 삭제?`, {
+      const label = abgmEntryLabel(bgm);
+      const ok = await _abgmConfirm(root, `"${label}" 삭제?`, {
         title: "Delete",
         okText: "확인",
         cancelText: "취소",
