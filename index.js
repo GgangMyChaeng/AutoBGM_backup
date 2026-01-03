@@ -133,28 +133,6 @@ function getActivePreset(settings) {
   return settings.presets[settings.activePresetId];
 }
 
-// ===== ABGM audio exclusivity bus =====
-window.__ABGM_AUDIO_BUS__ ??= { engine: null, freesrc: null };
-
-function abgmStopOtherAudio(kind) {
-  const bus = window.__ABGM_AUDIO_BUS__;
-  if (!bus) return;
-
-  const stopAudio = (a) => {
-    try {
-      if (!a) return;
-      a.pause?.();
-      // "자연스레 꺼짐" 느낌이면 currentTime 안 건드려도 되는데
-      // 완전 꺼짐 원하면 아래 두 줄 유지
-      a.currentTime = 0;
-      a.srcObject = null;
-    } catch {}
-  };
-
-  if (kind !== "engine") stopAudio(bus.engine);
-  if (kind !== "freesrc") stopAudio(bus.freesrc);
-}
-
 /** ========= 삭제 확인 및 취소 ========= */
 function abgmConfirm(containerOrDoc, message, {
   title = "Confirm",
@@ -488,19 +466,32 @@ let _engineLastChatKey = "";
 let _engineCurrentFileKey = "";
 let _engineCurrentPresetId = "";
 
-// ===== Audio exclusivity (engine vs test/preview) =====
-function __abgmStopAudio(a) {
-  try {
-    if (!a) return;
-    a.pause?.();
-    // 완전히 "꺼짐" 원하면 리셋
-    a.currentTime = 0;
-  } catch {}
-}
+// ===== ABGM audio exclusivity bus 으아니 버스를 피할 수도 없고... =====
+window.__ABGM_AUDIO_BUS__ ??= { engine: null, freesrc: null };
 
+// (중요) ui_freesources.js에서도 호출할 거라 window에 걸어둠
+window.abgmStopOtherAudio = function(kind) {
+  const bus = window.__ABGM_AUDIO_BUS__;
+  if (!bus) return;
+
+  const stopAudio = (a) => {
+    try {
+      if (!a) return;
+      a.pause?.();
+      a.currentTime = 0;
+    } catch {}
+  };
+
+  if (kind !== "engine") stopAudio(bus.engine);
+  if (kind !== "freesrc") stopAudio(bus.freesrc);
+};
+
+// 메인 오디오 등록
+window.__ABGM_AUDIO_BUS__.engine = _bgmAudio;
+
+// 메인 재생 시작하면 프리소스 끄기
 try {
-  _bgmAudio.addEventListener("play", () => __abgmStopAudio(_testAudio));
-  _testAudio.addEventListener("play", () => __abgmStopAudio(_bgmAudio));
+  _bgmAudio.addEventListener("play", () => window.abgmStopOtherAudio?.("engine"));
 } catch {}
 
 // ===== Now Playing UI =====
@@ -2132,6 +2123,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
