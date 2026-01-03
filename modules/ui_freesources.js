@@ -383,7 +383,7 @@ export async function openFreeSourcesModal() {
 
 async function initFreeSourcesModal(overlay) {
   const settings = _ensureSettings();
-  await syncBundledFreeSourcesIntoSettings(settings, { force: true, save: true });
+  await _syncBundledFreeSourcesIntoSettings(settings, { force: true, save: true });
 
   const root = overlay;
 
