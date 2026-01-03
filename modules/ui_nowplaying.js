@@ -768,11 +768,19 @@ export function bindSideMenuNowPlayingControls(root) {
     });
   }
 
-function abgmRenderPlaylistPage(overlay) {
+function abgmRenderPlaylistPage(overlay, pidOverride) {
   const settings = ensureSettings();
 
-  // activePresetId가 꼬여도 플리 렌더는 되게 fallback
-  const pid = String(NP.getEngineCurrentPresetId?.() || settings?.activePresetId || "");
+  // 플리 렌더는 "UI 선택/override"가 최우선 (엔진 pid는 최후 fallback)
+  const sel = overlay?.querySelector("#abgm_pl_preset");
+  const pid = String(
+    pidOverride ||
+    sel?.value ||
+    settings?.activePresetId ||
+    NP.getEngineCurrentPresetId?.() ||
+    ""
+  );
+
   let preset =
     (pid && settings?.presets?.[pid]) ||
     settings?.presets?.[settings?.activePresetId] ||
