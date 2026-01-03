@@ -101,6 +101,8 @@ import { abgmBindFloatingActions, createFloatingButton, removeFloatingButton, re
 import { abgmBindNowPlayingDeps, bindSideMenuNowPlayingControls, updateNowPlayingUI, bindNowPlayingEventsOnce, openNowPlayingGlass, closeNowPlayingGlass } from "./modules/ui_nowplaying.js";
 import { abgmBindModalDeps, openModal, closeModal, fitModalToHost, getModalHost, fitModalToViewport } from "./modules/ui_modal.js";
 import { initModal } from "./modules/ui_settings_modal.js";
+// import { abgmBindFreeSourcesCoreDeps, bootFreeSourcesSync } from "./modules/freesources.js";
+import { abgmBindFreeSourcesDeps, closeFreeSourcesModal } from "./modules/ui_freesources.js";
 
 let __abgmDebugLine = ""; // 키워드 모드 디버깅
 let __abgmDebugMode = false;
@@ -2052,4 +2054,5 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
