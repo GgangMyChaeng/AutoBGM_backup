@@ -100,7 +100,7 @@ import { ensureSettings, migrateLegacyDataUrlsToIDB, ensureEngineFields } from "
 import { abgmBindFloatingActions, createFloatingButton, removeFloatingButton, removeFloatingMenu, openFloatingMenu, closeFloatingMenu, updateFloatingButtonPosition, abgmGetFloatingMenuEl, updateMenuDebugIcon } from "./modules/ui_floating.js";
 import { abgmBindNowPlayingDeps, bindSideMenuNowPlayingControls, updateNowPlayingUI, bindNowPlayingEventsOnce, openNowPlayingGlass, closeNowPlayingGlass } from "./modules/ui_nowplaying.js";
 import { abgmBindModalDeps, openModal, closeModal, fitModalToHost, getModalHost, fitModalToViewport } from "./modules/ui_modal.js";
-import { initModal } from "./modules/ui_settings_modal.js";
+import { initModal, abgmBindSettingsModalDeps } from "./modules/ui_settings_modal.js";
 // import { abgmBindFreeSourcesCoreDeps, bootFreeSourcesSync } from "./modules/freesources.js";
 import { abgmBindFreeSourcesDeps, closeFreeSourcesModal } from "./modules/ui_freesources.js";
 
@@ -1562,7 +1562,8 @@ async function init() {
   // 중복 로드/실행 방지 (메뉴 2개 뜨는 거 방지)
   if (window.__AUTOBGM_BOOTED__) return;
   window.__AUTOBGM_BOOTED__ = true;
-  
+
+  // 부팅/바인딩
   abgmBindModalDeps({
     loadHtml,
     initModal,
@@ -1618,6 +1619,13 @@ async function init() {
     saveSettingsDebounced,
     syncFreeSourcesFromJson,
     syncBundledFreeSourcesIntoSettings,
+  });
+  abgmBindSettingsModalDeps({
+    getBgmSort,
+    getSortedBgms,
+    getActivePreset,
+    setPlayButtonsLocked,
+    saveSettingsDebounced,
   });
   await bootFreeSourcesSync();
   mount();
@@ -2054,5 +2062,6 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
