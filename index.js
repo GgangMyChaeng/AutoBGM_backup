@@ -3233,10 +3233,10 @@ async function init() {
     abgmCycleBgmSort: (settings) => abgmCycleBgmSort(settings),
     abgmSortNice: (k) => abgmSortNice(k),
     ensurePlayFile: (fk, vol01, autoplay, presetId) => ensurePlayFile(fk, vol01, autoplay, presetId),
- 
+
+    // 디버그/컨텍스트
     getDebugMode: () => __abgmDebugMode,
     getDebugLine: () => __abgmDebugLine,
-
     getSTContextSafe: () => getSTContextSafe(),
     getChatKeyFromContext: (ctx) => getChatKeyFromContext(ctx),
     ensureEngineFields: (settings) => ensureEngineFields(settings),
@@ -3676,6 +3676,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
