@@ -1,5 +1,5 @@
 /** ========= Modal logic ========= */
-function initModal(overlay) {
+export function initModal(overlay) {
   const settings = ensureSettings();
   const root = overlay;
 
