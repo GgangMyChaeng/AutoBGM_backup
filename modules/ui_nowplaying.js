@@ -793,7 +793,6 @@ function abgmRenderPlaylistPage(overlay, pidOverride) {
   }
 
 // --- preset select ---
-const sel = overlay.querySelector("#abgm_pl_preset");
 if (sel && !sel.__abgmBound) {
   sel.__abgmBound = true;
 
