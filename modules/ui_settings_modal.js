@@ -1,4 +1,5 @@
-import { ensureSettings } from "./settings.js";
+import { ensureSettings, migrateLegacyDataUrlsToIDB } from "./settings.js";
+import { saveSettingsDebounced } from "./deps.js";
 import { openFreeSourcesModal } from "./ui_freesources.js";
 
 /** ========= Modal logic ========= */
@@ -28,7 +29,7 @@ export function initModal(overlay) {
   root.__abgmUpdateSelectionUI = updateSelectionUI;
 
   // 구버전 dataUrl 있으면 IndexedDB로 옮김 (있어도 한번만)
-  migrateLegacyDataUrlsToIDB(settings);
+  migrateLegacyDataUrlsToIDB(settings).catch(() => {});
 
   // ===== 상단 옵션 =====
   const kw = root.querySelector("#abgm_keywordMode");
@@ -41,7 +42,7 @@ export function initModal(overlay) {
 
   if (kw) kw.checked = !!settings.keywordMode;
   if (dbg) dbg.checked = !!settings.debugMode;
-  __abgmDebugMode = !!settings.debugMode;
+  window.__abgmDebugMode = !!settings.debugMode;
 
   if (pm) {
     pm.value = settings.playMode ?? "manual";
@@ -66,7 +67,7 @@ export function initModal(overlay) {
   if (dbg) {
     dbg.addEventListener("change", (e) => {
       settings.debugMode = !!e.target.checked;
-      __abgmDebugMode = !!settings.debugMode;
+      window.__abgmDebugMode = !!settings.debugMode;
       if (!__abgmDebugMode) __abgmDebugLine = "";
       saveSettingsDebounced();
       updateNowPlayingUI();
