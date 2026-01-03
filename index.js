@@ -1624,6 +1624,10 @@ async function init() {
     getActivePreset,
     setPlayButtonsLocked,
     saveSettingsDebounced,
+    
+    renderDefaultSelect,
+    rerenderAll,
+    
     updateNowPlayingUI,
     engineTick: () => engineTick(),
     setDebugMode: (on) => {
@@ -2067,6 +2071,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
