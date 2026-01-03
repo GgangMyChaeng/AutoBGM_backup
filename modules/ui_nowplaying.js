@@ -784,19 +784,27 @@ function abgmRenderPlaylistPage(overlay) {
     settings.activePresetId = String(preset.id);
   }
 
-  // --- preset select ---
-  const sel = overlay.querySelector("#abgm_pl_preset");
-  if (sel && !sel.__abgmBound) {
-    sel.__abgmBound = true;
+// --- preset select ---
+const sel = overlay.querySelector("#abgm_pl_preset");
+if (sel && !sel.__abgmBound) {
+  sel.__abgmBound = true;
 
-    sel.addEventListener("change", (e) => {
-      settings.activePresetId = String(e.target.value || settings.activePresetId || "");
-      saveSettingsDebounced();
-      try { abgmRenderPlaylistPage(overlay); }
-        catch (e) { console.error("[AutoBGM] render playlist failed", e); }
-      try { updateNowPlayingUI(); } catch {}
-    });
-  }
+  sel.addEventListener("change", (e) => {
+    const pid = String(e?.target?.value || "");
+    const settings = ensureSettings();
+
+    // 1) 새 pid를 settings에 먼저 확정
+    settings.activePresetId = pid;
+    // 2) 저장
+    try { saveSettingsDebounced?.(); } catch {}
+    // 3) 렌더는 "명시적으로 pid" 넘겨서 (렌더쪽이 헷갈릴 여지 제거)
+    try { abgmRenderPlaylistPage(overlay, pid); }
+    catch (err) { console.error("[AutoBGM] render playlist failed", err); }
+    // 4) NP 상단도 동기화
+    try { updateNowPlayingUI(); } catch {}
+  });
+}
+
   if (sel) {
     sel.innerHTML = "";
     const presetsSorted = Object.values(settings.presets || {}).sort((a, b) =>
