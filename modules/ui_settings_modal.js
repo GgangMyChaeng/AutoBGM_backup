@@ -12,12 +12,23 @@ let _getActivePreset = (settings) =>
 let _setPlayButtonsLocked = () => {};
 let _saveSettingsDebounced = () => {};
 
+let _renderDefaultSelect = () => {};
+let _rerenderAll = () => {};
+let _updateNowPlayingUI = () => {};
+let _engineTick = () => {};
+let _setDebugMode = () => {};
+
 export function abgmBindSettingsModalDeps(deps = {}) {
   if (typeof deps.getBgmSort === "function") _getBgmSort = deps.getBgmSort;
   if (typeof deps.getSortedBgms === "function") _getSortedBgms = deps.getSortedBgms;
   if (typeof deps.getActivePreset === "function") _getActivePreset = deps.getActivePreset;
   if (typeof deps.setPlayButtonsLocked === "function") _setPlayButtonsLocked = deps.setPlayButtonsLocked;
   if (typeof deps.saveSettingsDebounced === "function") _saveSettingsDebounced = deps.saveSettingsDebounced;
+  if (typeof deps.renderDefaultSelect === "function") _renderDefaultSelect = deps.renderDefaultSelect;
+  if (typeof deps.rerenderAll === "function") _rerenderAll = deps.rerenderAll;
+  if (typeof deps.updateNowPlayingUI === "function") _updateNowPlayingUI = deps.updateNowPlayingUI;
+  if (typeof deps.engineTick === "function") _engineTick = deps.engineTick;
+  if (typeof deps.setDebugMode === "function") _setDebugMode = deps.setDebugMode;
 }
 
 /** ========= Modal logic ========= */
@@ -88,7 +99,7 @@ export function initModal(overlay) {
       window.__abgmDebugMode = !!settings.debugMode;
       if (!__abgmDebugMode) __abgmDebugLine = "";
       _saveSettingsDebounced();
-      updateNowPlayingUI();
+      _updateNowPlayingUI();
     });
   }
 
@@ -124,7 +135,7 @@ export function initModal(overlay) {
     if (gvText) gvText.textContent = String(v);
 
     _saveSettingsDebounced();
-    engineTick();
+    _engineTick();
   });
 
   gvLock?.addEventListener("click", () => {
@@ -146,7 +157,7 @@ export function initModal(overlay) {
     sortSel.addEventListener("change", (e) => {
       settings.ui.bgmSort = e.target.value;
       _saveSettingsDebounced();
-      rerenderAll(root, settings);
+      _rerenderAll(root, settings);
     });
   }
 
@@ -159,7 +170,7 @@ export function initModal(overlay) {
     if (e.target.checked) list.forEach((b) => selected.add(b.id));
     else selected.clear();
 
-    rerenderAll(root, settings);
+    _rerenderAll(root, settings);
   });
 
   // ===== row checkbox =====
@@ -230,7 +241,7 @@ export function initModal(overlay) {
     }
 
     _saveSettingsDebounced();
-    rerenderAll(root, settings);
+    _rerenderAll(root, settings);
   });
 
   // ===== bulk reset volume (selected) =====
@@ -255,8 +266,8 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
   }
 
   _saveSettingsDebounced();
-  rerenderAll(root, settings);
-  try { engineTick(); } catch {}
+  _rerenderAll(root, settings);
+  try { _engineTick(); } catch {}
 });
 
   // ===== Add empty entry row =====
@@ -275,7 +286,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
   });
 
   _saveSettingsDebounced();
-  rerenderAll(root, settings);
+  _rerenderAll(root, settings);
 });
 
   // ===== Expand/Collapse all =====
@@ -283,12 +294,12 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
     const preset = _getActivePreset(settings);
     const list = _getSortedBgms(preset, _getBgmSort(settings));
     list.forEach((b) => root.__abgmExpanded.add(b.id));
-    rerenderAll(root, settings);
+    _rerenderAll(root, settings);
   });
 
   root.querySelector("#abgm_collapse_all")?.addEventListener("click", () => {
     root.__abgmExpanded.clear();
-    rerenderAll(root, settings);
+    _rerenderAll(root, settings);
   });
 
   // ===== lock all volume sliders =====
@@ -296,7 +307,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
     const preset = _getActivePreset(settings);
     (preset.bgms ?? []).forEach((b) => { b.volLocked = true; });
     _saveSettingsDebounced();
-    rerenderAll(root, settings);
+    _rerenderAll(root, settings);
   });
 
   // ===== preset select =====
@@ -304,7 +315,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
     settings.activePresetId = e.target.value;
     root.__abgmSelected.clear();
     _saveSettingsDebounced();
-    rerenderAll(root, settings);
+    _rerenderAll(root, settings);
   });
 
   // ===== preset add/del/rename =====
@@ -313,7 +324,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
     settings.presets[id] = { id, name: "New Preset", defaultBgmKey: "", bgms: [] };
     settings.activePresetId = id;
     _saveSettingsDebounced();
-    rerenderAll(root, settings);
+    _rerenderAll(root, settings);
   });
 
   root.querySelector("#abgm_preset_del")?.addEventListener("click", async () => {
@@ -337,7 +348,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
     root.__abgmExpanded?.clear?.();
 
     _saveSettingsDebounced();
-    rerenderAll(root, settings);
+    _rerenderAll(root, settings);
   });
 
   // 프리셋 이름 변경
@@ -358,8 +369,8 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
 
   preset.name = name;
   _saveSettingsDebounced();
-  rerenderAll(root, settings);
-  updateNowPlayingUI();
+  _rerenderAll(root, settings);
+  _updateNowPlayingUI();
 });
 
   root.querySelector("#abgm_open_freesources")?.addEventListener("click", openFreeSourcesModal);
@@ -439,7 +450,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
           console.error("[AutoBGM] bind failed", e);
         }
         await renderBindOverlay();
-        try { engineTick(); } catch {}
+        try { _engineTick(); } catch {}
       });
 
       const clearBtn = document.createElement("button");
@@ -458,7 +469,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
           try { await writeExtensionField(i, EXT_BIND_KEY, {}); } catch {}
         }
         await renderBindOverlay();
-        try { engineTick(); } catch {}
+        try { _engineTick(); } catch {}
       });
 
       row.appendChild(mainBtn);
@@ -513,7 +524,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
 
     e.target.value = "";
     _saveSettingsDebounced();
-    rerenderAll(root, settings);
+    _rerenderAll(root, settings);
   });
 
   // ===== ZIP add =====
@@ -550,7 +561,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
       maybeSetDefaultOnFirstAdd(preset, firstAddedKey);
 
       _saveSettingsDebounced();
-      rerenderAll(root, settings);
+      _rerenderAll(root, settings);
     } catch (err) {
       console.error("[AutoBGM] zip import failed:", err);
       console.warn("[AutoBGM] vendor/jszip.min.js 없으면 zip 안 됨");
@@ -582,8 +593,8 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
     // 엔트리 이름 개선
     if (e.target.classList.contains("abgm_name")) {
       bgm.name = String(e.target.value || "").trim();
-      updateNowPlayingUI(); // 엔트리 이름 바꾸면 Now Playing도 즉시 갱신
-      renderDefaultSelect(root, settings); // Default 셀렉트에 엔트리 이름 표시하려면 즉시 재렌더
+      _updateNowPlayingUI(); // 엔트리 이름 바꾸면 Now Playing도 즉시 갱신
+      _renderDefaultSelect(root, settings); // Default 셀렉트에 엔트리 이름 표시하려면 즉시 재렌더
       _saveSettingsDebounced();
       return;
     }
@@ -603,7 +614,7 @@ if (e.target.classList.contains("abgm_source")) {
   }
 
   _saveSettingsDebounced();
-  renderDefaultSelect(root, settings);
+  _renderDefaultSelect(root, settings);
   return;
 }
 
@@ -613,7 +624,7 @@ if (e.target.classList.contains("abgm_source")) {
       if (bgm.volLocked) return;
       const v = Math.max(0, Math.min(100, Number(e.target.value || 100)));
       bgm.volume = v / 100;
-      engineTick();
+      _engineTick();
       const n = detailRow.querySelector(".abgm_volnum");
       if (n) n.value = String(v);
     }
@@ -621,7 +632,7 @@ if (e.target.classList.contains("abgm_source")) {
     if (e.target.classList.contains("abgm_volnum")) {
       const v = Math.max(0, Math.min(100, Number(e.target.value || 100)));
       bgm.volume = v / 100;
-      engineTick();
+      _engineTick();
       if (!bgm.volLocked) {
         const r = detailRow.querySelector(".abgm_vol");
         if (r) r.value = String(v);
@@ -653,7 +664,7 @@ if (e.target.classList.contains("abgm_source")) {
       if (detail?.classList?.contains("abgm-bgm-detail")) {
         detail.style.display = open ? "" : "none";
       } else {
-        rerenderAll(root, settings);
+        _rerenderAll(root, settings);
       }
       return;
     }
@@ -680,7 +691,7 @@ if (e.target.closest(".abgm_license_btn")) {
   if (out === null) return;
   bgm.license = String(out ?? "").trim();
   _saveSettingsDebounced();
-  try { updateNowPlayingUI(); } catch {}
+  try { _updateNowPlayingUI(); } catch {}
   return;
 }
 
@@ -737,7 +748,7 @@ if (e.target.closest(".abgm_copy")) {
   // target default 비어있으면 "자동으로" 바꾸고 싶냐? -> 난 비추라서 안 함
   _saveSettingsDebounced();
   // 현재 화면 프리셋은 그대로니까 그냥 UI 갱신만
-  rerenderAll(root, settings);
+  _rerenderAll(root, settings);
   return;
 }
 
@@ -773,7 +784,7 @@ if (e.target.closest(".abgm_move")) {
 
   root.__abgmSelected?.delete(id);
   _saveSettingsDebounced();
-  rerenderAll(root, settings);
+  _rerenderAll(root, settings);
   return;
 }
 
@@ -804,7 +815,7 @@ if (e.target.closest(".abgm_move")) {
       }
 
       _saveSettingsDebounced();
-      rerenderAll(root, settings);
+      _rerenderAll(root, settings);
       return;
     }
 
@@ -864,8 +875,8 @@ root.querySelector("#abgm_bgm_tbody")?.addEventListener("change", async (e) => {
     }
 
     _saveSettingsDebounced();
-    rerenderAll(root, settings);
-    try { engineTick(); } catch {}
+    _rerenderAll(root, settings);
+    try { _engineTick(); } catch {}
   } catch (err) {
     console.error("[AutoBGM] change mp3 failed:", err);
   }
@@ -895,7 +906,7 @@ root.querySelector("#abgm_bgm_tbody")?.addEventListener("change", async (e) => {
       settings.activePresetId = incomingPreset.id;
 
       _saveSettingsDebounced();
-      rerenderAll(root, settings);
+      _rerenderAll(root, settings);
     } catch (err) {
       console.error("[AutoBGM] import failed", err);
     } finally {
@@ -981,6 +992,6 @@ root.querySelector("#abgm_bgm_tbody")?.addEventListener("change", async (e) => {
     requestAnimationFrame(() => fitModalToHost(overlay, getModalHost()));
     setTimeout(() => fitModalToHost(overlay, getModalHost()), 120);
   });
-  rerenderAll(root, settings);
+  _rerenderAll(root, settings);
   setupHelpToggles(root);
 } // initModal 닫기
