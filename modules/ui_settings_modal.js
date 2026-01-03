@@ -2,6 +2,24 @@ import { ensureSettings, migrateLegacyDataUrlsToIDB } from "./settings.js";
 import { saveSettingsDebounced } from "./deps.js";
 import { openFreeSourcesModal } from "./ui_freesources.js";
 
+// fallback(안전망) - 실제론 index.js에서 주입됨
+let _getBgmSort = (settings) => String(settings?.ui?.bgmSort ?? "added_asc");
+let _getSortedBgms = (preset, sortKey) => (preset?.bgms ?? []);
+let _getActivePreset = (settings) =>
+  (settings?.activePresetId && settings?.presets?.[settings.activePresetId]) ||
+  Object.values(settings?.presets || {})[0] ||
+  {};
+let _setPlayButtonsLocked = () => {};
+let _saveSettingsDebounced = () => {};
+
+export function abgmBindSettingsModalDeps(deps = {}) {
+  if (typeof deps.getBgmSort === "function") _getBgmSort = deps.getBgmSort;
+  if (typeof deps.getSortedBgms === "function") _getSortedBgms = deps.getSortedBgms;
+  if (typeof deps.getActivePreset === "function") _getActivePreset = deps.getActivePreset;
+  if (typeof deps.setPlayButtonsLocked === "function") _setPlayButtonsLocked = deps.setPlayButtonsLocked;
+  if (typeof deps.saveSettingsDebounced === "function") _saveSettingsDebounced = deps.saveSettingsDebounced;
+}
+
 /** ========= Modal logic ========= */
 export function initModal(overlay) {
   const settings = ensureSettings();
@@ -11,8 +29,8 @@ export function initModal(overlay) {
   root.__abgmExpanded = new Set();
 
   const updateSelectionUI = () => {
-  const preset = getActivePreset(settings);
-  const list = getSortedBgms(preset, getBgmSort(settings));
+  const preset = _getActivePreset(settings);
+  const list = _getSortedBgms(preset, _getBgmSort(settings));
   const selected = root.__abgmSelected;
 
   const countEl = root.querySelector("#abgm_selected_count");
@@ -50,7 +68,7 @@ export function initModal(overlay) {
 
     pm.addEventListener("change", (e) => {
       settings.playMode = e.target.value;
-      saveSettingsDebounced();
+      _saveSettingsDebounced();
     });
   }
 
@@ -59,8 +77,8 @@ export function initModal(overlay) {
       settings.keywordMode = !!e.target.checked;
       if (pm) pm.disabled = !!settings.keywordMode;
       // KeywordMode 상태에 따라 Play 버튼 잠금/해제
-      setPlayButtonsLocked(root, !!settings.keywordMode);
-      saveSettingsDebounced();
+      _setPlayButtonsLocked(root, !!settings.keywordMode);
+      _saveSettingsDebounced();
     });
   }
 
@@ -69,7 +87,7 @@ export function initModal(overlay) {
       settings.debugMode = !!e.target.checked;
       window.__abgmDebugMode = !!settings.debugMode;
       if (!__abgmDebugMode) __abgmDebugLine = "";
-      saveSettingsDebounced();
+      _saveSettingsDebounced();
       updateNowPlayingUI();
     });
   }
@@ -105,20 +123,20 @@ export function initModal(overlay) {
     settings.globalVolume = Math.max(0, Math.min(1, v / 100));
     if (gvText) gvText.textContent = String(v);
 
-    saveSettingsDebounced();
+    _saveSettingsDebounced();
     engineTick();
   });
 
   gvLock?.addEventListener("click", () => {
     settings.globalVolLocked = !settings.globalVolLocked;
-    saveSettingsDebounced();
+    _saveSettingsDebounced();
     syncGlobalVolUI();
   });
 
   if (useDef) useDef.checked = !!settings.useDefault;
   useDef?.addEventListener("change", (e) => {
     settings.useDefault = !!e.target.checked;
-    saveSettingsDebounced();
+    _saveSettingsDebounced();
   });
 
   // ===== Sort =====
@@ -127,15 +145,15 @@ export function initModal(overlay) {
     sortSel.value = getBgmSort(settings);
     sortSel.addEventListener("change", (e) => {
       settings.ui.bgmSort = e.target.value;
-      saveSettingsDebounced();
+      _saveSettingsDebounced();
       rerenderAll(root, settings);
     });
   }
 
   // ===== select all =====
   root.querySelector("#abgm_sel_all")?.addEventListener("change", (e) => {
-    const preset = getActivePreset(settings);
-    const list = getSortedBgms(preset, getBgmSort(settings));
+    const preset = _getActivePreset(settings);
+    const list = _getSortedBgms(preset, _getBgmSort(settings));
     const selected = root.__abgmSelected;
 
     if (e.target.checked) list.forEach((b) => selected.add(b.id));
@@ -172,7 +190,7 @@ export function initModal(overlay) {
     const selected = root.__abgmSelected;
     if (!selected.size) return;
 
-    const preset = getActivePreset(settings);
+    const preset = _getActivePreset(settings);
 
     const names = [];
     for (const id of selected) {
@@ -211,7 +229,7 @@ export function initModal(overlay) {
       try { await idbDel(fk); delete settings.assets[fk]; } catch {}
     }
 
-    saveSettingsDebounced();
+    _saveSettingsDebounced();
     rerenderAll(root, settings);
   });
 
@@ -220,7 +238,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
   const selected = root.__abgmSelected;
   if (!selected?.size) return;
 
-  const preset = getActivePreset(settings);
+  const preset = _getActivePreset(settings);
 
   const ok = await abgmConfirm(root, `선택한 ${selected.size}개 BGM의 볼륨을 100으로 초기화?`, {
     title: "Reset volume",
@@ -236,14 +254,14 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
     // bgm.volLocked 는 건드리지 않음(요구사항)
   }
 
-  saveSettingsDebounced();
+  _saveSettingsDebounced();
   rerenderAll(root, settings);
   try { engineTick(); } catch {}
 });
 
   // ===== Add empty entry row =====
   root.querySelector("#abgm_bgm_add_row")?.addEventListener("click", () => {
-  const preset = getActivePreset(settings);
+  const preset = _getActivePreset(settings);
 
   preset.bgms ??= [];
   preset.bgms.push({
@@ -256,14 +274,14 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
     volLocked: false,
   });
 
-  saveSettingsDebounced();
+  _saveSettingsDebounced();
   rerenderAll(root, settings);
 });
 
   // ===== Expand/Collapse all =====
   root.querySelector("#abgm_expand_all")?.addEventListener("click", () => {
-    const preset = getActivePreset(settings);
-    const list = getSortedBgms(preset, getBgmSort(settings));
+    const preset = _getActivePreset(settings);
+    const list = _getSortedBgms(preset, _getBgmSort(settings));
     list.forEach((b) => root.__abgmExpanded.add(b.id));
     rerenderAll(root, settings);
   });
@@ -275,9 +293,9 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
 
   // ===== lock all volume sliders =====
   root.querySelector("#abgm_lock_all_vol")?.addEventListener("click", () => {
-    const preset = getActivePreset(settings);
+    const preset = _getActivePreset(settings);
     (preset.bgms ?? []).forEach((b) => { b.volLocked = true; });
-    saveSettingsDebounced();
+    _saveSettingsDebounced();
     rerenderAll(root, settings);
   });
 
@@ -285,7 +303,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
   root.querySelector("#abgm_preset_select")?.addEventListener("change", (e) => {
     settings.activePresetId = e.target.value;
     root.__abgmSelected.clear();
-    saveSettingsDebounced();
+    _saveSettingsDebounced();
     rerenderAll(root, settings);
   });
 
@@ -294,7 +312,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
     const id = uid();
     settings.presets[id] = { id, name: "New Preset", defaultBgmKey: "", bgms: [] };
     settings.activePresetId = id;
-    saveSettingsDebounced();
+    _saveSettingsDebounced();
     rerenderAll(root, settings);
   });
 
@@ -318,13 +336,13 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
     root.__abgmSelected?.clear?.();
     root.__abgmExpanded?.clear?.();
 
-    saveSettingsDebounced();
+    _saveSettingsDebounced();
     rerenderAll(root, settings);
   });
 
   // 프리셋 이름 변경
   root.querySelector("#abgm_preset_rename_btn")?.addEventListener("click", async () => {
-  const preset = getActivePreset(settings);
+  const preset = _getActivePreset(settings);
   const out = await abgmPrompt(root, `Preset name 변경`, {
     title: "Rename Preset",
     okText: "확인",
@@ -339,7 +357,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
   if (!name) return;
 
   preset.name = name;
-  saveSettingsDebounced();
+  _saveSettingsDebounced();
   rerenderAll(root, settings);
   updateNowPlayingUI();
 });
@@ -469,7 +487,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const preset = getActivePreset(settings);
+    const preset = _getActivePreset(settings);
     const fileKey = file.name;
 
     await idbPut(fileKey, file);
@@ -494,7 +512,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
     maybeSetDefaultOnFirstAdd(preset, fileKey);
 
     e.target.value = "";
-    saveSettingsDebounced();
+    _saveSettingsDebounced();
     rerenderAll(root, settings);
   });
 
@@ -508,7 +526,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
 
     try {
       const importedKeys = await importZip(file, settings);
-      const preset = getActivePreset(settings);
+      const preset = _getActivePreset(settings);
 
       for (const fk of importedKeys) {
         if (!preset.bgms.some((b) => b.fileKey === fk)) {
@@ -531,7 +549,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
         }
       maybeSetDefaultOnFirstAdd(preset, firstAddedKey);
 
-      saveSettingsDebounced();
+      _saveSettingsDebounced();
       rerenderAll(root, settings);
     } catch (err) {
       console.error("[AutoBGM] zip import failed:", err);
@@ -543,9 +561,9 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
 
   // ===== default select =====
   root.querySelector("#abgm_default_select")?.addEventListener("change", (e) => {
-    const preset = getActivePreset(settings);
+    const preset = _getActivePreset(settings);
     preset.defaultBgmKey = e.target.value;
-    saveSettingsDebounced();
+    _saveSettingsDebounced();
   });
 
   // ===== tbody input =====
@@ -554,7 +572,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
     if (!tr) return;
 
     const id = tr.dataset.id;
-    const preset = getActivePreset(settings);
+    const preset = _getActivePreset(settings);
     const bgm = preset.bgms.find((x) => x.id === id);
     if (!bgm) return;
 
@@ -566,7 +584,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
       bgm.name = String(e.target.value || "").trim();
       updateNowPlayingUI(); // 엔트리 이름 바꾸면 Now Playing도 즉시 갱신
       renderDefaultSelect(root, settings); // Default 셀렉트에 엔트리 이름 표시하려면 즉시 재렌더
-      saveSettingsDebounced();
+      _saveSettingsDebounced();
       return;
     }
 
@@ -584,7 +602,7 @@ if (e.target.classList.contains("abgm_source")) {
     preset.defaultBgmKey = newKey;
   }
 
-  saveSettingsDebounced();
+  _saveSettingsDebounced();
   renderDefaultSelect(root, settings);
   return;
 }
@@ -610,7 +628,7 @@ if (e.target.classList.contains("abgm_source")) {
       }
     }
 
-    saveSettingsDebounced();
+    _saveSettingsDebounced();
   });
 
   // ===== tbody click (toggle/lock/del/test) =====
@@ -642,7 +660,7 @@ if (e.target.classList.contains("abgm_source")) {
 
     // id/bgm
     const id = tr.dataset.id;
-    const preset = getActivePreset(settings);
+    const preset = _getActivePreset(settings);
     const bgm = preset.bgms.find((x) => x.id === id);
     if (!bgm) return;
 
@@ -661,7 +679,7 @@ if (e.target.closest(".abgm_license_btn")) {
   // 취소면 null
   if (out === null) return;
   bgm.license = String(out ?? "").trim();
-  saveSettingsDebounced();
+  _saveSettingsDebounced();
   try { updateNowPlayingUI(); } catch {}
   return;
 }
@@ -692,7 +710,7 @@ if (e.target.closest(".abgm_change_mp3")) {
       if (range) range.disabled = !!bgm.volLocked;
       if (icon) icon.className = `fa-solid ${bgm.volLocked ? "fa-lock" : "fa-lock-open"}`;
 
-      saveSettingsDebounced();
+      _saveSettingsDebounced();
       return;
     }
 
@@ -717,7 +735,7 @@ if (e.target.closest(".abgm_copy")) {
   });
 
   // target default 비어있으면 "자동으로" 바꾸고 싶냐? -> 난 비추라서 안 함
-  saveSettingsDebounced();
+  _saveSettingsDebounced();
   // 현재 화면 프리셋은 그대로니까 그냥 UI 갱신만
   rerenderAll(root, settings);
   return;
@@ -754,7 +772,7 @@ if (e.target.closest(".abgm_move")) {
   }
 
   root.__abgmSelected?.delete(id);
-  saveSettingsDebounced();
+  _saveSettingsDebounced();
   rerenderAll(root, settings);
   return;
 }
@@ -785,7 +803,7 @@ if (e.target.closest(".abgm_move")) {
         } catch {}
       }
 
-      saveSettingsDebounced();
+      _saveSettingsDebounced();
       rerenderAll(root, settings);
       return;
     }
@@ -803,7 +821,7 @@ if (e.target.closest(".abgm_move")) {
       settings.chatStates[chatKey] ??= { currentKey: "", listIndex: 0, lastSig: "", defaultPlayedSig: "", prevKey: "" };
       settings.chatStates[chatKey].currentKey = bgm.fileKey;
 
-      saveSettingsDebounced();
+      _saveSettingsDebounced();
       return;
     }
   });
@@ -818,7 +836,7 @@ root.querySelector("#abgm_bgm_tbody")?.addEventListener("change", async (e) => {
 
   if (!file || !bgmId) return;
 
-  const preset = getActivePreset(settings);
+  const preset = _getActivePreset(settings);
   const bgm = preset.bgms.find((x) => String(x.id) === bgmId);
   if (!bgm) return;
 
@@ -845,7 +863,7 @@ root.querySelector("#abgm_bgm_tbody")?.addEventListener("change", async (e) => {
       try { await idbDel(oldKey); delete settings.assets[oldKey]; } catch {}
     }
 
-    saveSettingsDebounced();
+    _saveSettingsDebounced();
     rerenderAll(root, settings);
     try { engineTick(); } catch {}
   } catch (err) {
@@ -876,7 +894,7 @@ root.querySelector("#abgm_bgm_tbody")?.addEventListener("change", async (e) => {
       settings.presets[incomingPreset.id] = incomingPreset;
       settings.activePresetId = incomingPreset.id;
 
-      saveSettingsDebounced();
+      _saveSettingsDebounced();
       rerenderAll(root, settings);
     } catch (err) {
       console.error("[AutoBGM] import failed", err);
@@ -886,7 +904,7 @@ root.querySelector("#abgm_bgm_tbody")?.addEventListener("change", async (e) => {
   });
 
   root.querySelector("#abgm_export")?.addEventListener("click", () => {
-    const preset = getActivePreset(settings);
+    const preset = _getActivePreset(settings);
     const out = exportPresetFile(preset);
 
     const blob = new Blob([JSON.stringify(out, null, 2)], { type: "application/json" });
