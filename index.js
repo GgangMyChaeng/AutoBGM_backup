@@ -1625,9 +1625,32 @@ async function init() {
     setPlayButtonsLocked,
     saveSettingsDebounced,
     
-    renderDefaultSelect,
-    rerenderAll,
+    uid,
+    abgmConfirm,
+    abgmPrompt,
+    getSTContextSafe,
+    getChatKeyFromContext,
+    exportPresetFile,
+    rekeyPreset,
+    pickPresetFromImportData,
+    basenameNoExt,
+    clone,
+    dropboxToRaw,
+    importZip,
+    isFileKeyReferenced,
+    maybeSetDefaultOnFirstAdd,
+    abgmPickPreset,
+    abgmGetDurationSecFromBlob,
+
+    // storage / modal 쪽
+    idbPut,
+    idbDel,
+    ensureAssetList,
+    fitModalToHost,
+    getModalHost,
     
+    rerenderAll,
+    renderDefaultSelect,
     updateNowPlayingUI,
     engineTick: () => engineTick(),
     setDebugMode: (on) => {
@@ -2071,6 +2094,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
