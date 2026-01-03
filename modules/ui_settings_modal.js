@@ -142,7 +142,7 @@ export function initModal(overlay) {
   // ===== Sort =====
   const sortSel = root.querySelector("#abgm_sort");
   if (sortSel) {
-    sortSel.value = getBgmSort(settings);
+    sortSel.value = _getBgmSort(settings);
     sortSel.addEventListener("change", (e) => {
       settings.ui.bgmSort = e.target.value;
       _saveSettingsDebounced();
@@ -320,7 +320,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
     const keys = Object.keys(settings.presets);
     if (keys.length <= 1) return;
 
-    const cur = getActivePreset(settings);
+    const cur = _getActivePreset(settings);
     const name = cur?.name || cur?.id || "Preset";
 
     const ok = await abgmConfirm(root, `"${name}" 프리셋 삭제?`, {
@@ -380,7 +380,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
     if (!bindList) return;
 
     const settingsNow = ensureSettings();
-    const preset = getActivePreset(settingsNow);
+    const preset = _getActivePreset(settingsNow);
     const presetId = String(preset?.id ?? "");
     const presetName = String(preset?.name ?? presetId);
 
@@ -716,7 +716,7 @@ if (e.target.closest(".abgm_change_mp3")) {
 
     // copy
 if (e.target.closest(".abgm_copy")) {
-  const curPreset = getActivePreset(settings);
+  const curPreset = _getActivePreset(settings);
   const targetId = await abgmPickPreset(root, settings, {
     title: "Copy entry",
     message: "복사할 프리셋 선택",
@@ -743,7 +743,7 @@ if (e.target.closest(".abgm_copy")) {
 
 // Entry move
 if (e.target.closest(".abgm_move")) {
-  const curPreset = getActivePreset(settings);
+  const curPreset = _getActivePreset(settings);
   const targetId = await abgmPickPreset(root, settings, {
     title: "Move entry",
     message: "이동할 프리셋 선택",
