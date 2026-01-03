@@ -18,17 +18,77 @@ let _updateNowPlayingUI = () => {};
 let _engineTick = () => {};
 let _setDebugMode = () => {};
 
+let _uid = () => `${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+
+let _abgmConfirm = async (_root, msg) => window.confirm(String(msg || ""));
+let _abgmPrompt = async (_root, _title, { value = "" } = {}) =>
+  window.prompt(String(_title || ""), String(value ?? "")) ?? null;
+
+let _getSTContextSafe = () => ({});
+let _getChatKeyFromContext = () => "default";
+
+let _exportPresetFile = (preset) => ({ type: "autobgm_preset", version: 3, exportedAt: new Date().toISOString(), preset });
+let _rekeyPreset = (p) => p;
+let _pickPresetFromImportData = (d) => d?.preset ?? null;
+
+let _basenameNoExt = (s = "") => (String(s).split("/").pop() || "").replace(/\.[^/.]+$/, "");
+let _clone = (o) => JSON.parse(JSON.stringify(o ?? null));
+
+let _dropboxToRaw = (u) => u;
+let _importZip = async () => [];
+let _isFileKeyReferenced = () => false;
+let _maybeSetDefaultOnFirstAdd = () => {};
+let _abgmPickPreset = async () => "";
+
+let _abgmGetDurationSecFromBlob = async () => 0;
+let _idbPut = async () => {};
+let _idbDel = async () => {};
+let _ensureAssetList = (settings) => (settings?.assets ? Object.keys(settings.assets) : []);
+
+let _fitModalToHost = () => {};
+let _getModalHost = () => document.body;
+
 export function abgmBindSettingsModalDeps(deps = {}) {
   if (typeof deps.getBgmSort === "function") _getBgmSort = deps.getBgmSort;
   if (typeof deps.getSortedBgms === "function") _getSortedBgms = deps.getSortedBgms;
   if (typeof deps.getActivePreset === "function") _getActivePreset = deps.getActivePreset;
   if (typeof deps.setPlayButtonsLocked === "function") _setPlayButtonsLocked = deps.setPlayButtonsLocked;
   if (typeof deps.saveSettingsDebounced === "function") _saveSettingsDebounced = deps.saveSettingsDebounced;
+
   if (typeof deps.renderDefaultSelect === "function") _renderDefaultSelect = deps.renderDefaultSelect;
   if (typeof deps.rerenderAll === "function") _rerenderAll = deps.rerenderAll;
+  
   if (typeof deps.updateNowPlayingUI === "function") _updateNowPlayingUI = deps.updateNowPlayingUI;
   if (typeof deps.engineTick === "function") _engineTick = deps.engineTick;
   if (typeof deps.setDebugMode === "function") _setDebugMode = deps.setDebugMode;
+
+  if (typeof deps.uid === "function") _uid = deps.uid;
+  if (typeof deps.abgmConfirm === "function") _abgmConfirm = deps.abgmConfirm;
+  if (typeof deps.abgmPrompt === "function") _abgmPrompt = deps.abgmPrompt;
+
+  if (typeof deps.getSTContextSafe === "function") _getSTContextSafe = deps.getSTContextSafe;
+  if (typeof deps.getChatKeyFromContext === "function") _getChatKeyFromContext = deps.getChatKeyFromContext;
+
+  if (typeof deps.exportPresetFile === "function") _exportPresetFile = deps.exportPresetFile;
+  if (typeof deps.rekeyPreset === "function") _rekeyPreset = deps.rekeyPreset;
+  if (typeof deps.pickPresetFromImportData === "function") _pickPresetFromImportData = deps.pickPresetFromImportData;
+
+  if (typeof deps.basenameNoExt === "function") _basenameNoExt = deps.basenameNoExt;
+  if (typeof deps.clone === "function") _clone = deps.clone;
+
+  if (typeof deps.dropboxToRaw === "function") _dropboxToRaw = deps.dropboxToRaw;
+  if (typeof deps.importZip === "function") _importZip = deps.importZip;
+  if (typeof deps.isFileKeyReferenced === "function") _isFileKeyReferenced = deps.isFileKeyReferenced;
+  if (typeof deps.maybeSetDefaultOnFirstAdd === "function") _maybeSetDefaultOnFirstAdd = deps.maybeSetDefaultOnFirstAdd;
+  if (typeof deps.abgmPickPreset === "function") _abgmPickPreset = deps.abgmPickPreset;
+
+  if (typeof deps.abgmGetDurationSecFromBlob === "function") _abgmGetDurationSecFromBlob = deps.abgmGetDurationSecFromBlob;
+  if (typeof deps.idbPut === "function") _idbPut = deps.idbPut;
+  if (typeof deps.idbDel === "function") _idbDel = deps.idbDel;
+  if (typeof deps.ensureAssetList === "function") _ensureAssetList = deps.ensureAssetList;
+
+  if (typeof deps.fitModalToHost === "function") _fitModalToHost = deps.fitModalToHost;
+  if (typeof deps.getModalHost === "function") _getModalHost = deps.getModalHost;
 }
 
 /** ========= Modal logic ========= */
@@ -211,7 +271,7 @@ export function initModal(overlay) {
 
     const preview = names.slice(0, 6).map((x) => `- ${x}`).join("\n");
     const more = names.length > 6 ? `\n...외 ${names.length - 6}개` : "";
-    const ok = await abgmConfirm(root, `선택한 ${names.length}개 BGM 삭제?\n${preview}${more}`, {
+    const ok = await _abgmConfirm(root, `선택한 ${names.length}개 BGM 삭제?\n${preview}${more}`, {
       title: "Delete selected",
       okText: "확인",
       cancelText: "취소",
@@ -236,8 +296,8 @@ export function initModal(overlay) {
 
     for (const fk of removedKeys) {
       if (!fk) continue;
-      if (isFileKeyReferenced(settings, fk)) continue;
-      try { await idbDel(fk); delete settings.assets[fk]; } catch {}
+      if (_isFileKeyReferenced(settings, fk)) continue;
+      try { await _idbDel(fk); delete settings.assets[fk]; } catch {}
     }
 
     _saveSettingsDebounced();
@@ -251,7 +311,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
 
   const preset = _getActivePreset(settings);
 
-  const ok = await abgmConfirm(root, `선택한 ${selected.size}개 BGM의 볼륨을 100으로 초기화?`, {
+  const ok = await _abgmConfirm(root, `선택한 ${selected.size}개 BGM의 볼륨을 100으로 초기화?`, {
     title: "Reset volume",
     okText: "확인",
     cancelText: "취소",
@@ -276,7 +336,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
 
   preset.bgms ??= [];
   preset.bgms.push({
-    id: uid(),
+    id: _uid(),
     fileKey: "",          // Source 비어있음 (재생/모드에서 자동 무시됨)
     name: "",             // Entry name도 비어있게 (placeholder 보이게)
     keywords: "",
@@ -320,7 +380,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
 
   // ===== preset add/del/rename =====
   root.querySelector("#abgm_preset_add")?.addEventListener("click", () => {
-    const id = uid();
+    const id = _uid();
     settings.presets[id] = { id, name: "New Preset", defaultBgmKey: "", bgms: [] };
     settings.activePresetId = id;
     _saveSettingsDebounced();
@@ -334,7 +394,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
     const cur = _getActivePreset(settings);
     const name = cur?.name || cur?.id || "Preset";
 
-    const ok = await abgmConfirm(root, `"${name}" 프리셋 삭제?`, {
+    const ok = await _abgmConfirm(root, `"${name}" 프리셋 삭제?`, {
       title: "Delete preset",
       okText: "삭제",
       cancelText: "취소",
@@ -354,7 +414,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
   // 프리셋 이름 변경
   root.querySelector("#abgm_preset_rename_btn")?.addEventListener("click", async () => {
   const preset = _getActivePreset(settings);
-  const out = await abgmPrompt(root, `Preset name 변경`, {
+  const out = await _abgmPrompt(root, `Preset name 변경`, {
     title: "Rename Preset",
     okText: "확인",
     cancelText: "취소",
@@ -398,7 +458,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
     if (bindTitle) bindTitle.textContent = `Bind Preset → Characters`;
     if (bindSub) bindSub.textContent = `"${presetName}" 프리셋을 연결할 캐릭터를 선택`;
 
-    const ctx = getSTContextSafe();
+    const ctx = _getSTContextSafe();
     const chars = ctx?.characters;
     const writeExtensionField = ctx?.writeExtensionField;
 
@@ -501,17 +561,17 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
     const preset = _getActivePreset(settings);
     const fileKey = file.name;
 
-    await idbPut(fileKey, file);
-    const durationSec = await abgmGetDurationSecFromBlob(file);
-    const assets = ensureAssetList(settings);
+    await _idbPut(fileKey, file);
+    const durationSec = await _abgmGetDurationSecFromBlob(file);
+    const assets = _ensureAssetList(settings);
     assets[fileKey] = { fileKey, label: fileKey.replace(/\.mp3$/i, "") };
 
     const exists = preset.bgms.some((b) => b.fileKey === fileKey);
     if (!exists) {
       preset.bgms.push({
-        id: uid(),
+        id: _uid(),
         fileKey,
-        name: basenameNoExt(fileKey),
+        name: _basenameNoExt(fileKey),
         keywords: "",
         priority: 0,
         volume: 1.0,
@@ -520,7 +580,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
       });
     }
 
-    maybeSetDefaultOnFirstAdd(preset, fileKey);
+    _maybeSetDefaultOnFirstAdd(preset, fileKey);
 
     e.target.value = "";
     _saveSettingsDebounced();
@@ -536,15 +596,15 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
     if (!file) return;
 
     try {
-      const importedKeys = await importZip(file, settings);
+      const importedKeys = await _importZip(file, settings);
       const preset = _getActivePreset(settings);
 
       for (const fk of importedKeys) {
         if (!preset.bgms.some((b) => b.fileKey === fk)) {
           preset.bgms.push({
-            id: uid(),
+            id: _uid(),
             fileKey: fk,
-            name: basenameNoExt(fk),
+            name: _basenameNoExt(fk),
             keywords: "",
             priority: 0,
             volume: 1.0,
@@ -558,7 +618,7 @@ root.querySelector("#abgm_reset_vol_selected")?.addEventListener("click", async 
         if (!firstAddedKey) firstAddedKey = fk;
           // bgm push 로직...
         }
-      maybeSetDefaultOnFirstAdd(preset, firstAddedKey);
+      _maybeSetDefaultOnFirstAdd(preset, firstAddedKey);
 
       _saveSettingsDebounced();
       _rerenderAll(root, settings);
@@ -604,7 +664,7 @@ if (e.target.classList.contains("abgm_source")) {
   const oldKey = String(bgm.fileKey ?? "");
 
   let newKey = String(e.target.value || "").trim();
-  newKey = dropboxToRaw(newKey);     // 여기
+  newKey = _dropboxToRaw(newKey);     // 여기
   e.target.value = newKey;           // 입력창도 변환된 걸로 보여주기
 
   bgm.fileKey = newKey;
@@ -678,7 +738,7 @@ if (e.target.classList.contains("abgm_source")) {
       // license / description edit
 if (e.target.closest(".abgm_license_btn")) {
   const current = String(bgm.license ?? "");
-  const out = await abgmPrompt(root, `License / Description (이 엔트리에만 저장됨)`, {
+  const out = await _abgmPrompt(root, `License / Description (이 엔트리에만 저장됨)`, {
     title: "License / Description",
     okText: "확인",
     cancelText: "취소",
@@ -728,7 +788,7 @@ if (e.target.closest(".abgm_change_mp3")) {
     // copy
 if (e.target.closest(".abgm_copy")) {
   const curPreset = _getActivePreset(settings);
-  const targetId = await abgmPickPreset(root, settings, {
+  const targetId = await _abgmPickPreset(root, settings, {
     title: "Copy entry",
     message: "복사할 프리셋 선택",
     okText: "확인",
@@ -741,8 +801,8 @@ if (e.target.closest(".abgm_copy")) {
 
   target.bgms ??= [];
   target.bgms.push({
-    ...clone(bgm),
-    id: uid(), // 복사면 새 id
+    ..._clone(bgm),
+    id: _uid(), // 복사면 새 id
   });
 
   // target default 비어있으면 "자동으로" 바꾸고 싶냐? -> 난 비추라서 안 함
@@ -755,7 +815,7 @@ if (e.target.closest(".abgm_copy")) {
 // Entry move
 if (e.target.closest(".abgm_move")) {
   const curPreset = _getActivePreset(settings);
-  const targetId = await abgmPickPreset(root, settings, {
+  const targetId = await _abgmPickPreset(root, settings, {
     title: "Move entry",
     message: "이동할 프리셋 선택",
     okText: "확인",
@@ -769,8 +829,8 @@ if (e.target.closest(".abgm_move")) {
 
   target.bgms ??= [];
   target.bgms.push({
-    ...clone(bgm),
-    id: uid(), // 이동도 새 id로 안전빵(겹침 방지)
+    ..._clone(bgm),
+    id: _uid(), // 이동도 새 id로 안전빵(겹침 방지)
   });
 
   // 원본에서 제거
@@ -791,7 +851,7 @@ if (e.target.closest(".abgm_move")) {
     // delete
     if (e.target.closest(".abgm_del")) {
       const fk = bgm.fileKey || "(unknown)";
-      const ok = await abgmConfirm(root, `"${fk}" 삭제?`, {
+      const ok = await _abgmConfirm(root, `"${fk}" 삭제?`, {
         title: "Delete",
         okText: "확인",
         cancelText: "취소",
@@ -807,9 +867,9 @@ if (e.target.closest(".abgm_move")) {
         preset.defaultBgmKey = preset.bgms[0]?.fileKey ?? "";
       }
 
-      if (fileKey && !isFileKeyReferenced(settings, fileKey)) {
+      if (fileKey && !_isFileKeyReferenced(settings, fileKey)) {
         try {
-          await idbDel(fileKey);
+          await _idbDel(fileKey);
           delete settings.assets[fileKey];
         } catch {}
       }
@@ -826,8 +886,8 @@ if (e.target.closest(".abgm_move")) {
       settings.playMode = "manual";
       if (pm) { pm.value = "manual"; pm.disabled = false; }
 
-      const ctx = getSTContextSafe();
-      const chatKey = getChatKeyFromContext(ctx);
+      const ctx = _getSTContextSafe();
+      const chatKey = _getChatKeyFromContext(ctx);
       settings.chatStates ??= {};
       settings.chatStates[chatKey] ??= { currentKey: "", listIndex: 0, lastSig: "", defaultPlayedSig: "", prevKey: "" };
       settings.chatStates[chatKey].currentKey = bgm.fileKey;
@@ -857,8 +917,8 @@ root.querySelector("#abgm_bgm_tbody")?.addEventListener("change", async (e) => {
 
   try {
     // 새 파일 저장
-    await idbPut(newKey, file);
-    const assets = ensureAssetList(settings);
+    await _idbPut(newKey, file);
+    const assets = _ensureAssetList(settings);
     assets[newKey] = { fileKey: newKey, label: newKey.replace(/\.mp3$/i, "") };
 
     // 엔트리 소스 교체
@@ -870,8 +930,8 @@ root.querySelector("#abgm_bgm_tbody")?.addEventListener("change", async (e) => {
 }
 
     // oldKey가 더 이상 참조 안 되면 정리(선택)
-    if (oldKey && oldKey !== newKey && !isFileKeyReferenced(settings, oldKey)) {
-      try { await idbDel(oldKey); delete settings.assets[oldKey]; } catch {}
+    if (oldKey && oldKey !== newKey && !_isFileKeyReferenced(settings, oldKey)) {
+      try { await _idbDel(oldKey); delete settings.assets[oldKey]; } catch {}
     }
 
     _saveSettingsDebounced();
@@ -894,10 +954,10 @@ root.querySelector("#abgm_bgm_tbody")?.addEventListener("change", async (e) => {
       const text = await file.text();
       const data = JSON.parse(text);
 
-      const incomingPresetRaw = pickPresetFromImportData(data);
+      const incomingPresetRaw = _pickPresetFromImportData(data);
       if (!incomingPresetRaw) return;
 
-      const incomingPreset = rekeyPreset(incomingPresetRaw);
+      const incomingPreset = _rekeyPreset(incomingPresetRaw);
 
       const names = new Set(Object.values(settings.presets).map((p) => p.name));
       if (names.has(incomingPreset.name)) incomingPreset.name = `${incomingPreset.name} (imported)`;
@@ -916,7 +976,7 @@ root.querySelector("#abgm_bgm_tbody")?.addEventListener("change", async (e) => {
 
   root.querySelector("#abgm_export")?.addEventListener("click", () => {
     const preset = _getActivePreset(settings);
-    const out = exportPresetFile(preset);
+    const out = _exportPresetFile(preset);
 
     const blob = new Blob([JSON.stringify(out, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -989,8 +1049,8 @@ root.querySelector("#abgm_bgm_tbody")?.addEventListener("change", async (e) => {
 
   // 키보드/주소창 변화 대응
   overlay.addEventListener("focusin", () => {
-    requestAnimationFrame(() => fitModalToHost(overlay, getModalHost()));
-    setTimeout(() => fitModalToHost(overlay, getModalHost()), 120);
+    requestAnimationFrame(() => _fitModalToHost(overlay, _getModalHost()));
+    setTimeout(() => _fitModalToHost(overlay, _getModalHost()), 120);
   });
   _rerenderAll(root, settings);
   setupHelpToggles(root);
