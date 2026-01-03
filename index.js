@@ -474,7 +474,9 @@ window.abgmStopOtherAudio = function(kind) {
   const bus = window.__ABGM_AUDIO_BUS__;
   if (!bus) return;
 
-  const stopAudio = (a) => {
+  const FADE_MS = 120; // 80~200 페이드아웃은 취향
+
+  const hardStop = (a) => {
     try {
       if (!a) return;
       a.pause?.();
@@ -482,8 +484,45 @@ window.abgmStopOtherAudio = function(kind) {
     } catch {}
   };
 
-  if (kind !== "engine") stopAudio(bus.engine);
-  if (kind !== "freesrc") stopAudio(bus.freesrc);
+  const fadeStop = (a, ms = FADE_MS) => {
+    try {
+      if (!a) return;
+
+      if (a.__abgmFadeRAF) cancelAnimationFrame(a.__abgmFadeRAF);
+
+      a.__abgmFadeToken = (a.__abgmFadeToken || 0) + 1;
+      const token = a.__abgmFadeToken;
+
+      const v0 = Number(a.volume ?? 1);
+      if (!Number.isFinite(v0) || v0 <= 0 || a.paused || ms <= 0) {
+        hardStop(a);
+        return;
+      }
+
+      const t0 = performance.now();
+
+      const tick = (now) => {
+        if (a.__abgmFadeToken !== token) return;
+        const p = Math.min(1, (now - t0) / ms);
+
+        try { a.volume = Math.max(0, v0 * (1 - p)); } catch {}
+
+        if (p < 1 && !a.paused) {
+          a.__abgmFadeRAF = requestAnimationFrame(tick);
+        } else {
+          hardStop(a);
+          try { a.volume = v0; } catch {}
+        }
+      };
+
+      a.__abgmFadeRAF = requestAnimationFrame(tick);
+    } catch {
+      hardStop(a);
+    }
+  };
+
+  if (kind !== "engine") fadeStop(bus.engine);
+  if (kind !== "freesrc") fadeStop(bus.freesrc);
 };
 
 // 메인 오디오 등록
@@ -2123,6 +2162,7 @@ async function abgmGetDurationSecFromBlob(blob) {
     audio.src = url;
   });
 }
+
 
 
 
