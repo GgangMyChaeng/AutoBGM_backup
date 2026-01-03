@@ -10,15 +10,24 @@ function escapeHtml(s) {
     .replaceAll("'", "&#039;");
 }
 
-// 프리뷰 재생(지금 playAsset/_testAudio undefined라서 최소 구현)
+// 프리뷰 재생
 let _testAudio = null;
+
 function playAsset(src, vol01 = 0.6) {
   try {
     if (!_testAudio) _testAudio = new Audio();
+
+      window.__ABGM_AUDIO_BUS__ ??= { engine: null, freesrc: null };
+      window.__ABGM_AUDIO_BUS__.freesrc = _testAudio;
+      _testAudio.addEventListener("play", () => window.abgmStopOtherAudio?.("freesrc"));
+    }
+    
     _testAudio.pause();
     _testAudio.src = String(src || "");
     _testAudio.volume = Math.max(0, Math.min(1, Number(vol01 ?? 0.6)));
     _testAudio.currentTime = 0;
+
+    window.abgmStopOtherAudio?.("freesrc");
     _testAudio.play().catch(() => {});
   } catch {}
 }
